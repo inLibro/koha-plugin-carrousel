@@ -29,7 +29,7 @@
                         <option value="[% language %]">[% language %]</option>
                     [% END %]
                     </select>
-                    <input type="submit" value="Pouet" />
+                    <input type="submit" value="Install" />
                 </form>
                 </div>
            </div>

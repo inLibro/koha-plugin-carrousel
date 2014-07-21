@@ -32,8 +32,8 @@ sub tool {
     my $cgi = $self->{'cgi'};
 
     my $language = $cgi->param('language');
-    
-    if($language){
+    my $refresh = $cgi->param('status');
+    if($language && !$refresh){
         installLanguage($language);
     }
     
@@ -54,10 +54,17 @@ sub tool {
 sub installLanguage{
     my ($language) = @_;
     
+    # install the template
     my $translatedir = C4::Context->config('intranetdir')."/misc/translator";
-    my $rc = Koha::Tasks->new()->addTask(name =>"LANGUAGES", command=>"$translatedir/translate install $language");
+    my $tasker = Koha::Tasks->new();
+    my $rc = $tasker->addTask(name =>"PLUGIN-LANGUAGES", command=>"cd $translatedir; ./translate install $language");
     
-    my $dbh = C4::Context->dbh;
+    # add the language to the display choices
+    foreach my $display ('language','opaclanguages'){
+        my $value = C4::Context->preference($display);
+        next if $value =~ /$language/;
+        C4::Context->set_preference($display, "$value,$language");
+    }
 }
 
 sub install() {
