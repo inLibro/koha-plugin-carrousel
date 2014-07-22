@@ -30,22 +30,34 @@ sub tool {
     my ( $self, $args ) = @_;
 
     my $cgi = $self->{'cgi'};
-
     my $language = $cgi->param('language');
-    my $refresh = $cgi->param('status');
-    if($language && !$refresh){
-        installLanguage($language);
-    }
-    
-    my $template = $self->get_template({ file => 'languages.tt' });
-
+    my $taskId = $cgi->param('taskid');
+    my %params;
+    if($taskId){ # we're looking for a status
+        my ($status, $log) = status($taskId);
+#        $taskId = 0 if(! $status =~ /WAITING|PROCESSING/);
+        $params{'log'} = $log;
+        $params{status} = $status;
+    }elsif($language){
+        my ($id, $status, $log) = installLanguage($language);
+        $params{'log'} = $log;
+        $params{status} = $status;
+        $taskId = $id;
+#        $params{selectedlanguage} = 'fr-CA';
+    } 
+    $params{taskid} = $taskId;
+    $params{language} = $language;
+        
     # obtenir la liste des langues pour les thèmes DISPONIBLES.  La librairie C4::Languages ne vérifie que ce qui est déjà installé.
     my $dir=C4::Context->config('intranetdir')."/misc/translator/po";
     opendir (MYDIR,$dir);
     my @languages = sort map {$_ =~ /^(.*)-opac-bootstrap.po/; $1; } grep { /-opac-bootstrap.po/ } readdir(MYDIR);    
     closedir MYDIR;
+    $params{languages} = \@languages;
     
-    $template->param( languages => \@languages );
+    my $template = $self->get_template({ file => 'languages.tt' });
+
+    $template->param( %params );
     
     print $cgi->header();
     print $template->output();
@@ -57,7 +69,7 @@ sub installLanguage{
     # install the template
     my $translatedir = C4::Context->config('intranetdir')."/misc/translator";
     my $tasker = Koha::Tasks->new();
-    my $rc = $tasker->addTask(name =>"PLUGIN-LANGUAGES", command=>"cd $translatedir; ./translate install $language");
+    my $taskId = $tasker->addTask(name =>"PLUGIN-LANGUAGES", command=>"cd $translatedir; ./translate install $language");
     
     # add the language to the display choices
     foreach my $display ('language','opaclanguages'){
@@ -65,6 +77,22 @@ sub installLanguage{
         next if $value =~ /$language/;
         C4::Context->set_preference($display, "$value,$language");
     }
+
+#je suis tanné de tenter de coder le progress bar "simplement", so fuck it pour l'instant
+for (my $i = 0; $i < 10; $i++){
+    sleep 3;
+    my $task = $tasker->getTask($taskId);
+    return ($task->{id}, $task->{status}, $task->{log}) if ($task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILED'); 
+}
+    return $taskId;
+}
+
+sub status{
+    my $taskId = shift;
+    my $hrTask = Koha::Tasks->new()->getTask($taskId);
+    return "Internal error, unknown task id $taskId" unless $hrTask;
+    
+    return ($hrTask->{status}, $hrTask->{'log'});
 }
 
 sub install() {

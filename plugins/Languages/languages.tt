@@ -22,14 +22,34 @@
                 <form name="addlanguage" id="addlanguage" method="get"> <!-- action="/cgi-bin/koha/members/paycollect.pl"-->
                     <input type="hidden" name="class" value="[% CLASS %]"/>
                     <input type="hidden" name="method" value="[% METHOD %]"/>
-                
+                    <input type="hidden" name="taskid" value="[% taskid %]" />
                     <label for="language">Please choose the UI language you would like installed: </label>
                     <select name="language" id="language">
-                    [% FOREACH language IN languages %]
-                        <option value="[% language %]">[% language %]</option>
+                    [% FOREACH lang IN languages %]
+                        <option value="[% lang %]" [% IF lang==language %]selected="selected"[% END %]>[% lang %]</option>
                     [% END %]
                     </select>
-                    <input type="submit" value="Install" />
+                    <input type="submit" value="Install" /> 
+<!--                    [% IF status == 'WAITING' %]value="Queued" disabled
+                    [% ELSIF status == 'PROCESSING' %]value="Processing" disabled
+                    [% ELSIF status == 'COMPLETED' %]value="Completed" 
+                    [% ELSIF status == 'FAILED' %]value="Failed"
+                    [% ELSE %]value="Install"[% END %]
+                    />
+-->
+                    
+                    <div id="installstatuspanel">
+<!--                taskId [% taskid %]<br>
+                    status [% status %]<br>
+                    language [% language %]<br>
+                    [% IF status == 'WAITING' %]Queued[% END %]
+                    [% IF status == 'PROCESSING' %]Processing[% END %]
+-->
+                    [% IF status == 'COMPLETED' %]Completed[% END %]
+                    [% IF status == 'FAILED' %]The installation process failed.  Please see the IT administrator to fix the problem.
+                    <br><br>[% log %]
+                    [% END %]
+                    </div>
                 </form>
                 </div>
            </div>
