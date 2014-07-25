@@ -4,8 +4,7 @@ use Modern::Perl;
 use base qw(Koha::Plugins::Base);
 use C4::Context;
 use C4::Auth;
-use strict;
-use warnings;
+use Koha::Tasks;
 
 sub new {
     my ( $class, $args ) = @_;
@@ -29,8 +28,25 @@ sub new {
 sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
+    my $version = $cgi->param('version');
+    my $taskId = $cgi->param('taskid');
+    
     my %params;
-
+    
+    if ($taskId) { # we're looking for a status
+        my ($status, $log) = status($taskId);
+#        $taskId = 0 if(! $status =~ /WAITING|PROCESSING/);
+        $params{'log'} = $log;
+        $params{'status'} = $status;
+    } elsif ($version) {
+        my ($id, $status, $log) = installVersion($version);
+        $params{'log'} = $log;
+        $params{'status'} = $status;
+        $taskId = $id;
+    } 
+    $params{'taskid'} = $taskId;
+    $params{'version'} = $version;
+    
     $params{'kohaVersion'} = C4::Context::KOHAVERSION;
     $params{'versions'} = trouverVersion($params{'kohaVersion'});
     
@@ -41,9 +57,45 @@ sub tool {
     print $template->output();
 }
 
+sub installVersion {
+    my $v = "v" . shift;
+    
+    my $dir = C4::Context->config("intranetdir"); 
+    my $tasker = Koha::Tasks->new();
+    my $taskId = $tasker->addTask(name =>"PLUGIN-VERSIONUPDATE", command=>"cd $dir; git checkout $v");
+
+    for (my $i = 0; $i < 10; $i++){
+        sleep 6;
+        my $task = $tasker->getTask($taskId);
+        return ($task->{id}, $task->{status}, $task->{log}) if ( defined $task->{status} && ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILED') ); 
+    }
+    return $taskId;
+}
+
 sub trouverVersion() {
-    my @versionlist = qx( git tag );
-    print "@versionlist\n";
+    my $dir = C4::Context->config("intranetdir");
+    chdir($dir) or warn "failed to chdir." && return;
+    my ( $cutoff_major, $cutoff_functional, $cutoff_subnumber ) = split ( /\./, shift );
+    my @versionlist = reverse grep { $_ =~ /^v.*\.[0-9]{2}$/ && s/v//g } qx( git tag );
+    
+    my @arr;
+    foreach my $ele (@versionlist){
+        my ( $major, $functional, $subnumber ) = split ( /\./, $ele );
+        if ( $major >= $cutoff_major ){
+            if ( $functional > $cutoff_functional || ( $functional == $cutoff_functional && $subnumber > $cutoff_subnumber ) ){
+                push (@arr, $ele);
+            }
+        }
+    }
+    return \@arr;
+}
+
+sub status {
+    my $taskId = shift;
+    my $hrTask = Koha::Tasks->new()->getTask($taskId);
+    return "Internal error, unknown task id $taskId" unless $hrTask;
+    
+    return ($hrTask->{status}, $hrTask->{'log'});
 }
 
 sub install() {
