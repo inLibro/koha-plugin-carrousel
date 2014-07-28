@@ -5,6 +5,7 @@ use Modern::Perl;
 use base qw(Koha::Plugins::Base);
 use C4::Context;
 use C4::Auth;
+use C4::Languages;
 use Koha::Tasks;
 
 sub new {
@@ -53,6 +54,11 @@ sub tool {
     opendir (MYDIR,$dir);
     my @languages = sort map {$_ =~ /^(.*)-opac-bootstrap.po/; $1; } grep { /-opac-bootstrap.po/ } readdir(MYDIR);    
     closedir MYDIR;
+    my @installed = map { $_->{rfc4646_subtag} } @{C4::Languages::getTranslatedLanguages()};
+    foreach my $t (@installed){
+        @languages = grep { $_ ne $t} @languages;
+    }
+    
     $params{languages} = \@languages;
     
     my $template = $self->get_template({ file => 'languages.tt' });
