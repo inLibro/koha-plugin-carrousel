@@ -5,6 +5,7 @@ use base qw(Koha::Plugins::Base);
 use C4::Context;
 use C4::Auth;
 use Koha::Tasks;
+use String::Util "trim";
 
 sub new {
     my ( $class, $args ) = @_;
@@ -37,15 +38,15 @@ sub tool {
         my ($status, $log) = status($taskId);
 #        $taskId = 0 if(! $status =~ /WAITING|PROCESSING/);
         $params{'log'} = $log;
-        $params{'status'} = $status;
+        $params{status} = $status;
     } elsif ($version) {
         my ($id, $status, $log) = installVersion($version);
         $params{'log'} = $log;
         $params{'status'} = $status;
         $taskId = $id;
     } 
-    $params{'taskid'} = $taskId;
-    $params{'version'} = $version;
+    $params{taskid} = $taskId;
+    $params{version} = $version;
     
     $params{'kohaVersion'} = C4::Context::KOHAVERSION;
     $params{'versions'} = trouverVersion($params{'kohaVersion'});
@@ -58,23 +59,23 @@ sub tool {
 }
 
 sub installVersion {
-    my $v = "v" . shift;
+    my $v = trim("v" . shift);
     
-    my $dir = C4::Context->config("intranetdir"); 
+    my $intranetdir = C4::Context->config("intranetdir"); 
     my $tasker = Koha::Tasks->new();
-    my $taskId = $tasker->addTask(name =>"PLUGIN-VERSIONUPDATE", command=>"cd $dir; git checkout $v");
+    my $taskId = $tasker->addTask(name =>"PLUGIN-VERSIONUPDATE", command=>"cd $intranetdir; git checkout $v");
 
     for (my $i = 0; $i < 10; $i++){
-        sleep 6;
+        sleep 3;
         my $task = $tasker->getTask($taskId);
-        return ($task->{id}, $task->{status}, $task->{log}) if ( defined $task->{status} && ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILED') ); 
+        return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILED' ); 
     }
     return $taskId;
 }
 
 sub trouverVersion() {
     my $dir = C4::Context->config("intranetdir");
-    chdir($dir) or warn "failed to chdir." && return;
+    chdir($dir) or ( warn "failed to chdir.", return );
     my ( $cutoff_major, $cutoff_functional, $cutoff_subnumber ) = split ( /\./, shift );
     my @versionlist = reverse grep { $_ =~ /^v.*\.[0-9]{2}$/ && s/v//g } qx( git tag );
     
