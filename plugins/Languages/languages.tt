@@ -18,7 +18,9 @@
        <div id="yui-main">
            <div class="yui-b">
                 <div class="details">
-
+                The following language codes are already installed:
+                [% FOREACH lang IN languagesinstalled %]<em>[% lang %]</em>[% UNLESS loop.last() %], [% END %][% END %]
+                <br><br>
                 <form name="addlanguage" id="addlanguage" method="get"> <!-- action="/cgi-bin/koha/members/paycollect.pl"-->
                     <input type="hidden" name="class" value="[% CLASS %]"/>
                     <input type="hidden" name="method" value="[% METHOD %]"/>

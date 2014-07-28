@@ -60,6 +60,7 @@ sub tool {
     }
     
     $params{languages} = \@languages;
+    $params{languagesinstalled} = \@installed;
     
     my $template = $self->get_template({ file => 'languages.tt' });
 
