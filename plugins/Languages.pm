@@ -75,8 +75,18 @@ sub installLanguage{
     
     # install the template
     my $translatedir = C4::Context->config('intranetdir')."/misc/translator";
+    my $command = "cd $translatedir; ./translate install $language";
     my $tasker = Koha::Tasks->new();
-    my $taskId = $tasker->addTask(name =>"PLUGIN-LANGUAGES", command=>"cd $translatedir; ./translate install $language");
+    my $hrOldTasks = $tasker->getTasks(command => $command);
+    # we do not want to install the language twice
+    if($hrOldTasks){
+        foreach my $id(keys $hrOldTasks){
+            if($hrOldTasks->{$id}->{status} ne 'FAILED'){
+                return ($id,$hrOldTasks->{$id}->{status},$hrOldTasks->{$id}->{log});
+            }
+        }
+    }
+    my $taskId = $tasker->addTask(name =>"PLUGIN-LANGUAGES", command=>$command);
     
     # add the language to the display choices
     foreach my $display ('language','opaclanguages'){
