@@ -18,7 +18,7 @@ sub new {
         date_updated    => '2014-07-23',
         minimum_version => '3.0140007',
         maximum_version => undef,
-        version         => 1.00,
+        version         => 1.01,
     };
 
     my $self = $class->SUPER::new($args);
@@ -75,7 +75,7 @@ sub installVersion {
 
 sub trouverVersion() {
     my $dir = C4::Context->config("intranetdir");
-    chdir($dir) or ( warn "failed to chdir.", return );
+    chdir($dir) or ( warn "failed to chdir." and return );
     my ( $cutoff_major, $cutoff_functional, $cutoff_subnumber ) = split ( /\./, shift );
     my @versionlist = reverse grep { $_ =~ /^v.*\.[0-9]{2}$/ && s/v//g } qx( git tag );
     
