@@ -23,7 +23,8 @@
                     <input type="hidden" name="class" value="[% CLASS %]"/>
                     <input type="hidden" name="method" value="[% METHOD %]"/>
                     <input type="hidden" name="taskid" value="[% taskid %]"/>
-                    <input type="hidden" id="submitbuttontype" name="submitbuttontype" />
+                    <input type="hidden" name="status" value="[% status %]"/>
+                    <input type="hidden" id="submitbuttontype" name="submitbuttontype" value="[% request %]"/>
                     <label for="version">Please choose your koha backup : </label>
                     <select name="backup" id="backup">
                     [% FOREACH backup IN backups %]
@@ -38,7 +39,12 @@
                     [% ELSE %]value="Install"[% END %]
                     />
 -->
-                    
+                    <br>
+                    <label>or</label>
+                    <br>
+                    <label for="manualBackup">Do a manual backup : </label>
+                    <input type="submit" value="Backup" />
+
                     <div id="installstatuspanel">
 <!--                taskId [% taskid %]<br>
                     status [% status %]<br>
@@ -46,10 +52,16 @@
                     [% IF status == 'WAITING' %]Queued[% END %]
                     [% IF status == 'PROCESSING' %]Processing[% END %]
 -->
-                    [% IF status == 'COMPLETED' %]Your koha database was successfully updated.[% END %]
-                    [% IF status == 'FAILED' %]The database update process failed.  Please see the IT administrator to fix the problem.
+                    <br> <h6>
+                    [% IF status == 'COMPLETED' && request == 'Install' %]Your koha database was successfully restored.[% END %]
+                    [% IF status == 'FAILURE' && request == 'Install' %]The database update process failed.  Please see the IT administrator to fix the problem.
                     <br><br>[% log %]
                     [% END %]
+                    [% IF status == 'COMPLETED' && request == 'Backup' %]Your koha database was successfully saved.[% END %]
+                    [% IF status == 'FAILURE' && request == 'Backup' %]The database manual backup failed.  Please see the IT administrator to fix the problem.
+                    <br><br>[% log %]
+                    [% END %]
+                    </h6>
                     </div>
                 </form>
                 [% ELSE %]
@@ -72,7 +84,23 @@
  
     function onsubmitHandler() {
         var submitValue = this.submitValue;
-        document.getElementById('submitbuttontype').value = submitValue;
+        if(submitValue === "Install"){
+            var e = document.getElementById("backup");
+            var version = e.options[e.selectedIndex].text;
+            if(window.confirm("Do you really want to restore your database to "+version+" ?")){
+                document.getElementById('submitbuttontype').value = submitValue;
+            } else {
+                document.getElementById('submitbuttontype').value = "";
+            }
+        } else if (submitValue === "Backup"){
+            if(window.confirm("Do you really want to backup your database ?")){
+                document.getElementById('submitbuttontype').value = submitValue;
+            } else {
+                document.getElementById('submitbuttontype').value = "";
+            }
+        } else {
+            document.getElementById('submitbuttontype').value = submitValue;
+        }
     }
     
 	var form = document.getElementById('database');
