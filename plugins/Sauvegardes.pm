@@ -5,11 +5,14 @@ use File::Spec;
 use base qw(Koha::Plugins::Base);
 use C4::Context;
 use C4::Auth;
+use DateTime;
 use Koha::Tasks;
 use String::Util "trim";
 use Data::Dumper;
 use strict;
 use warnings;
+
+my $minimumDelayBetweenTasks = 2; # en minutes
 
 sub new {
     my ($class, $args) = @_;
@@ -70,9 +73,8 @@ sub listBackups {
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');
     my $backupDir = "/inlibro/backups/db";
     
-    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n", return );
+    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n" and return );
     my @backuplist = grep { s/\.sql\.gz// && s/.*?-// } readdir ($dh);
-    my $l='';
     my @a;
     foreach (@backuplist) {
         my $annee = substr $_, 0, 4;
@@ -86,10 +88,12 @@ sub listBackups {
         push @a, "$jour/$mois/$annee, $heure";
     }
     closedir($dh);
-    @a = map  $_->[0],
+
+    @a = map $_->[0],
          sort { $a->[1] cmp $b->[1] }
-         map  [ $_, join('', (split '/', $_)[1,0]) ], @a; # magie noire pour trier dates
+         map  [ $_, join('', (split '/', $_)[1,0]) ], @a; #  black transform pour trier dates
     @a = reverse @a;
+
     return \@a;
 }
 
@@ -98,15 +102,21 @@ sub applyBackup {
     my $backupDir = "/inlibro/backups/db";
     my $clientdb = C4::Context->config('database');
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');
-    
-    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n", return );
+    my ( $u, $p ) = ( C4::Context->config('user'), C4::Context->config('pass') );
+    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n" and return );
     ( $backupChoisi ) = grep { /$backupChoisi/ } readdir ($dh);
     closedir($dh);
+    my $command = "gunzip -c $backupDir/$client/$backupChoisi | mysql -u$u -p$p $clientdb";
     
     my $tasker = Koha::Tasks->new();
-    my ( $u, $p ) = ( C4::Context->config('user'), C4::Context->config('pass') );
-    my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS", command=>"gunzip -c $backupChoisi | mysql -u$u -p$p $clientdb");
-    for (my $i = 0; $i < 10; $i++){
+    my $recentTasks = $tasker->getTasks(command => $command);
+    my $isUserAllowed = isUserAllowedCommand($recentTasks);
+    if ( !$isUserAllowed ){
+        return (-1, 'FAILURE', "REASON: A backup was already installed in the last $minimumDelayBetweenTasks minutes. Please try again later.");
+    }
+
+    my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS", command=>$command);
+    for (my $i = 0; $i < 20; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
         return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILURE' ); 
@@ -119,7 +129,7 @@ sub downloadBackup {
     my $backupDir = "/inlibro/backups/db";
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');
     
-    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n", return );
+    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n" and return );
     ( $backupChoisi ) = grep { /$backupChoisi/ } readdir ($dh);
     return if !$backupChoisi;
     closedir($dh);
@@ -127,7 +137,7 @@ sub downloadBackup {
     my $filename = "$backupDir/$client/$backupChoisi";
     my ( $volume,$directories,$file ) = File::Spec->splitpath ($filename);
     return if $directories != "$backupDir/$client";
-    
+
     open(FILE, "<", "$filename") or ( warn "failed to open file $filename\n" and return );
     my @fileholder = <FILE>;
     close(FILE);
@@ -141,8 +151,17 @@ sub saveBackup {
     my $tasker = Koha::Tasks->new();
     my $clientdb = C4::Context->config('database');
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');    
-    my $backupName = "$clientdb-" . trim( `date +\%Y\%m\%d-\%H\%M\%S` ) . ".sql.gz"; 
-    my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS", command=>"mysqldump -uinlibrodumper -pinlibrodumper $clientdb | gzip -c -9 > /inlibro/backups/db/$client/$backupName");
+    my $backupName = "$clientdb-" . trim( `date +\%Y\%m\%d-\%H\%M\%S` ) . ".sql.gz";
+    my $command = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > /inlibro/backups/db/$client/$backupName";
+
+    my $abbreviatedCmd = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > /inlibro/backups/db/$client/$clientdb-.*\.sql\.gz";
+    my $th = $tasker->getTasksRegexp(command => $abbreviatedCmd);
+    my $isUserAllowed = isUserAllowedCommand($th);
+    if ( !$isUserAllowed ){
+        return (-1, 'FAILURE', "REASON: A backup was already made in the last $minimumDelayBetweenTasks minutes. Please try again later.");
+    }
+
+    my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS", command=>$command);
     for (my $i = 0; $i < 10; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
@@ -170,6 +189,31 @@ sub parseDate {
         $heure =~ s/://g;
     }
     return ($jour.$mois.$annee."-".$heure);
+}
+
+sub isUserAllowedCommand {
+    my $recentTasks = shift;
+    if($recentTasks){
+        foreach my $id (keys $recentTasks){
+            my ($date, $time) = split(" ", $recentTasks->{$id}->{time_last_start});
+            my ($hour, $minute, $second) = split(":", $time);
+            my ($annee, $mois, $jour) = split("-", $date);
+            my $last_time = DateTime->new(
+                                year   => $annee,
+                                month  => $mois,
+                                day    => $jour,
+                                hour   => $hour,
+                                minute => $minute,
+                                second => $second,
+                            );
+            my $now = DateTime->now();
+            my $timegap = $last_time->delta_ms($now)->minutes;
+            if($recentTasks->{$id}->{status} ne 'FAILURE' && $timegap < $minimumDelayBetweenTasks){
+                return 0;
+            }
+        }
+    }
+    return 1;
 }
 
 sub install() {

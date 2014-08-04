@@ -104,15 +104,15 @@
     }
     
 	var form = document.getElementById('database');
-    var els = form.getElementsByTagName('input');
-    var i;
-    for (i = 0; i < els.length; i++) {
-        var el = els[i];
-        if (el.type === 'submit') {
-            el.onclick = submitClickHandler;
+    if (form !== undefined && form !== null){
+        var els = form.getElementsByTagName('input');
+        var i;
+        for (i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (el.type === 'submit') {
+                el.onclick = submitClickHandler;
+            }
         }
+        form.onsubmit = onsubmitHandler;
     }
- 
-    form.onsubmit = onsubmitHandler;
-    
 </script>
