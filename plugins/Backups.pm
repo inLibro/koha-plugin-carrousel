@@ -109,7 +109,8 @@ sub applyBackup {
     my $command = "gunzip -c $backupDir/$client/$backupChoisi | mysql -u$u -p$p $clientdb";
     
     my $tasker = Koha::Tasks->new();
-    my $recentTasks = $tasker->getTasks(command => $command);
+    my $abbreviatedCmd = "gunzip -c $backupDir/$client/.* | mysql -u$u -p$p $clientdb";
+    my $recentTasks = $tasker->getTasksRegexp(command => $abbreviatedCmd);
     my $isUserAllowed = isUserAllowedCommand($recentTasks);
     if ( !$isUserAllowed ){
         return (-1, 'FAILURE', "REASON: A backup was already installed in the last $minimumDelayBetweenTasks minutes. Please try again later.");
