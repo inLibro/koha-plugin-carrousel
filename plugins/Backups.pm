@@ -1,4 +1,4 @@
-package Koha::Plugin::Sauvegardes;
+package Koha::Plugin::Backups;
 
 use Modern::Perl;
 use File::Spec;
@@ -62,7 +62,7 @@ sub tool {
     $params{request} = $request;
     $params{backups} = listBackups();
 
-    my $template = $self->get_template({ file => 'sauvegardes.tt' });
+    my $template = $self->get_template({ file => 'backups.tt' });
     $template->param( %params );
 
     print $cgi->header();
