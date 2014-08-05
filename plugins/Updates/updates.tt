@@ -46,7 +46,7 @@
                     [% IF status == 'PROCESSING' %]Processing[% END %]
 -->
                     [% IF status == 'COMPLETED' %]Your koha version was successfully updated.[% END %]
-                    [% IF status == 'FAILED' %]The installation process failed.  Please see the IT administrator to fix the problem.
+                    [% IF status == 'FAILURE' %]The installation process failed.  Please see the IT administrator to fix the problem.
                     <br><br>[% log %]
                     [% END %]
                     </div>

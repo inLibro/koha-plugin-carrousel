@@ -53,6 +53,7 @@ sub tool {
     my $template = $self->get_template({ file => 'updates.tt' });
     $template->param( %params );
 
+    print $cgi->redirect("/cgi-bin/koha/mainpage.pl?logout.x=1") if ($params{'status'} eq 'COMPLETED');
     print $cgi->header();
     print $template->output();
 }
@@ -67,7 +68,7 @@ sub installVersion {
     for (my $i = 0; $i < 10; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
-        return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILED' ); 
+        return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILURE' ); 
     }
     return $taskId;
 }
@@ -110,7 +111,7 @@ sub uninstall() {
 
 sub abort {
     $params{'log'} = shift;
-    $params{'status'} = 'FAILED';
+    $params{'status'} = 'FAILURE';
 }
 
 1;
