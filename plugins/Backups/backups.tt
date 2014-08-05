@@ -18,13 +18,13 @@
        <div id="yui-main">
            <div class="yui-b">
                 <div class="details">
-				[% IF backups && backups.size %]
                 <form name="database" id="database" method="get"> <!-- action="/cgi-bin/koha/members/paycollect.pl"-->
-                    <input type="hidden" name="class" value="[% CLASS %]"/>
+                	<input type="hidden" name="class" value="[% CLASS %]"/>
                     <input type="hidden" name="method" value="[% METHOD %]"/>
                     <input type="hidden" name="taskid" value="[% taskid %]"/>
                     <input type="hidden" name="status" value="[% status %]"/>
                     <input type="hidden" id="submitbuttontype" name="submitbuttontype" value="[% request %]"/>
+                [% IF backups && backups.size %]
                     <label for="version">Please choose your koha backup : </label>
                     <select name="backup" id="backup">
                     [% FOREACH backup IN backups %]
@@ -42,9 +42,13 @@
                     <br>
                     <label>or</label>
                     <br>
+                [% ELSE %]
+	                <h3>Warning</h3>
+	                <div>We could not find any backups for your installation.</div><br><br>
+                [% END %]
                     <label for="manualBackup">Do a manual backup : </label>
                     <input type="submit" value="Backup" />
-
+                </form>
                     <div id="installstatuspanel">
 <!--                taskId [% taskid %]<br>
                     status [% status %]<br>
@@ -61,13 +65,9 @@
                     [% IF status == 'FAILURE' && request == 'Backup' %]The database manual backup failed.  Please see the IT administrator to fix the problem.
                     <br><br>[% log %]
                     [% END %]
+                    <input type="hidden" id="logall" value="[% logall %]"/>
                     </h6>
                     </div>
-                </form>
-                [% ELSE %]
-                <h3>Error</h3>
-                <div>Unfortunately, we could not find any backups for your installation.</div>
-                [% END %]
                 </div>
            </div>
        </div>
@@ -77,7 +77,13 @@
 </body>
 <script type="text/javascript">
 	
-	    
+	/*if (document.getElementById("logall").value.indexOf("ERROR") != -1) {
+		setTimeout(function(){
+			alert(document.getElementById("logall").value+"\n\nYou'll be redirected to the main page.");
+			window.location.href = "/cgi-bin/koha/mainpage.pl?logout.x=1";
+		}, 1000);
+	}*/
+	
     function submitClickHandler() {
         form.submitValue = this.value;
     }

@@ -6,6 +6,7 @@ use C4::Context;
 use C4::Auth;
 use Koha::Tasks;
 use String::Util "trim";
+use vars qw/%params/;
 
 sub new {
     my ( $class, $args ) = @_;
@@ -32,8 +33,6 @@ sub tool {
     my $version = $cgi->param('version');
     my $taskId = $cgi->param('taskid');
     
-    my %params;
-    
     if ($taskId) { # we're looking for a status
         my ($status, $log) = status($taskId);
 #        $taskId = 0 if(! $status =~ /WAITING|PROCESSING/);
@@ -44,10 +43,10 @@ sub tool {
         $params{'log'} = $log;
         $params{'status'} = $status;
         $taskId = $id;
-    } 
+        abort("ERROR: the installation process did not complete in time.") unless $status;
+    }
     $params{taskid} = $taskId;
     $params{version} = $version;
-    
     $params{'kohaVersion'} = C4::Context::KOHAVERSION;
     $params{'versions'} = trouverVersion($params{'kohaVersion'});
     
@@ -63,7 +62,7 @@ sub installVersion {
     
     my $intranetdir = C4::Context->config("intranetdir"); 
     my $tasker = Koha::Tasks->new();
-    my $taskId = $tasker->addTask(name =>"PLUGIN-VERSIONUPDATE", command=>"cd $intranetdir; git checkout $v");
+    my $taskId = $tasker->addTask(name =>"PLUGIN-VERSIONUPDATE", command=>"cd $intranetdir; git checkout $v; ./installer/data/mysql/updatedatabase.pl;");
 
     for (my $i = 0; $i < 10; $i++){
         sleep 3;
@@ -75,7 +74,7 @@ sub installVersion {
 
 sub trouverVersion() {
     my $dir = C4::Context->config("intranetdir");
-    chdir($dir) or ( warn "failed to chdir." and return );
+    chdir($dir) or ( abort("ERROR: failed to reach your installation directory.") and return );
     my ( $cutoff_major, $cutoff_functional, $cutoff_subnumber ) = split ( /\./, shift );
     my @versionlist = reverse grep { $_ =~ /^v.*\.[0-9]{2}$/ && s/v//g } qx( git tag );
     
@@ -107,6 +106,11 @@ sub install() {
 sub uninstall() {
     my ( $self, $args ) = @_;
     return 1; # succès
+}
+
+sub abort {
+    $params{'log'} = shift;
+    $params{'status'} = 'FAILED';
 }
 
 1;

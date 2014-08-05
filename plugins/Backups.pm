@@ -11,8 +11,9 @@ use String::Util "trim";
 use Data::Dumper;
 use strict;
 use warnings;
+use vars qw/%params/;
 
-my $minimumDelayBetweenTasks = 2; # en minutes
+my $minimumDelayBetweenTasks = 5; # en minutes
 
 sub new {
     my ($class, $args) = @_;
@@ -37,8 +38,7 @@ sub tool {
     my $backup = $cgi->param('backup');
     my $request = $cgi->param('submitbuttontype');
     my $statusupdate = $cgi->param('status');
-    
-    my %params;
+    $params{logall} = "";
     
     if ($taskId && ($statusupdate eq 'WAITING')) { # we're looking for a status
         my ($status, $log) = status($taskId);
@@ -51,11 +51,13 @@ sub tool {
         $params{'log'} = $log;
         $params{'status'} = $status;
         $taskId = $id;
+        displayerror("ERROR: Installation interrupted.") unless $status;
     } elsif ($request eq "Backup"){
-        my ($id, $status, $log) = saveBackup($backup);
+        my ($id, $status, $log) = saveBackup();
         $params{'log'} = $log;
         $params{'status'} = $status;
         $taskId = $id;
+        displayerror("ERROR: Backup interrupted.") unless $status;
     }
     
     $params{taskid} = $taskId;
@@ -73,7 +75,7 @@ sub listBackups {
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');
     my $backupDir = "/inlibro/backups/db";
     
-    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n" and return );
+    opendir(my $dh, "$backupDir/$client") or ( return );
     my @backuplist = grep { s/\.sql\.gz// && s/.*?-// } readdir ($dh);
     my @a;
     foreach (@backuplist) {
@@ -103,7 +105,7 @@ sub applyBackup {
     my $clientdb = C4::Context->config('database');
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');
     my ( $u, $p ) = ( C4::Context->config('user'), C4::Context->config('pass') );
-    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n" and return );
+    opendir(my $dh, "$backupDir/$client") or ( return );
     ( $backupChoisi ) = grep { /$backupChoisi/ } readdir ($dh);
     closedir($dh);
     my $command = "gunzip -c $backupDir/$client/$backupChoisi | mysql -u$u -p$p $clientdb";
@@ -113,11 +115,11 @@ sub applyBackup {
     my $recentTasks = $tasker->getTasksRegexp(command => $abbreviatedCmd);
     my $isUserAllowed = isUserAllowedCommand($recentTasks);
     if ( !$isUserAllowed ){
-        return (-1, 'FAILURE', "REASON: A backup was already installed in the last $minimumDelayBetweenTasks minutes. Please try again later.");
+        return (-1, 'FAILURE', "REASON: A backup was already recovered in the last $minimumDelayBetweenTasks minutes. Please try again later.");
     }
 
-    my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS", command=>$command);
-    for (my $i = 0; $i < 20; $i++){
+    my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS-INSTALL", command=>$command);
+    for (my $i = 0; $i < 10; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
         return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILURE' ); 
@@ -130,7 +132,7 @@ sub downloadBackup {
     my $backupDir = "/inlibro/backups/db";
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');
     
-    opendir(my $dh, "$backupDir/$client") or ( warn "failed to opendir $backupDir/$client\n" and return );
+    opendir(my $dh, "$backupDir/$client") or ( return );
     ( $backupChoisi ) = grep { /$backupChoisi/ } readdir ($dh);
     return if !$backupChoisi;
     closedir($dh);
@@ -139,7 +141,7 @@ sub downloadBackup {
     my ( $volume,$directories,$file ) = File::Spec->splitpath ($filename);
     return if $directories != "$backupDir/$client";
 
-    open(FILE, "<", "$filename") or ( warn "failed to open file $filename\n" and return );
+    open(FILE, "<", "$filename") or ( return );
     my @fileholder = <FILE>;
     close(FILE);
     $filename =~ s/.*\///;
@@ -153,16 +155,22 @@ sub saveBackup {
     my $clientdb = C4::Context->config('database');
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');    
     my $backupName = "$clientdb-" . trim( `date +\%Y\%m\%d-\%H\%M\%S` ) . ".sql.gz";
-    my $command = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > /inlibro/backups/db/$client/$backupName";
-
-    my $abbreviatedCmd = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > /inlibro/backups/db/$client/$clientdb-.*\.sql\.gz";
+    my $backupDir = "/inlibro/backups/db";
+    my $command = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$backupName";
+    
+    unless (-d "$backupDir/$client"){
+        my $id = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS-CREATEDIR", command=>"mkdir $backupDir/$client");
+        sleep 1 while ( $tasker->getTask($id)->{status} ne 'COMPLETED' || $tasker->getTask($id)->{status} ne 'FAILURE' );
+    }
+    
+    my $abbreviatedCmd = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$clientdb-.*\.sql\.gz";
     my $th = $tasker->getTasksRegexp(command => $abbreviatedCmd);
     my $isUserAllowed = isUserAllowedCommand($th);
     if ( !$isUserAllowed ){
         return (-1, 'FAILURE', "REASON: A backup was already made in the last $minimumDelayBetweenTasks minutes. Please try again later.");
     }
 
-    my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS", command=>$command);
+    my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS-MANUAL", command=>$command);
     for (my $i = 0; $i < 10; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
@@ -225,6 +233,10 @@ sub install() {
 sub uninstall() {
     my ( $self, $args ) = @_;
     return 1; # succès
+}
+
+sub displayerror {
+    $params{logall} = shift;
 }
 
 1;
