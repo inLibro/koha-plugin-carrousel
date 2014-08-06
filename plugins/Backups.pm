@@ -154,13 +154,13 @@ sub saveBackup {
     my $tasker = Koha::Tasks->new();
     my $clientdb = C4::Context->config('database');
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');    
-    my $backupName = "$clientdb-" . trim( `date +\%Y\%m\%d-\%H\%M\%S` ) . ".sql.gz";
+    my $backupName = $clientdb . "_MANUAL-" . trim( `date +\%Y\%m\%d-\%H\%M\%S` ) . ".sql.gz";
     my $backupDir = "/inlibro/backups/db";
     my $command = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$backupName";
     
     unless (-d "$backupDir/$client"){
         my $id = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS-CREATEDIR", command=>"mkdir $backupDir/$client");
-        sleep 1 while ( $tasker->getTask($id)->{status} ne 'COMPLETED' || $tasker->getTask($id)->{status} ne 'FAILURE' );
+        sleep 1 while ( $tasker->getTask($id)->{status} ne 'COMPLETED' && $tasker->getTask($id)->{status} ne 'FAILURE' );
     }
     
     my $abbreviatedCmd = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$clientdb-.*\.sql\.gz";
@@ -171,7 +171,7 @@ sub saveBackup {
     }
 
     my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS-MANUAL", command=>$command);
-    for (my $i = 0; $i < 10; $i++){
+    while(1){
         sleep 3;
         my $task = $tasker->getTask($taskId);
         return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILURE' ); 
