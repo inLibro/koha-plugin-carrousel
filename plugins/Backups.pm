@@ -75,21 +75,23 @@ sub listBackups {
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');
     my $backupDir = "/inlibro/backups/db";
     
-    opendir(my $dh, "$backupDir/$client") or ( return );
+    opendir(my $dh, "$backupDir/$client") or ( return );   
     my @backuplist = grep { s/\.sql\.gz// && s/.*?-// } readdir ($dh);
+    closedir($dh);
     my @a;
     foreach (@backuplist) {
         my $annee = substr $_, 0, 4;
         my $mois  = substr $_, 4, 2;
         my $jour  = substr $_, 6, 2;
         my $heure = substr $_, 9;
-        if(index($heure, ":") == -1){
-            my @t = ( $heure =~ m/../g );
-            $heure = join (":", @t);
-        }
+        
+        my @t = ( $heure =~ m/../g )[0..2] if index($heure, ":") == -1;
+        my $manual = ", MANUAL" if index($heure, "MANUAL") != -1;
+        $heure = join (":", @t) if @t;
+        $heure.= $manual if $manual;
+                
         push @a, "$jour/$mois/$annee, $heure";
     }
-    closedir($dh);
 
     @a = map $_->[0],
          sort { $a->[1] cmp $b->[1] }
@@ -154,7 +156,7 @@ sub saveBackup {
     my $tasker = Koha::Tasks->new();
     my $clientdb = C4::Context->config('database');
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');    
-    my $backupName = $clientdb . "_MANUAL-" . trim( `date +\%Y\%m\%d-\%H\%M\%S` ) . ".sql.gz";
+    my $backupName = $clientdb . "-" . trim( `date +\%Y\%m\%d-\%H\%M\%S` ) . "-MANUAL.sql.gz";
     my $backupDir = "/inlibro/backups/db";
     my $command = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$backupName";
     
@@ -191,13 +193,15 @@ sub parseDate {
     #
     # risque de changer en fonction des specs de sauvegarde
     # 
-    my $d = shift; 
-    my ( $date, $heure ) = split ( ", ", $d );
+    my $d = shift;
+    my ( $date, $heure, $manual ) = split ( ", ", $d );
     my ( $annee, $mois, $jour ) = split ( "/", $date );
     if ( substr($heure, 0, 2) gt "03" ){
         $heure =~ s/://g;
     }
-    return ($jour.$mois.$annee."-".$heure);
+    my $s = $jour.$mois.$annee."-".$heure;
+    $s .= "-MANUAL" if $manual;
+    return $s;
 }
 
 sub isUserAllowedCommand {
