@@ -78,27 +78,7 @@ sub listBackups {
     opendir(my $dh, "$backupDir/$client") or ( return );   
     my @backuplist = grep { s/\.sql\.gz// && s/.*?-// } readdir ($dh);
     closedir($dh);
-    my @a;
-    foreach (@backuplist) {
-        my $annee = substr $_, 0, 4;
-        my $mois  = substr $_, 4, 2;
-        my $jour  = substr $_, 6, 2;
-        my $heure = substr $_, 9;
-        
-        my @t = ( $heure =~ m/../g )[0..2] if index($heure, ":") == -1;
-        my $manual = ", MANUAL" if index($heure, "MANUAL") != -1;
-        $heure = join (":", @t) if @t;
-        $heure.= $manual if $manual;
-                
-        push @a, "$jour/$mois/$annee, $heure";
-    }
-
-    @a = map $_->[0],
-         sort { $a->[1] cmp $b->[1] }
-         map  [ $_, join('', (split '/', $_)[1,0]) ], @a; #  black transform pour trier dates
-    @a = reverse @a;
-
-    return \@a;
+    return prettify(@backuplist);
 }
 
 sub applyBackup {
@@ -189,6 +169,32 @@ sub status {
     return ($hrTask->{status}, $hrTask->{'log'});
 }
 
+sub prettify {
+    my @backuplist = @_;
+    my @a;
+    foreach (@backuplist) {
+        my $annee = substr $_, 0, 4;
+        my $mois  = substr $_, 4, 2;
+        my $jour  = substr $_, 6, 2;
+        my $heure = substr $_, 9;
+        
+        my @t = ( $heure =~ m/../g )[0..2] if index($heure, ":") == -1;
+        my $manual = ", DAILY";
+        $manual = ", MANUAL" if index($heure, "MANUAL") != -1;
+        $heure = join (":", @t) if @t;
+        $heure.= $manual if $manual;
+                
+        push @a, "$jour/$mois/$annee, $heure";
+    }
+
+    @a = map $_->[0],
+         sort { $a->[1] cmp $b->[1] }
+         map  [ $_, join('', (split '/', $_)[1,0]) ], @a; #  black transform pour trier dates
+    @a = reverse @a;
+
+    return \@a;
+}
+
 sub parseDate {
     #
     # risque de changer en fonction des specs de sauvegarde
@@ -200,7 +206,7 @@ sub parseDate {
         $heure =~ s/://g;
     }
     my $s = $jour.$mois.$annee."-".$heure;
-    $s .= "-MANUAL" if $manual;
+    $s .= "-MANUAL" if index($manual, "MANUAL") != -1;
     return $s;
 }
 
