@@ -3,8 +3,87 @@
 <title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Reindexing Zebra</title>
 [% INCLUDE 'doc-head-close.inc' %]
 [% INCLUDE 'calendar.inc' %]
+<script type="text/javascript" language="JavaScript">
+	function onsubmitHandler(form) {
+		//Handle task cancelling
+		if(form.canceltask.value){
+			if(window.confirm("Do you really want to cancel Zebra's pending rebuild ?")){
+				return true;
+			} else {
+				form.canceltask.value = "";
+				return false;
+			}
+		}
+		//Handle new task
+		var mail = form.email2;		
+		if (mail.type !== "hidden" && !mail.value.trim()){
+			alert("You need to enter an email address");
+			return false;
+		}
+		if(!form.biblio.checked && !form.authority.checked){
+			alert("You must choose at least one (1) type of record to reindex");
+			return false;
+		}
+		if(form.reset.checked && document.getElementById('zebratbl').checked){
+			alert("Can't 'Reset Index' while 'Use Zebraqueue Table' is selected");
+			return false;
+		}
+		
+		if(form.reindexnow.value && !form.btncancel) {
+			if(window.confirm("Do you really want to reindex Zebra ?")){
+	            return true;
+	        } else {
+	            form.reindexnow.value = "";
+	            return false;
+	        }
+		} else {
+			if(window.confirm("Do you really want to modify the pending Zebra rebuild ?")){
+				form.reindexnow.value = "";
+				form.updatenow.value  = 1;
+	            return true;
+	        } else {
+	            form.updatenow.value = "";
+	            return false;
+	        }
+		}
+	}
+	
+	function btnCancelClick (){
+		document.getElementById('canceltask').value = 1;
+	}
+	
+	function btnReindexClick(){
+		document.getElementById('reindexnow').value = 1;
+	}
+	
+	function isNumber(n) {
+  		return !isNaN(parseFloat(n)) && isFinite(n);
+	}
+	
+	function emailChange (cb) {
+		if (cb.checked) document.getElementById("email2").type = "textbox";
+		else 			document.getElementById("email2").type = "hidden";
+	}
+	
+	function emailFocus (tb){
+		if(tb.value === "[% email2 %]") tb.value = "";
+	}
+	
+	function emailBlur (tb) {
+		if(!tb.value.trim()) tb.value = "[% email2 %]";
+	}
+	
+	function startTaskLater (cb) {
+		if (cb.checked) {
+			document.getElementById("labelhour").style["visibility"] = "visible";
+			document.getElementById("labelminute").style["visibility"] = "visible";
+		} else {
+			document.getElementById("labelhour").style["visibility"] = "hidden";
+			document.getElementById("labelminute").style["visibility"] = "hidden";
+		}
+	}
+</script>
 </head>
-
 <body>
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'circ-search.inc' %]
@@ -18,15 +97,21 @@
        <div id="yui-main">
            <div class="yui-b">
                 <div class="details">
-				<h2>Zebra's reindexing plugin</h2>
+				<h1>Zebra's Reindexing Plugin</h1>
 				<br>
-                <form name="reindex" id="reindex" method="get"> <!-- action="/cgi-bin/koha/members/paycollect.pl"-->
+                <form name="reindex" id="reindex" method="get" onsubmit="return onsubmitHandler(this);"> <!-- action="/cgi-bin/koha/members/paycollect.pl"-->
                     <input type="hidden" name="class" value="[% CLASS %]"/>
                     <input type="hidden" name="method" value="[% METHOD %]"/>
-                    <input type="hidden" id="taskid" name="taskid" value="[% taskid %]" />
                     <input type="hidden" id="reindexnow" name="reindexnow" value="[% reindexnow %]" />
+                    <input type="hidden" id="updatenow" name="updatenow" value="[% updatenow %]" />
+                    <input type="hidden" id="canceltask" name="canceltask" value="[% canceltask %]" />
                     <input type="hidden" name="full" />
 					<input type="hidden" name="zebratbl" />
+					
+					[% IF status == 'WAITING' %]<h3>Zebra's reindexing is scheduled on [% timenext %]</h3>
+					<input type="submit" id="btncancel" value="Cancel" style="width:75px;" onclick="btnCancelClick()">
+					<br><br>
+					[% END %]
 					
                     <label>
                     	<input type="checkbox" id="biblio" name="biblio" />
@@ -38,20 +123,44 @@
                     	Rebuild <strong>Authority</strong> Records
                     </label>
                     <br><br>
-					<label><input type="radio" id="full" name="group" checked="checked" value="full" /> Full Reindexation</label>
-					<label><input type="radio" id="zebratbl" name="group" value="zebratbl" /> Use Zebraqueue Table</label>
-					<br><br>
-                    <label>
+					<label>
                     	<input type="checkbox" id="reset" name="reset" />
                     	Reset Index
                     </label>
                     <br>
                     <label>
-                    	<input type="checkbox" id="email" name="email" />
+                    	<input type="checkbox" id="email" name="email" onchange="emailChange(this);" />
                     	Send Results By Email
                     </label>
+                    &nbsp;&nbsp;
+                    <input type="hidden" value="[% email2 %]" id="email2" name="email2" onfocus="emailFocus(this);" onblur="emailBlur(this);" />
+                    <br>
+                    <label>
+                    	<input type="checkbox" id="startlater" name="startlater" onchange="startTaskLater(this);" />
+                    	Start task later
+                    </label>
+                    <label id="labelhour" style="visibility: hidden;">
+                    at : 
+	                    <select name="hour" id="hour">
+	                    [% FOREACH h IN [0 .. 23] %]
+	                        <option value="[% h %] ">[% h %]</option>
+	                    [% END %]
+	                    </select>
+	                <strong>H</strong>&nbsp;
+                    </label>
+                    <label id="labelminute" style="visibility: hidden;">
+		                <select name="minute" id="minute">
+		                [% FOREACH m IN [0 .. 59] %]
+		                    <option value="[% m %] ">[% m %]</option>
+		                [% END %]
+		                </select>
+                    </label>
+                    <br><br>
+					<label><input type="radio" id="full" name="group" checked="checked" value="full" /> Full Reindexation</label>
+					<label><input type="radio" id="zebratbl" name="group" value="zebratbl" /> Use Zebraqueue Table</label>
                     <br><br><br>
-                    <input type="submit" value="Reindex" style="width:75px;" /> 
+                    <input type="submit" value="Reindex" style="width:75px;" onclick="btnReindexClick()"/>
+                    <br><br><br>
 <!--                    [% IF status == 'WAITING' %]value="Queued" disabled
                     [% ELSIF status == 'PROCESSING' %]value="Processing" disabled
                     [% ELSIF status == 'COMPLETED' %]value="Completed" 
@@ -66,10 +175,11 @@
                     language [% language %]<br>
                     [% IF status == 'WAITING' %]Queued[% END %]
                     [% IF status == 'PROCESSING' %]Processing[% END %]
--->
-                    [% IF status == 'COMPLETED' %]Your Zebra was successfuly reindexed.[% END %]
-                    [% IF status == 'FAILURE' %]The reindexing process failed.  Please see the IT administrator to fix the problem.
-                    <br><br>[% log %]
+-->					
+                    [% IF status == 'COMPLETED' %]<h4>Your Zebra was successfuly reindexed.</h4>[% END %]
+                    [% IF status == 'DELETED' %]<h4>Your Zebra reindexing was successfuly cancelled.</h4>[% END %]
+                    [% IF status == 'FAILURE' %]<h4>The reindexing process failed.  Please see the IT administrator to fix the problem.</h4>
+                    <br>[% log %]
                     [% END %]
                     </div>
                 </form>
@@ -80,21 +190,3 @@
     </div>
 </div>
 [% INCLUDE 'intranet-bottom.inc' %]
-</body>
-<script type="text/javascript">
-	
-	function onsubmitHandler() {
-		var taskid	 = document.getElementById('taskid');
-		if (!isNumber(taskid.value)){
-			//taskid.value = '';
-		}
-		document.getElementById('reindexnow').value = 1;
-	}
-	
-	function isNumber(n) {
-  		return !isNaN(parseFloat(n)) && isFinite(n);
-	}
-    
-	document.getElementById('reindex').onsubmit = onsubmitHandler;
-	
-</script>
