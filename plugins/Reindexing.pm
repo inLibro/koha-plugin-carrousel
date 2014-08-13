@@ -77,7 +77,7 @@ sub tool {
     my $th = getWaiting();# unless ($params{status} =~ /(FAILURE|COMPLETED|DELETED)/ );
     ( $params{nexttaskstatus}, $params{timenext} ) = ($th->{(keys $th)[0]}->{status}, $th->{(keys $th)[0]}->{time_next}) if ($th);
     
-    $params{mailstatus} = sendEmail($params{emailaddr}, 'pluginzebra@inlibro.com', "$params{'reindexstatus'}\n\n$params{log}") if ($list{email} && $params{'reindexstatus'});
+    $params{mailstatus} = sendEmail($params{emailaddr}, C4::Context->preference('KohaAdminEmailAddress'), "$params{'reindexstatus'}\n\n$params{log}") if ($list{email} && $params{'reindexstatus'});
         
     my $template = $self->get_template({ file => 'reindexing.tt' });
     $template->param( %params );
@@ -171,7 +171,7 @@ sub buildQuery {
 
 sub sendEmail {
     my $to = join ("\@", split ("@", shift));
-    my $from = shift;
+    my $from = join ("\@", split ("@", shift));
     my $message = shift;
     open MAIL,"|-","/usr/lib/sendmail","-ti";
     print MAIL <<EOF;
