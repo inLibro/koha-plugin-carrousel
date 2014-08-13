@@ -214,6 +214,7 @@ sub isUserAllowedCommand {
     my $recentTasks = shift;
     if($recentTasks){
         foreach my $id (keys $recentTasks){
+            next unless $recentTasks->{$id}->{time_last_start};
             my ($date, $time) = split(" ", $recentTasks->{$id}->{time_last_start});
             my ($hour, $minute, $second) = split(":", $time);
             my ($annee, $mois, $jour) = split("-", $date);
