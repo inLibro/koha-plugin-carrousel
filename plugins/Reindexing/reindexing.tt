@@ -15,7 +15,7 @@
 			}
 		}
 		//Handle new task
-		var mail = form.email2;		
+		var mail = form.emailaddr;		
 		if (mail.type !== "hidden" && !mail.value.trim()){
 			alert("You need to enter an email address");
 			return false;
@@ -61,16 +61,16 @@
 	}
 	
 	function emailChange (cb) {
-		if (cb.checked) document.getElementById("email2").type = "textbox";
-		else 			document.getElementById("email2").type = "hidden";
+		if (cb.checked) document.getElementById("emailaddr").type = "textbox";
+		else 			document.getElementById("emailaddr").type = "hidden";
 	}
 	
 	function emailFocus (tb){
-		if(tb.value === "[% email2 %]") tb.value = "";
+		if(tb.value === "[% emailaddr %]") tb.value = "";
 	}
 	
 	function emailBlur (tb) {
-		if(!tb.value.trim()) tb.value = "[% email2 %]";
+		if(!tb.value.trim()) tb.value = "[% emailaddr %]";
 	}
 	
 	function startTaskLater (cb) {
@@ -108,7 +108,7 @@
                     <input type="hidden" name="full" />
 					<input type="hidden" name="zebratbl" />
 					
-					[% IF status == 'WAITING' %]<h3>Zebra's reindexing is scheduled on [% timenext %]</h3>
+					[% IF nexttaskstatus %]<h3>Zebra's reindexing is scheduled on [% timenext %]</h3>
 					<input type="submit" id="btncancel" value="Cancel" style="width:75px;" onclick="btnCancelClick()">
 					<br><br>
 					[% END %]
@@ -133,7 +133,7 @@
                     	Send Results By Email
                     </label>
                     &nbsp;&nbsp;
-                    <input type="hidden" value="[% email2 %]" id="email2" name="email2" onfocus="emailFocus(this);" onblur="emailBlur(this);" />
+                    <input type="hidden" value="[% emailaddr %]" id="emailaddr" name="emailaddr" onfocus="emailFocus(this);" onblur="emailBlur(this);" />
                     <br>
                     <label>
                     	<input type="checkbox" id="startlater" name="startlater" onchange="startTaskLater(this);" />
@@ -143,7 +143,7 @@
                     at : 
 	                    <select name="hour" id="hour">
 	                    [% FOREACH h IN [0 .. 23] %]
-	                        <option value="[% h %] ">[% h %]</option>
+	                        <option value="[% h %] ">[% FILTER format('%02d') %][% h %][% END %]</option>
 	                    [% END %]
 	                    </select>
 	                <strong>H</strong>&nbsp;
@@ -151,7 +151,7 @@
                     <label id="labelminute" style="visibility: hidden;">
 		                <select name="minute" id="minute">
 		                [% FOREACH m IN [0 .. 59] %]
-		                    <option value="[% m %] ">[% m %]</option>
+		                    <option value="[% m %] ">[% FILTER format('%02d') %][% m %][% END %]</option>
 		                [% END %]
 		                </select>
                     </label>
@@ -176,11 +176,14 @@
                     [% IF status == 'WAITING' %]Queued[% END %]
                     [% IF status == 'PROCESSING' %]Processing[% END %]
 -->					
-                    [% IF status == 'COMPLETED' %]<h4>Your Zebra was successfuly reindexed.</h4>[% END %]
-                    [% IF status == 'DELETED' %]<h4>Your Zebra reindexing was successfuly cancelled.</h4>[% END %]
-                    [% IF status == 'FAILURE' %]<h4>The reindexing process failed.  Please see the IT administrator to fix the problem.</h4>
+                    [% IF status == 'UPDATED' %]<h4>Your Zebra's reindexing query was successfully updated.</h4>[% END %]
+                    [% IF status == 'DELETED' %]<h4>Your Zebra's reindexing was successfuly cancelled.</h4>[% END %]
+                    [% IF status == 'ERROR' %]<h4>The operation failed</h4>[% END %]
+                    [% IF reindexstatus == 'COMPLETED' %]<h4>Your Zebra was successfuly reindexed.</h4>[% END %]
+                    [% IF reindexstatus == 'FAILURE' %]<h4>The reindexing process failed.  Please see the IT administrator to fix the problem.</h4>
                     <br>[% log %]
                     [% END %]
+                    [% IF mailstatus %]<h4>An email was sent at [% emailaddr %].</h4>[% END %]
                     </div>
                 </form>
 
