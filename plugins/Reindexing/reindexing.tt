@@ -143,7 +143,7 @@
                     at : 
 	                    <select name="hour" id="hour">
 	                    [% FOREACH h IN [0 .. 23] %]
-	                        <option value="[% h %] ">[% FILTER format('%02d') %][% h %][% END %]</option>
+	                        <option value="[% h %]">[% FILTER format('%02d') %][% h %][% END %]</option>
 	                    [% END %]
 	                    </select>
 	                <strong>H</strong>&nbsp;
@@ -151,7 +151,7 @@
                     <label id="labelminute" style="visibility: hidden;">
 		                <select name="minute" id="minute">
 		                [% FOREACH m IN [0 .. 59] %]
-		                    <option value="[% m %] ">[% FILTER format('%02d') %][% m %][% END %]</option>
+		                    <option value="[% m %]">[% FILTER format('%02d') %][% m %][% END %]</option>
 		                [% END %]
 		                </select>
                     </label>

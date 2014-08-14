@@ -47,9 +47,10 @@ sub tool {
         'email'      => $cgi->param('email')     || undef,
         'emailaddr'     => $cgi->param('emailaddr')    || undef,
         'startlater' => $cgi->param('startlater')|| undef,
-        'hour'       => $cgi->param('hour')      || undef,
-        'minute'     => $cgi->param('minute')    || undef,
+        'hour'       => (defined $cgi->param('hour') && $cgi->param('hour')) == 0 ? 0 : $cgi->param('hour') || undef,
+        'minute'     => (defined $cgi->param('minute') && $cgi->param('minute')) == 0 ? 0 : $cgi->param('minute') || undef,
     );
+    #die "$list{hour}\n$list{minute}";
     #
     # Switch vers les opérations
     #
@@ -89,7 +90,7 @@ sub reindex_zebra {
     my %list = @_;
     my ($command, $timestring) = buildQuery( %list );
     my $tasker = Koha::Tasks->new();
-    my $taskId = $tasker->addTask(name =>"PLUGIN-REBUILDZEBRA", command=>"$command", time_next=>$timestring);
+    my $taskId = $tasker->addTask(name =>"PLUGIN-REBUILDZEBRA", command=>$command, time_next=>$timestring);
     for (my $i = 0; $i < 20; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
@@ -121,8 +122,6 @@ sub updateTask {
     ); 
     my $tasker = Koha::Tasks->new();
     my $nbrow = $tasker->update( %args );
-    
-    return $nbrow if $timestring;
     
     for (my $i = 0; $i < 20; $i++){
         sleep 3;
@@ -159,7 +158,7 @@ sub buildQuery {
     $command .= ";";
     
     my $timestring;
-    if($list{'startlater'} && $list{hour} && $list{minute}){
+    if($list{'startlater'} && defined ($list{hour}) && defined ($list{minute})){
         my $t = localtime;
         my $u = Time::Piece->strptime(localtime->ymd." $list{hour}:$list{minute}:00", "%Y-%m-%d %H:%M:%S" );
         $u += ONE_DAY if ($list{hour} < $t->hour || ($list{hour} == $t->hour && $list{minute} < $t->min));
