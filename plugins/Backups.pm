@@ -138,14 +138,14 @@ sub saveBackup {
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');    
     my $backupName = $clientdb . "-" . trim( `date +\%Y\%m\%d-\%H\%M\%S` ) . "-MANUAL.sql.gz";
     my $backupDir = "/inlibro/backups/db";
-    my $command = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$backupName";
+    my $command = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --single-transaction --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$backupName";
     
     unless (-d "$backupDir/$client"){
         my $id = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS-CREATEDIR", command=>"mkdir $backupDir/$client");
         sleep 1 while ( $tasker->getTask($id)->{status} ne 'COMPLETED' && $tasker->getTask($id)->{status} ne 'FAILURE' );
     }
     
-    my $abbreviatedCmd = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$clientdb-.*\.sql\.gz";
+    my $abbreviatedCmd = "mysqldump -uinlibrodumper -pinlibrodumper $clientdb --single-transaction --ignore-table=$clientdb.tasks | gzip -c -9 > $backupDir/$client/$clientdb-.*\.sql\.gz";
     my $th = $tasker->getTasksRegexp(command => $abbreviatedCmd);
     my $isUserAllowed = isUserAllowedCommand($th);
     if ( !$isUserAllowed ){
