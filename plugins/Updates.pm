@@ -60,11 +60,13 @@ sub tool {
 
 sub installVersion {
     my $v = trim("v" . shift);
-    
     my $intranetdir = C4::Context->config("intranetdir"); 
+    my $command = "cd $intranetdir; ";
+    $command .= "git stash save \"Stashed by Kohas Update Plugin.\"; ";
+    $command .= "git checkout $v; ";
+    $command .= "./installer/data/mysql/updatedatabase.pl; ";
     my $tasker = Koha::Tasks->new();
-    my $taskId = $tasker->addTask(name =>"PLUGIN-VERSIONUPDATE", command=>"cd $intranetdir; git checkout $v; ./installer/data/mysql/updatedatabase.pl;");
-
+    my $taskId = $tasker->addTask(name =>"PLUGIN-VERSIONUPDATE", command=>$command);
     for (my $i = 0; $i < 10; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
