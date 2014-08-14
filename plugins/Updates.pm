@@ -62,6 +62,7 @@ sub installVersion {
     my $v = trim("v" . shift);
     my $intranetdir = C4::Context->config("intranetdir"); 
     my $command = "cd $intranetdir; ";
+    $command .= "git add -A .";
     $command .= "git stash save \"Stashed by Kohas Update Plugin.\"; ";
     $command .= "git checkout $v; ";
     $command .= "./installer/data/mysql/updatedatabase.pl; ";
