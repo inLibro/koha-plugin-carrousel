@@ -29,8 +29,9 @@
                         <option value="[% v %] [% IF v==version %]selected="selected"[% END %]">[% v %]</option>
                     [% END %]
                     </select>
-                    <input type="submit" value="Install" /> 
-<!--                    [% IF status == 'WAITING' %]value="Queued" disabled
+                    <input type="submit" value="Install" />
+                    <br>
+<!--                [% IF status == 'WAITING' %]value="Queued" disabled
                     [% ELSIF status == 'PROCESSING' %]value="Processing" disabled
                     [% ELSIF status == 'COMPLETED' %]value="Completed" 
                     [% ELSIF status == 'FAILED' %]value="Failed"
