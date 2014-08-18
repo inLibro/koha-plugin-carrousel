@@ -6,6 +6,7 @@ use C4::Context;
 use C4::Auth;
 use Koha::Tasks;
 use String::Util "trim";
+use Data::Dumper;
 use vars qw/%params/;
 
 sub new {
@@ -43,7 +44,7 @@ sub tool {
         $params{'log'} = $log;
         $params{'status'} = $status;
         $taskId = $id;
-        abort("ERROR: the installation process did not complete in time.") unless $status;
+        abort("ERROR: the installation process did not complete in time and could still be running.") unless $status;
     }
     $params{taskid} = $taskId;
     $params{version} = $version;
@@ -60,15 +61,24 @@ sub tool {
 
 sub installVersion {
     my $v = trim("v" . shift);
-    my $intranetdir = C4::Context->config("intranetdir"); 
+    my $intranetdir  = C4::Context->config("intranetdir");
+    my $translatedir = C4::Context->config("intranetdir")."/misc/translator";
     my $command = "cd $intranetdir; ";
-    $command .= "git add -A .; ";
-    $command .= "git stash save \"Stashed by Kohas Update Plugin.\"; ";
-    $command .= "git checkout $v; ";
+    $command .= "git checkout -f $v; ";
     $command .= "./installer/data/mysql/updatedatabase.pl; ";
+    $command .= "cd $translatedir; ";
+    my @installed = map { $_->{rfc4646_subtag} } @{C4::Languages::getTranslatedLanguages()};
+    foreach(@installed){
+        # we lose our installed languages with git checkout -f, so we install them back
+        $command .= "./translate install $_; ";
+    }
+    
     my $tasker = Koha::Tasks->new();
-    my $taskId = $tasker->addTask(name =>"PLUGIN-VERSIONUPDATE", command=>$command);
-    for (my $i = 0; $i < 10; $i++){
+    my $taskId = $tasker->addTask(
+        name        => "PLUGIN-VERSIONUPDATE",
+        command     => $command
+    );
+    for (my $i = 0; $i < 30; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
         return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILURE' ); 
