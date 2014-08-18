@@ -113,7 +113,7 @@ sub downloadBackup {
     my $backupChoisi = parseDate(trim( shift ));
     my $backupDir = "/inlibro/backups/db";
     my ( $client ) = grep { s/koha_// && s/_.*_.*// } C4::Context->config('database');
-    
+
     opendir(my $dh, "$backupDir/$client") or ( return );
     ( $backupChoisi ) = grep { /$backupChoisi/ } readdir ($dh);
     return if !$backupChoisi;
@@ -122,7 +122,6 @@ sub downloadBackup {
     my $filename = "$backupDir/$client/$backupChoisi";
     my ( $volume,$directories,$file ) = File::Spec->splitpath ($filename);
     return if $directories != "$backupDir/$client";
-
     open(FILE, "<", "$filename") or ( return );
     my @fileholder = <FILE>;
     close(FILE);
@@ -153,7 +152,7 @@ sub saveBackup {
     }
 
     my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS-MANUAL", command=>$command);
-    while(1){
+    for(my $i=0; $i<20; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
         return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILURE' ); 
@@ -176,33 +175,39 @@ sub prettify {
         my $annee = substr $_, 0, 4;
         my $mois  = substr $_, 4, 2;
         my $jour  = substr $_, 6, 2;
-        my $heure = substr $_, 9;
+        my $reste = substr $_, 9;
         
-        my @t = ( $heure =~ m/../g )[0..2] if index($heure, ":") == -1;
         my $manual = ", DAILY";
-        $manual = ", MANUAL" if index($heure, "MANUAL") != -1;
-        $heure = join (":", @t) if @t;
-        $heure.= $manual if $manual;
-                
-        push @a, "$jour/$mois/$annee, $heure";
+        $manual = ", MANUAL" if index($reste, "MANUAL") != -1;
+        my @time = ( $reste =~ m/../g )[0..2] if index($reste, ":") == -1;
+        my $hsql = @time ? join ("", @time) : grep { s/:// } substr $reste, 0, 7;
+        my $heure= @time ? join (":", @time) : substr $reste, 0, 7 ;
+        $heure .= $manual;
+        
+        # afficher dans le format par défaut
+        my $date = C4::Dates->new("$annee$mois$jour    $hsql","sql");#, "sql");
+        if(C4::Context->preference('dateformat') =~ /rfc822|sql/){
+            push @a, [$date->output()."$manual", "$annee$mois$jour$hsql"] ;
+        } else {
+            push @a, [$date->output().", $heure", "$annee$mois$jour$hsql"];
+        }
     }
-
-    @a = map $_->[0],
-         sort { $a->[1] cmp $b->[1] }
-         map  [ $_, join('', (split '/', $_)[1,0]) ], @a; #  black transform pour trier dates
-    @a = reverse @a;
-
+    @a = reverse map { $_->[0] } sort { $a->[1] <=> $b->[1] } @a;
     return \@a;
 }
 
 sub parseDate {
     #
+    # prend la date telle qu'affichée dans le menu déroulant et
+    # construit une chaine de caractères semblable à celle du nom de nos fichiers de sauvegarde
+    #
     # risque de changer en fonction des specs de sauvegarde
     # 
     my $d = shift;
     my ( $date, $heure, $manual ) = split ( ", ", $d );
-    my ( $annee, $mois, $jour ) = split ( "/", $date );
-    if ( substr($heure, 0, 2) gt "03" ){
+    my $dh = C4::Dates->new($date, C4::Context->preference('dateformat'));
+    my ( $annee, $mois, $jour ) = split ( "/", $dh->output("metric") );
+    if ( substr($heure, 0, 2) gt "03" ){ # à cause que certains fichiers ont la forme YYYY-MM-DD-03:00:0X
         $heure =~ s/://g;
     }
     my $s = $jour.$mois.$annee."-".$heure;

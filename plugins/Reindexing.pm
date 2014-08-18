@@ -59,7 +59,7 @@ sub tool {
         $params{status} = $nbrow > 0  ? 'DELETED' : 'ERROR';
     } elsif ($updatenow){
         my ($nbrow, $id, $status, $log) = updateTask( %list );
-        $params{status} = $nbrow > 0  ? 'UPDATED' : 'ERROR';
+        $params{status} = $nbrow > 0  ? 'UPDATED' : '';
         $params{'log'} = $log if $log;
         $params{'reindexstatus'} = $status if $status;
         abort("ERROR: the reindexing process did not complete in time and could still be running.") if ($id && !$status);
@@ -78,7 +78,7 @@ sub tool {
     my $th = getWaiting();# unless ($params{status} =~ /(FAILURE|COMPLETED|DELETED)/ );
     ( $params{nexttaskstatus}, $params{timenext} ) = ($th->{(keys $th)[0]}->{status}, $th->{(keys $th)[0]}->{time_next}) if ($th);
     
-    $params{mailstatus} = sendEmail($params{emailaddr}, C4::Context->preference('KohaAdminEmailAddress'), "$params{'reindexstatus'}\n\n$params{log}") if ($list{email} && $params{'reindexstatus'});
+    #$params{mailstatus} = sendEmail($params{emailaddr}, C4::Context->preference('KohaAdminEmailAddress'), "$params{'reindexstatus'}\n\n$params{log}") if ($list{email} && $params{'reindexstatus'});
         
     my $template = $self->get_template({ file => 'reindexing.tt' });
     $template->param( %params );
@@ -90,7 +90,7 @@ sub reindex_zebra {
     my %list = @_;
     my ($command, $timestring) = buildQuery( %list );
     my $tasker = Koha::Tasks->new();
-    my $taskId = $tasker->addTask(name =>"PLUGIN-REBUILDZEBRA", command=>$command, time_next=>$timestring);
+    my $taskId = $tasker->addTask(name =>"PLUGIN-REBUILDZEBRA", command=>$command, time_next=>$timestring, email=>( $list{emailaddr} || "NULL" ));
     for (my $i = 0; $i < 20; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
@@ -109,16 +109,17 @@ sub cancelTask {
 
 sub updateTask {
     my %list = @_;
-    my ($command, $timestring) = buildQuery( %list );
     my $th = getWaiting();
 
-    return -1 unless $th;
+    return (-1, reindex_zebra(%list)) unless $th;
     
+    my ($command, $timestring) = buildQuery( %list );
     my $taskId = (keys $th)[0];
     my %args = (
         id          => $taskId,
         command     => $command,
         time_next   => $timestring,
+        email       => $list{email} || "NULL"
     ); 
     my $tasker = Koha::Tasks->new();
     my $nbrow = $tasker->update( %args );
@@ -166,22 +167,6 @@ sub buildQuery {
         $timestring = $u->strftime("%Y-%m-%d %H:%M:%S");
     }
     return ($command, $timestring);
-}
-
-sub sendEmail {
-    my $to = join ("\@", split ("@", shift));
-    my $from = join ("\@", split ("@", shift));
-    my $message = shift;
-    open MAIL,"|-","/usr/lib/sendmail","-ti";
-    print MAIL <<EOF;
-To: $to
-From: $from
-Subject: Zabbix's Rebuild Status
-
-Your latest Zebra rebuild task finished with the following status: $message
-EOF
-    close MAIL;
-    return 1;
 }
 
 sub status {

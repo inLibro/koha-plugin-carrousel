@@ -183,7 +183,6 @@
                     [% IF reindexstatus == 'FAILURE' %]<h4>The reindexing process failed.  Please see the IT administrator to fix the problem.</h4>
                     <br>[% log %]
                     [% END %]
-                    [% IF mailstatus %]<h4>An email was sent at [% emailaddr %].</h4>[% END %]
                     </div>
                 </form>
 
