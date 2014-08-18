@@ -77,8 +77,6 @@ sub tool {
     
     my $th = getWaiting();# unless ($params{status} =~ /(FAILURE|COMPLETED|DELETED)/ );
     ( $params{nexttaskstatus}, $params{timenext} ) = ($th->{(keys $th)[0]}->{status}, $th->{(keys $th)[0]}->{time_next}) if ($th);
-    
-    #$params{mailstatus} = sendEmail($params{emailaddr}, C4::Context->preference('KohaAdminEmailAddress'), "$params{'reindexstatus'}\n\n$params{log}") if ($list{email} && $params{'reindexstatus'});
         
     my $template = $self->get_template({ file => 'reindexing.tt' });
     $template->param( %params );
@@ -90,7 +88,12 @@ sub reindex_zebra {
     my %list = @_;
     my ($command, $timestring) = buildQuery( %list );
     my $tasker = Koha::Tasks->new();
-    my $taskId = $tasker->addTask(name =>"PLUGIN-REBUILDZEBRA", command=>$command, time_next=>$timestring, email=>( $list{emailaddr} || "NULL" ));
+    my $taskId = $tasker->addTask(
+        name        => "PLUGIN-REBUILDZEBRA",
+        command     => $command,
+        time_next   => $timestring,
+        email       => $list{email} ? $list{emailaddr} : ''
+    );
     for (my $i = 0; $i < 20; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
@@ -119,7 +122,7 @@ sub updateTask {
         id          => $taskId,
         command     => $command,
         time_next   => $timestring,
-        email       => $list{email} || "NULL"
+        email       => $list{email} ? $list{emailaddr} : ''
     ); 
     my $tasker = Koha::Tasks->new();
     my $nbrow = $tasker->update( %args );
