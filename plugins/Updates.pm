@@ -33,7 +33,7 @@ sub tool {
     my $cgi = $self->{'cgi'};
     my $version = $cgi->param('version');
     my $taskId = $cgi->param('taskid');
-    
+
     if ($taskId) { # we're looking for a status
         my ($status, $log) = status($taskId);
 #        $taskId = 0 if(! $status =~ /WAITING|PROCESSING/);
@@ -41,6 +41,7 @@ sub tool {
         $params{status} = $status;
     } elsif ($version) {
         my ($id, $status, $log) = installVersion($version);
+        warn "RETOUR À UPDATES.PM APRÈS L'EXÉCUTION DE INSTALLVERSION";
         $params{'log'} = $log;
         $params{'status'} = $status;
         $taskId = $id;
@@ -48,13 +49,20 @@ sub tool {
     }
     $params{taskid} = $taskId;
     $params{version} = $version;
+    warn "AVANT C4::CONTEXT::KOHAVERSION";
     $params{'kohaVersion'} = C4::Context::KOHAVERSION;
     $params{'versions'} = trouverVersion($params{'kohaVersion'});
     
     my $template = $self->get_template({ file => 'updates.tt' });
     $template->param( %params );
-
-    print $cgi->redirect("/cgi-bin/koha/mainpage.pl?logout.x=1") if ($params{'status'} eq 'COMPLETED');
+    warn "AVANT C4::CONTEXT->PREFERENCE";
+    my $prefversion = C4::Context->preference('Version');
+    warn "------------\n$prefversion\n$params{kohaVersion}\n$version\n------------\n";
+    
+    if($params{'status'} eq 'COMPLETED'){
+        print $cgi->redirect("/cgi-bin/koha/mainpage.pl?logout.x=1");        
+    }
+    
     print $cgi->header();
     print $template->output();
 }
@@ -81,6 +89,7 @@ sub installVersion {
     for (my $i = 0; $i < 30; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
+        warn "EXECUTION DE LA MISE À JOUR";
         return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILURE' ); 
     }
     return $taskId;
