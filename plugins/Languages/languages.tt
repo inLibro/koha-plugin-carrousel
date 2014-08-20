@@ -24,7 +24,7 @@
                 <form name="addlanguage" id="addlanguage" method="get"> <!-- action="/cgi-bin/koha/members/paycollect.pl"-->
                     <input type="hidden" name="class" value="[% CLASS %]"/>
                     <input type="hidden" name="method" value="[% METHOD %]"/>
-                    <input type="hidden" name="taskid" value="[% taskid %]" />
+<!--                    <input type="hidden" name="taskid" value="[% taskid %]" /> -->
                     <label for="language">Please choose the UI language you would like installed: </label>
                     <select name="language" id="language">
                     [% FOREACH lang IN languages %]

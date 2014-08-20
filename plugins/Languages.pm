@@ -46,8 +46,8 @@ sub tool {
         $taskId = $id;
 #        $params{selectedlanguage} = 'fr-CA';
     } 
-    $params{taskid} = $taskId;
-    $params{language} = $language;
+#    $params{taskid} = $taskId;
+#    $params{language} = $language;
         
     # obtenir la liste des langues pour les thèmes DISPONIBLES.  La librairie C4::Languages ne vérifie que ce qui est déjà installé.
     my $dir=C4::Context->config('intranetdir')."/misc/translator/po";
