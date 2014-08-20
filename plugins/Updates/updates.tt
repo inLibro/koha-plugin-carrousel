@@ -50,6 +50,20 @@
                     [% IF status == 'FAILURE' %]The installation process failed.  Please see the IT administrator to fix the problem.
                     <br><br>[% log %]
                     [% END %]
+                    [% IF return == 1 %]
+                    <h4>Your update process went well</h4>
+                    <ul>
+                    	<li>A backup was made before updating Koha</li>
+                    	<li>Your database was updated</li>
+                    	<li>These langages were reinstalled :
+                    		<ul>
+                    			[% FOREACH l in languages %]
+                    			<li>[% l %]</li>
+                    			[% END %]
+                    		</ul>
+                    	</li>
+                    </ul>
+                    [% END %]
                     </div>
                 </form>
                 [% ELSE %]
