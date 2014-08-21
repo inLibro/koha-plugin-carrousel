@@ -101,7 +101,7 @@ sub applyBackup {
     }
 
     my $taskId = $tasker->addTask(name =>"PLUGIN-MANAGEBACKUPS-INSTALL", command=>$command);
-    for (my $i = 0; $i < 10; $i++){
+    for (my $i = 0; $i < 30; $i++){
         sleep 3;
         my $task = $tasker->getTask($taskId);
         return ($task->{id}, $task->{status}, $task->{log}) if ( $task->{status} eq 'COMPLETED' || $task->{status} eq 'FAILURE' ); 
