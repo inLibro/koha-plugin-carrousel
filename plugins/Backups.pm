@@ -51,13 +51,13 @@ sub tool {
         $params{'log'} = $log;
         $params{'status'} = $status;
         $taskId = $id;
-        displayerror("ERROR: Installation interrupted.") unless $status;
+        abort("ERROR: Your installation did not complete in time, and could still be running.") unless $status;
     } elsif ($request eq "Backup"){
         my ($id, $status, $log) = saveBackup();
         $params{'log'} = $log;
         $params{'status'} = $status;
         $taskId = $id;
-        displayerror("ERROR: Backup interrupted.") unless $status;
+        abort("ERROR: Your manual backup did not complete in time, and could still be running.") unless $status;
     }
     
     $params{taskid} = $taskId;
@@ -202,16 +202,18 @@ sub parseDate {
     # construit une chaine de caractères semblable à celle du nom de nos fichiers de sauvegarde
     #
     # risque de changer en fonction des specs de sauvegarde
-    # 
+    #
+    # ACHTUNG : Certains fichiers ont déjà eu la forme YYYY-MM-DD-03:00:0X
+    # sauf dans nos nouvelles installations
+    #
     my $d = shift;
     my ( $date, $heure, $manual ) = split ( ", ", $d );
     my $dh = C4::Dates->new($date, C4::Context->preference('dateformat'));
     my ( $annee, $mois, $jour ) = split ( "/", $dh->output("metric") );
-    if ( substr($heure, 0, 2) gt "03" ){ # à cause que certains fichiers ont la forme YYYY-MM-DD-03:00:0X
-        $heure =~ s/://g;
-    }
+    $heure =~ s/://g;
     my $s = $jour.$mois.$annee."-".$heure;
     $s .= "-MANUAL" if index($manual, "MANUAL") != -1;
+    
     return $s;
 }
 
@@ -251,8 +253,9 @@ sub uninstall() {
     return 1; # succès
 }
 
-sub displayerror {
-    $params{logall} = shift;
+sub abort {
+    $params{'log'} = shift;
+    $params{'status'} = 'FAILURE';
 }
 
 1;
