@@ -30,7 +30,7 @@
                     [% END %]
                     </select>
                     <input type="submit" value="Install" />
-                    <br>
+                    <br><br>
 <!--                [% IF status == 'WAITING' %]value="Queued" disabled
                     [% ELSIF status == 'PROCESSING' %]value="Processing" disabled
                     [% ELSIF status == 'COMPLETED' %]value="Completed" 
@@ -46,18 +46,18 @@
                     [% IF status == 'WAITING' %]Queued[% END %]
                     [% IF status == 'PROCESSING' %]Processing[% END %]
 -->
-                    [% IF status == 'COMPLETED' %]Your koha version was successfully updated.[% END %]
-                    [% IF status == 'FAILURE' %]The installation process failed.  Please see the IT administrator to fix the problem.
-                    <br><br>[% log %]
+                    [% IF status == 'COMPLETED' %]<h4>Your koha version was successfully updated.</h4>[% END %]
+                    [% IF status == 'FAILURE' %]<h4>The installation process failed.  Please see the IT administrator to fix the problem.</h4>
+                    <br>[% log %]
                     [% END %]
-                    [% IF return == 1 %]
+                    [% IF success == 1 %]
                     <h4>Your update process went well</h4>
                     <ul>
                     	<li>A backup was made before updating Koha</li>
                     	<li>Your database was updated</li>
                     	<li>These langages were reinstalled :
                     		<ul>
-                    			[% FOREACH l in languages %]
+                    			[% FOREACH l IN languages %]
                     			<li>[% l %]</li>
                     			[% END %]
                     		</ul>

@@ -7,6 +7,7 @@ use C4::Auth;
 use Koha::Tasks;
 use String::Util "trim";
 use Data::Dumper;
+use Switch;
 use vars qw/%params/;
 
 sub new {
@@ -33,23 +34,30 @@ sub tool {
     my $cgi = $self->{'cgi'};
     my $version = $cgi->param('version');
     my $taskId = $cgi->param('taskid');
-
+    my $returnStatus = $cgi->param('success');
+    
     if ($taskId) { # we're looking for a status
         my ($status, $log) = status($taskId);
-#        $taskId = 0 if(! $status =~ /WAITING|PROCESSING/);
         $params{'log'} = $log;
         $params{status} = $status;
     } elsif ($version) {
         my $return = launchUpdateSequence($version);
+        switch($return){
+            case -1 { abort("ERROR: Failed on backup.") }
+            case -2 { abort("ERROR: Failed on update.") }
+            case -3 { abort("ERROR: Failed on installing languages.") }
+        }
         $params{'return'} = $return;
     }
     
-    if ( defined $params{'return'} && $params{'return'} != -1 ){
-        print $cgi->redirect("/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Updates&method=tool&status=1&logout.x=1");
+    if ( defined $params{'return'} && $params{'return'} > 0 ){
+        print $cgi->redirect("/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Updates&method=tool&logout.x=1&success=1");
     }
-    
     $params{taskid} = $taskId;
     $params{version} = $version;
+    $params{success} = $returnStatus;
+    my @installed = map { $_->{rfc4646_subtag} } @{C4::Languages::getTranslatedLanguages()};    
+    $params{languages} = \@installed if $returnStatus;
     $params{versions} = trouverVersion();
     my $template = $self->get_template({ file => 'updates.tt' });
     $template->param( %params );    
@@ -62,15 +70,15 @@ sub launchUpdateSequence {
     my ($id, $status, $log);
     #lance le backup
     ($id, $status, $log) = preemptiveBackup();
-    return -1 unless ($status || $status eq 'COMPLETED');
+    return -1 unless ($status && $status eq 'COMPLETED');
     #lance le checkout, l'update
     ($id, $status, $log) = installVersion($version);
-    return -1 unless ($status || $status eq 'COMPLETED');
+    return -2 unless ($status && $status eq 'COMPLETED');
     #lance l'installation des langues
     ($id, $status, $log) = installLang();
-    return -1 unless ($status || $status eq 'COMPLETED');
+    return -3 unless ($status && $status eq 'COMPLETED');
     
-    return 0;
+    return 1;
 }
 
 sub launchTask {
@@ -119,7 +127,6 @@ sub installLang {
     my $translatedir = C4::Context->config("intranetdir")."/misc/translator";
     my $command = "cd $translatedir; ";
     my @installed = map { $_->{rfc4646_subtag} } @{C4::Languages::getTranslatedLanguages()};
-    $params{'languages'} = \@installed;
     foreach(@installed){
         # we lose our installed languages with git checkout -f, so we install them back
         $command .= "./translate install $_; ";
@@ -133,7 +140,6 @@ sub trouverVersion() {
     chdir($dir) or ( abort("ERROR: failed to reach your installation directory.") and return );
     my ( $cutoff_major, $cutoff_functional, $cutoff_subnumber ) = split ( /\./, C4::Context::KOHAVERSION );
     my @versionlist = reverse grep { $_ =~ /^v.*\.[0-9]{2}$/ && s/v//g } qx( git tag );
-    
     my @arr;
     foreach my $ele (@versionlist){
         my ( $major, $functional, $subnumber ) = split ( /\./, $ele );
