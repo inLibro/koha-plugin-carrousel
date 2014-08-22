@@ -51,7 +51,7 @@ sub tool {
     }
     
     if ( defined $params{'return'} && $params{'return'} > 0 ){
-        print $cgi->redirect("/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Updates&method=tool&logout.x=1&success=1");
+        print $cgi->redirect("/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Updates&method=tool&success=1");
     }
     $params{taskid} = $taskId;
     $params{version} = $version;
