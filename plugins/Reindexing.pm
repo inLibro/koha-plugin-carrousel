@@ -20,10 +20,10 @@ sub new {
         author => 'Charles Farmer',
         description => "Permet à l'usager de réindexer Zebra depuis son intranet",
         date_authored   => '2014-08-11',
-        date_updated    => '2014-08-11',
+        date_updated    => '2014-11-24',
         minimum_version => '3.0140007',
         maximum_version => undef,
-        version         => 1.01,
+        version         => 1.02,
     };
 
     my $self = $class->SUPER::new($args);

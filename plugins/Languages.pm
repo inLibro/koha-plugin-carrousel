@@ -17,10 +17,10 @@ sub new {
         author => 'Philippe Blouin',
         description => "Permet l'ajout de choix de langues aux usagers de l'interface.  Remplace la commande './translage install'",
         date_authored   => '2014-07-17',
-        date_updated    => '2014-07-17',
+        date_updated    => '2014-11-24',
         minimum_version => '3.0140007',
         maximum_version => undef,
-        version         => 1.01,
+        version         => 1.02,
     };
 
     my $self = $class->SUPER::new($args);
