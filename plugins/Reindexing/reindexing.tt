@@ -3,6 +3,7 @@
 <title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Reindexing Zebra</title>
 [% INCLUDE 'doc-head-close.inc' %]
 [% INCLUDE 'calendar.inc' %]
+<script src="//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js"></script>
 <script type="text/javascript" language="JavaScript">
 	function onsubmitHandler(form) {
 		//Handle task cancelling
@@ -77,9 +78,16 @@
 		if (cb.checked) {
 			document.getElementById("labelhour").style["visibility"] = "visible";
 			document.getElementById("labelminute").style["visibility"] = "visible";
+            var tz = jstz.determine();
+            //jQuery("#tz").val(tz.name());
+            //jQuery("#labeltz").html(tz.name());
+            jQuery("#tz").val('Europe/Paris');
+            jQuery("#labeltz").html('Europe/Paris');
+            document.getElementById("labeltz").style["visibility"] = "visible";
 		} else {
 			document.getElementById("labelhour").style["visibility"] = "hidden";
 			document.getElementById("labelminute").style["visibility"] = "hidden";
+            document.getElementById("labeltz").style["visibility"] = "hidden";
 		}
 	}
 </script>
@@ -108,7 +116,7 @@
                     <input type="hidden" name="full" />
 					<input type="hidden" name="zebratbl" />
 					
-					[% IF nexttaskstatus %]<h3>Zebra's reindexing is scheduled on [% timenext %]</h3>
+					[% IF nexttaskstatus %]<h3>Zebra's reindexing is scheduled on [% timenext %] [% time_zone %]</h3>
 					<input type="submit" id="btncancel" value="Cancel" style="width:75px;" onclick="btnCancelClick()">
 					<br><br>
 					[% END %]
@@ -155,6 +163,8 @@
 		                [% END %]
 		                </select>
                     </label>
+                    <input type="hidden" name="tz" id="tz" />
+                    <label id="labeltz" style="visibility: hidden;"></label>
                     <br><br>
 					<label><input type="radio" id="full" name="group" checked="checked" value="full" /> Full Reindexation</label>
 					<label><input type="radio" id="zebratbl" name="group" value="zebratbl" /> Use Zebraqueue Table</label>

@@ -8,6 +8,7 @@ use Koha::Tasks;
 use String::Util "trim";
 use Time::Piece;
 use Time::Seconds;
+use DateTime;
 use Data::Dumper;
 use vars qw/%params/;
 
@@ -49,6 +50,7 @@ sub tool {
         'startlater' => $cgi->param('startlater')|| undef,
         'hour'       => (defined $cgi->param('hour') && $cgi->param('hour')) == 0 ? 0 : $cgi->param('hour') || undef,
         'minute'     => (defined $cgi->param('minute') && $cgi->param('minute')) == 0 ? 0 : $cgi->param('minute') || undef,
+        'tz'         => $cgi->param('tz') || undef,
     );
     #die "$list{hour}\n$list{minute}";
     #
@@ -77,6 +79,7 @@ sub tool {
     
     my $th = getWaiting();# unless ($params{status} =~ /(FAILURE|COMPLETED|DELETED)/ );
     ( $params{nexttaskstatus}, $params{timenext} ) = ($th->{(keys $th)[0]}->{status}, $th->{(keys $th)[0]}->{time_next}) if ($th);
+    $params{time_zone} = DateTime::TimeZone->new( name => 'local')->name;
         
     my $template = $self->get_template({ file => 'reindexing.tt' });
     $template->param( %params );
@@ -162,12 +165,23 @@ sub buildQuery {
     $command .= ";";
     
     my $timestring;
-    if($list{'startlater'} && defined ($list{hour}) && defined ($list{minute})){
-        my $t = localtime;
-        my $u = Time::Piece->strptime(localtime->ymd." $list{hour}:$list{minute}:00", "%Y-%m-%d %H:%M:%S" );
-        $u += ONE_DAY if ($list{hour} < $t->hour || ($list{hour} == $t->hour && $list{minute} < $t->min));
-        
-        $timestring = $u->strftime("%Y-%m-%d %H:%M:%S");
+    if($list{'startlater'} && defined ($list{hour}) && defined ($list{minute}) && defined($list{tz})){
+        # MySQL doesn't store time zone information in DATETIME fields
+        # (this timestring is for the 'time_next' column, which is of type DATETIME).
+        # Datetimes are to be interpreted in the system timezone (i.e. the same value is returned
+        # by MySQL whether you set its timezone to UTC or, say, EST). This is fine: the system
+        # timezone has no reason to change over time. However, this timezone may be different
+        # from the client's timezone. So: we force the client to supply a timezone, and we
+        # convert the time to our local system's timezone before storing it in the database.
+        # This way, all values stored in our database are in the same timezone.
+        my $dt = DateTime->now( time_zone => $list{tz} );
+        if($list{hour} < $dt->hour || ($list{hour} == $dt->hour && $list{minute} < $dt->minute)) {
+            $dt->add( days => 1 );
+        }
+        $dt->set_hour($list{hour});
+        $dt->set_minute($list{minute});
+        $dt->set_time_zone(DateTime::TimeZone->new( name => 'local' ));
+        $timestring = $dt->strftime("%Y-%m-%d %H-%M-%S");
     }
     return ($command, $timestring);
 }
