@@ -79,10 +79,8 @@
 			document.getElementById("labelhour").style["visibility"] = "visible";
 			document.getElementById("labelminute").style["visibility"] = "visible";
             var tz = jstz.determine();
-            //jQuery("#tz").val(tz.name());
-            //jQuery("#labeltz").html(tz.name());
-            jQuery("#tz").val('Europe/Paris');
-            jQuery("#labeltz").html('Europe/Paris');
+            jQuery("#tz").val(tz.name());
+            jQuery("#labeltz").html(tz.name());
             document.getElementById("labeltz").style["visibility"] = "visible";
 		} else {
 			document.getElementById("labelhour").style["visibility"] = "hidden";
