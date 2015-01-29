@@ -1,6 +1,6 @@
 ﻿[% USE KohaDates %]
 [% INCLUDE 'doc-head-open.inc' %]
-<title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Add Language</title>
+<title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Scheduled Scripts</title>
 [% INCLUDE 'doc-head-close.inc' %]
 [% INCLUDE 'calendar.inc' %]
 <script src="//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js"></script>
