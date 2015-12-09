@@ -11,6 +11,7 @@ use Time::Seconds;
 use DateTime;
 use Data::Dumper;
 use vars qw/%params/;
+use utf8;
 
 sub new {
     my ( $class, $args ) = @_;

@@ -8,6 +8,7 @@ use C4::Auth;
 use C4::Languages;
 use Koha::Tasks;
 use JSON;
+use utf8;
 
 sub new {
     my ( $class, $args ) = @_;
