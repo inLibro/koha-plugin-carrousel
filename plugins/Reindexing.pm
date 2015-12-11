@@ -84,7 +84,7 @@ sub tool {
         
     my $template = $self->get_template({ file => 'reindexing.tt' });
     $template->param( %params );
-    print $cgi->header();
+    print $cgi->header(-charset => 'utf8');
     print $template->output();
 }
 
