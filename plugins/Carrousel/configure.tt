@@ -1,0 +1,115 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<!-- Head-->
+<title>Koha:Carrousel Plugin: Configuration</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<script src=[%PLUGIN_PATH%]/js/jscolor.js></script>
+<!-- Body-->
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Carrousel</div>
+
+<div id="doc3">
+    <div id="content">
+
+        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+        <h3>Configuration of carrousel </h3>
+
+        <form method="get">
+
+            <div class="infos">
+                <label> Select the default list : </label>
+                <select name="selectedShelf" id ="shelves" class="alignment">
+                    [% FOREACH shelf IN shelves %]
+                    <option id ="" value="[% shelf.shelfnumber %]"> [% shelf.shelfname %]</option>
+                    [% END %]
+                </select>
+            </div>
+
+            <div class="infos">
+                Text color : <input name="txtColor" onchange="update(this.jscolor, 'text')" id="colors" class="jscolor alignment " value="[% txtColor %]">
+            </div>
+
+            <div class="infos">
+                Backgraound color : <input name="bgColor" onchange="update(this.jscolor, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]">
+            </div>
+            <input type="hidden" name="class" value="[% CLASS %]"/>
+            <input type="hidden" name="method" value="[% METHOD %]"/>
+            <input type="hidden" name="action" value="configure"/>
+            <br>
+
+            <div id="background">
+                <p id="text" style="font-size: 30px; color:#[% txtColor %]; padding : 4.75% 2%"> This is just an example </p>
+            </div>
+
+            <input id="submit" type="submit" value="Apply configuration">
+
+        </form>
+
+
+
+    </div>
+</div>
+
+<!-- Footer-->
+[% INCLUDE 'intranet-bottom.inc' %]
+<style>
+#colors{
+    height :25px;
+    width : 30%;
+}
+#shelves{
+    width : 32.5%;
+}
+form{
+    width:500px;
+}
+.alignment{
+    float:right;
+}
+.infos{
+    margin: 20px 0;
+}
+#content{
+    width : 450px;
+    margin:2% 1%;
+    font-size:20px;
+}
+h1{
+    font-size: 300%;
+    margin:2% 2%;
+}
+#submit{
+    margin-top:2%;
+}
+#shelves{
+    font-size: 100%;
+}
+#background{
+    width:100%;
+    height:80px;
+    background-color : #[% bgColor %];
+    border :0;
+}
+</style>
+
+<script>
+// setting the dropdown menu to the correct selected item
+var MyIndex =0;
+var selectedShelf = 0;
+[%IF selectedShelf !='' %]selectedShelf = [% selectedShelf %] [%END%]
+
+$('#shelves option').each(function(index,element){
+    if(element.value == selectedShelf){
+        MyIndex= index;
+    }
+});
+$("#shelves").get(0).selectedIndex = MyIndex;
+function update(jscolor, object) {
+    // 'jscolor' instance can be used as a string
+    if(object == "background"){
+        document.getElementById('background').style.backgroundColor = '#' + jscolor;
+    }else{
+        document.getElementById('text').style.color = '#' + jscolor;
+    }
+}
+</script>
