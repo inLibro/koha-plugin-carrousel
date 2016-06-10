@@ -1,6 +1,6 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha:Carrousel Plugin: Configuration</title>
+<title>Koha:ChangeDate Plugin</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]

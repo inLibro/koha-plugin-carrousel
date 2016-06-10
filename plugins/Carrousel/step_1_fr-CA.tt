@@ -5,7 +5,7 @@
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Carrousel</div>
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Carrousel</div>
 <div id="doc3">
     <div id="content">
 
@@ -19,7 +19,7 @@
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
             <div class="infos">
-                <label> S&eacute;lectionnez votre liste : </label>
+                <label> Sélectionnez votre liste : </label>
                 <select name="selectedShelf" id ="shelves" class="alignment">
                     [% FOREACH shelf IN shelves %]
                     <option id ="" value="[% shelf.shelfnumber %]"> [% shelf.shelfname %]</option>

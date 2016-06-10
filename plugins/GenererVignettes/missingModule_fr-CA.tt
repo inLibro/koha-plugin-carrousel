@@ -1,0 +1,48 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<!-- Head-->
+<title>Koha: GenerateVignettes Plugin</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<!-- Body-->
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; GenerateVignettes</div>
+<div id="doc3">
+    <div id="content">
+
+        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+        <h2>Generate images of documents from pdf</h2>
+
+        <form method="get" name ="myForm" onsubmit="return validateForm()">
+            <!-- Necessary for the plugin to run, do not remove  -->
+            <input type="hidden" name="class" value="[% CLASS %]"/>
+            <input type="hidden" name="method" value="[% METHOD %]"/>
+            <input type="hidden" name="action" value="configure"/>
+            <!-- end of plugin necessary inputs  -->
+
+            <div class="alert">
+                    <h2>Ce plugin ne peut pas être utilisé, car le module : ibcairo2-dev n'est pas installé </h2>
+            </div>
+    </div>
+</div>
+
+<!-- Footer-->
+[% INCLUDE 'intranet-bottom.inc' %]
+
+<style>
+
+#submit{
+    width:100px;
+    font-size: 100%;
+    font-weight: bold;
+    height:25px;
+    background: green;
+    margin:3px 0;
+}
+#submit:hover{
+    background: red;
+}
+</style>
+
+<script>
+
+</script>

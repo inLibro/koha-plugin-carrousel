@@ -31,10 +31,10 @@ our $VERSION = 1.01;
 our $metadata = {
     name            => 'ChangeDate',
     author          => 'Mehdi Hamidi',
-    description     => 'Change the return date by category',
+    description     => 'Change the return date of items using filters',
     date_authored   => '2016-06-08',
     date_updated    => '2016-06-08',
-    minimum_version => '3.1400000',
+    minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
 };
@@ -144,7 +144,6 @@ sub itemTypes{
 
     return @itemTypes;
 }
-#my $test = "update issues a INNER JOIN items b ON (a.itemnumber = b.itemnumber) set a.date_due='$newDate', b.onloan ='$newDate' where a.borrowernumber=$borrower";
 sub changeDate{
     my ( $self, $args) = @_;
     my $cgi = $self->{'cgi'};
@@ -205,7 +204,7 @@ sub changeDate{
     $query = $query." and b.itype=?" unless $itemType eq 'none';
     push @params, $itemType unless $itemType eq 'none';
 
-
+    #changer le premier and à un where 
     $query =~s/and/where/;
     my $stmt = $dbh->prepare($query);
     $stmt->execute(@params);
