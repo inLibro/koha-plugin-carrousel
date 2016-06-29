@@ -228,7 +228,7 @@ sub insertIntoPref{
 
     # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
     my $first_line = "<!-- Debut du carrousel -->";
-    my $second_line ="<!-- Fin du  carrousel -->";
+    my $second_line ="<!-- Fin du carrousel -->";
 
     #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
     if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
@@ -379,7 +379,7 @@ sub uninstall() {
 
     # Le code du carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
     my $first_line = "<!-- Debut du carrousel -->";
-    my $second_line ="<!-- Fin du  carrousel -->";
+    my $second_line ="<!-- Fin du carrousel -->";
     $value =~ s/$first_line.*?$second_line//s;
 
     my $query = $dbh->prepare("update systempreferences set value= ? where variable='OpacMainUserBlock'");
