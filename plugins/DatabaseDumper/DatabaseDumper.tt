@@ -28,31 +28,5 @@
 
     </form>
 
-   [% IF ( error_no_dir ) %]
-        <div class="dialog alert"><strong>Error : </strong>Report/log files could not be found because the "accessdir" option was not set in "koha-conf.xml". Contact your system administrator to add this option.</div>
-    [% ELSE %]
-        [% IF ( files_loop ) %]
-            <table id="files">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Size (bytes)</th>
-                        <th>Date last modified</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    [% FOREACH file IN files_loop %]
-                    <tr>
-                        <td><a href="?class=Koha::Plugin::DatabaseDumper&method=tool&id=[% file.id |url %]">[% file.name %]</a></td>
-                        <td align="right">[% file.size %]</td>
-                        <td>[% file.date %]</td>
-                    </tr>
-                    [% END %]
-                </tbody>
-            </table>
-        [% ELSE %]
-            No file found.
-        [% END %]
-    [% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]

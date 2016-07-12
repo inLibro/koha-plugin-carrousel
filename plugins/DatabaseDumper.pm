@@ -37,7 +37,7 @@ use Digest::MD5 qw(md5_hex);
 
 
 ## Here we set our plugin version
-our $VERSION = 1.01;
+our $VERSION = 1.02;
 
 ## Here is our metadata, some keys are required, some are optional
 our $metadata = {
@@ -45,7 +45,7 @@ our $metadata = {
     author          => 'Rémi MP',
     description     => 'Allows database dumping directly from the intranet. Then gives a link to download the said dump',
     date_authored   => '2016-04-22',
-    date_updated    => '2016-04-25',
+    date_updated    => '2016-07-11',
     minimum_version => '3.1400000',
     maximum_version => undef,
     version         => $VERSION,
@@ -74,91 +74,28 @@ sub tool {
     my $action = $cgi->param('action');
 
     if($action eq 'dump'){
+        # Dans le cas d'une dompe, on propose à l'utilisateur de téléchargé le fichier mais on ne réimprime pas le template
         $self->dumpDatabase();
+    }else{
+        # Impression simple du template
+        $self->databaseDumper();
     }
-    $self->databaseDumper();
 }
 
-
+# Page du plugin, print le template et c'est tout
 sub databaseDumper {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
 
-    my $publicdumpdir = C4::Context->config('publicdumpdir');
-    my $db_user = C4::Context->config('user');
-    my $db_pass = C4::Context->config('pass');
-    my $db_name = C4::Context->config('database');
-    my @directories = $publicdumpdir ? (ref $publicdumpdir ? @{$publicdumpdir} : ($publicdumpdir)) : ();
-    my $input = new CGI;
-    my $file_id = $input->param("id");
-    #`mysqldump -u $db_user -p$db_pass $db_name> $publicdumpdir/test.sql`;
-
     my $template = $self->get_template( { file => 'DatabaseDumper.tt' } );
-    unless(@directories) {
-        $template->param(error_no_dir => 1);
-    }else{
-        #Get the files list
-        my @files_list;
-        foreach my $dir(@directories){
-            opendir(DIR, $dir);
-            foreach my $filename (readdir(DIR)) {
-            my $id = md5_hex($filename);
-                my $full_path = "$dir/$filename";
-                next if ($filename =~ /^\./ or -d $full_path);
-
-                my $st = stat($full_path);
-                my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =localtime($st->mtime);
-                my $dt=DateTime->new(year      => $year + 1900,
-                                      month    => $mon + 1,
-                                      day      => $mday,
-                                      hour     => $hour,
-                                      minute   => $min,
-                                );
-                push(@files_list, {name => $filename,
-                                   accessdir => $dir,
-                                   date =>Koha::DateUtils::output_pref($dt),
-                                   size => $st->size,
-                                   id   => $id});
-            }
-            closedir(DIR);
-        }
-
-        my %files_hash = map { $_->{id} => $_ } @files_list;
-        # If we received a file_id and it is valid, send the file to the browser
-        if(defined $file_id and exists $files_hash{$file_id} ){
-            my $filename = $files_hash{$file_id}->{name};
-            my $dir = $files_hash{$file_id}->{accessdir};
-            binmode STDOUT;
-            # Open the selected file and send it to the browser
-            print $input->header(-type => 'application/x-download',
-                                 -name => "$filename",
-                                 -Content_length => -s "$dir/$filename",
-                                 -attachment => "$filename");
-
-            my $fh;
-            open $fh, "<:encoding(UTF-8)", "$dir/$filename";
-            binmode $fh;
-
-            my $buf;
-            while(read($fh, $buf, 65536)) {
-                print $buf;
-            }
-            close $fh;
-
-            exit(1);
-        }
-        else{
-            # Send the file list to the template
-            $template->param(files_loop => \@files_list);
-        }
-    }
     print $cgi->header();
     print $template->output();
 }
 
 sub dumpDatabase {
-	my $input = new CGI;
-	my $publicdumpdir = C4::Context->config('publicdumpdir');
+	my ( $self, $args ) = @_;
+    my $input = $self->{'cgi'};
+	my $publicdumpdir = C4::Context->config('pluginsdir') . "/Koha/Plugin/DatabaseDumper";
     my $db_user = C4::Context->config('user');
     my $db_pass = C4::Context->config('pass');
     my $db_name = C4::Context->config('database');
@@ -166,7 +103,26 @@ sub dumpDatabase {
 	if(!$dumpName){
 		$dumpName="dump";
 	}
-    `mysqldump -u $db_user -p$db_pass $db_name | gzip > $publicdumpdir/$dumpName.sql.gz`;
+	$dumpName .= '.sql.gz';
+    # On lance la dompe
+    `mysqldump -u $db_user -p$db_pass $db_name | gzip > $publicdumpdir/$dumpName`;
+
+    my $filepath = "$publicdumpdir/$dumpName";
+
+    print ("Content-Type:application/x-download\n");
+    print "Content-Disposition: attachment; filename=$dumpName\n\n";
+
+    # On imprime le contenu de la page
+    open FILE, "< $filepath" or die "can't open : $!";
+    binmode FILE;
+    local $/ = \10240;
+    while (<FILE>){
+        print $_;
+    }
+    close FILE;
+
+    # On supprime le fichier
+    unlink ($filepath);
 }
 
 1;
