@@ -86,8 +86,23 @@ sub tool {
 sub databaseDumper {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
+    # Chercher la langue de l'utilisateur
+    my $lang = $cgi->cookie('KohaOpacLanguage');
 
-    my $template = $self->get_template( { file => 'DatabaseDumper.tt' } );
+    my $templateName = 'DatabaseDumper.tt';
+    if($lang && $lang ne ''){
+	$templateName = 'DatabaseDumper_' . $lang . '.tt';
+
+    }
+    warn "template = $templateName";
+    #eval {$template = $self->get_template( { file => "DatabaseDumper" . $preferedLanguage . ".tt" } )};
+    #if(!$template){
+    #    $preferedLanguage = substr $preferedLanguage, 0, 2;
+    #    eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
+    #}
+    #$template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
+
+    my $template = $self->get_template( { file => $templateName } );
     print $cgi->header();
     print $template->output();
 }
