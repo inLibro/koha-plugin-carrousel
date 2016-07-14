@@ -42,7 +42,7 @@ our $VERSION = 1.02;
 ## Here is our metadata, some keys are required, some are optional
 our $metadata = {
     name            => 'Database Dumper',
-    author          => 'Rémi MP',
+    author          => 'inLibro',
     description     => 'Allows database dumping directly from the intranet. Then gives a link to download the said dump',
     date_authored   => '2016-04-22',
     date_updated    => '2016-07-11',
@@ -87,24 +87,20 @@ sub databaseDumper {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
     # Chercher la langue de l'utilisateur
-    my $lang = $cgi->cookie('KohaOpacLanguage');
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
 
-    my $templateName = 'DatabaseDumper.tt';
-    if($lang && $lang ne ''){
-	$templateName = 'DatabaseDumper_' . $lang . '.tt';
+    my $template = undef;
 
+    eval {$template = $self->get_template( { file => "DatabaseDumper_" . $preferedLanguage . ".tt" } )};
+    if(!$template){
+        $preferedLanguage = substr $preferedLanguage, 0, 2;
+        eval {$template = $self->get_template( { file => "DatabaseDumper_$preferedLanguage.tt" } )};
     }
-    warn "template = $templateName";
-    #eval {$template = $self->get_template( { file => "DatabaseDumper" . $preferedLanguage . ".tt" } )};
-    #if(!$template){
-    #    $preferedLanguage = substr $preferedLanguage, 0, 2;
-    #    eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
-    #}
-    #$template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
+    $template = $self->get_template( { file => 'DatabaseDumper.tt' } ) unless $template;
 
-    my $template = $self->get_template( { file => $templateName } );
-    print $cgi->header();
+    print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
+
 }
 
 sub dumpDatabase {
@@ -138,6 +134,14 @@ sub dumpDatabase {
 
     # On supprime le fichier
     unlink ($filepath);
+}
+
+#Supprimer le plugin avec toutes ses données
+sub uninstall() {
+    my ( $self, $args ) = @_;
+    my $table = $self->get_qualified_table_name('mytable');
+
+    return C4::Context->dbh->do("DROP TABLE $table");
 }
 
 1;
