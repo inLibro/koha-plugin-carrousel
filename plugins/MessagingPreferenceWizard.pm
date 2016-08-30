@@ -1,4 +1,4 @@
-package Koha::Plugin::Com::Inlibro::MessagingPreferenceWizard;
+package Koha::Plugin::MessagingPreferenceWizard;
 
 
 use Modern::Perl;
