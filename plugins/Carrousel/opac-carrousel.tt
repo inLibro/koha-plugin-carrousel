@@ -98,13 +98,13 @@ this.autoRotate=function(){if(options.autoRotate!=='no'){var dir=(options.autoRo
 
 <!---This initialises carousels on the container elements specified. -->
 <script type="text/javascript">
-var parent=$("#[% shelfname %]").parent();
+var formCarousel=$("#[% shelfname %]").parent();
 $("#[% shelfname %]").CloudCarousel(
     {
-        xPos : parent.width() * 0.5,
+        xPos : formCarousel.width() * 0.5,
         yPos : 10,
-        xRadius : parent.width() / 2,
-        yRadius : parent.height() / 7,
+        xRadius : formCarousel.width() / 2,
+        yRadius : formCarousel.height() / 7,
         buttonLeft: $("#left-but"),
         buttonRight: $("#right-but"),
         altBox: $("#alt-text"),
