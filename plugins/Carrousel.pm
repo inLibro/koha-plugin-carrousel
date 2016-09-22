@@ -188,9 +188,10 @@ sub generateCarroussel{
     foreach my $biblionumber ( @items ) {
         my $record = GetMarcBiblio( $biblionumber );
         next if ! $record;
-        my $title = $record->subfield('245', 'a');
+        my $biblio = TransformMarcToKoha ($record,GetFrameworkCode($biblionumber));
+        my $title = $biblio->{title};#$record->subfield('245', 'a');
         $title =~ s/[,:\/\s]+$//;
-        my $url = getThumbnailUrl( $biblionumber, $record );
+        my $url = getThumbnailUrl( $biblionumber, $biblio );
         if ( $url ){
             my %image = ( url => $url, title => $title, biblionumber => $biblionumber );
             push @images, \%image;
@@ -254,9 +255,9 @@ sub getThumbnailUrl
     my $record = shift;
     return if ! $record;
 
-    foreach my $field ( $record->field('020') )
+    foreach my $field ( $record->{isbn} )
     {
-        my $isbn = GetNormalizedISBN( $field->subfield('a') );
+        my $isbn = GetNormalizedISBN( $field );
 
         next if ! $isbn;
 
