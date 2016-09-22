@@ -1,5 +1,6 @@
 package Koha::Plugin::Carrousel;
-# Mehdi Hamidi, 2016 - Inlibro
+# Mehdi Hamidi, 2016 - InLibro
+# Modified by Bouzid Fergani, 2016 - InLibro
 #
 # This plugin allows you to generate a Carrousel of books from available lists
 # and insert the template into the table system preferences;OpacMainUserBlock
@@ -35,7 +36,7 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.01;
+our $VERSION = 1.1;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',
@@ -188,10 +189,15 @@ sub generateCarroussel{
     foreach my $biblionumber ( @items ) {
         my $record = GetMarcBiblio( $biblionumber );
         next if ! $record;
-        my $biblio = TransformMarcToKoha ($record,GetFrameworkCode($biblionumber));
-        my $title = $biblio->{title};#$record->subfield('245', 'a');
+        my $title;
+        my $marcflavour = C4::Context->preference("marcflavour");
+        if ($marcflavour eq 'MARC21'){
+            $title = $record->subfield('245', 'a');
+        }elsif ($marcflavour eq 'UNIMARC'){
+            $title = $record->subfield('200', 'a');
+        }
         $title =~ s/[,:\/\s]+$//;
-        my $url = getThumbnailUrl( $biblionumber, $biblio );
+        my $url = getThumbnailUrl( $biblionumber, $record );
         if ( $url ){
             my %image = ( url => $url, title => $title, biblionumber => $biblionumber );
             push @images, \%image;
@@ -254,11 +260,16 @@ sub getThumbnailUrl
     my $biblionumber = shift;
     my $record = shift;
     return if ! $record;
-
-    foreach my $field ( $record->{isbn} )
+    my $marcflavour = C4::Context->preference("marcflavour");
+    my @isbns;
+    if ($marcflavour eq 'MARC21' ){
+        @isbns = $record->field('020');
+    }elsif($marcflavour eq 'UNIMARC'){
+        @isbns = $record->field('010');
+    }
+    foreach my $field ( @isbns )
     {
-        my $isbn = GetNormalizedISBN( $field );
-
+        my $isbn = GetNormalizedISBN( $field->subfield('a') );
         next if ! $isbn;
 
         if ( C4::Context->preference("OPACAmazonCoverImages") ) {
