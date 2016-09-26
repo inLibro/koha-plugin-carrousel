@@ -39,17 +39,40 @@ sub new {
 sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
- 
     my $op = $cgi->param('op');
     my $truncate = $cgi->param('trunc');
     my $since = $cgi->param('since');
     if ($op eq 'valide'){
-        force_borrower_messaging_defaults(1,$truncate,$since);
+        $since = '0000-00-00' if (!$since);
+        warn $since;
+        my $dbh = C4::Context->dbh;
+        $dbh->{AutoCommit} = 0;
+        if ( $truncate ) {
+            my $sth = $dbh->prepare("TRUNCATE borrower_message_preferences");
+            $sth->execute();
+        }
+
+        my $sth = $dbh->prepare("SELECT borrowernumber, categorycode FROM borrowers WHERE dateenrolled >= ?");
+        $sth->execute($since);
+        my $size = $sth->rows;
+        my $poucentelement = 100 / $size;
+        my $element = 1;
         my $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } );
         print $cgi->header();
-        $template->param( confirmation => 'ok' );
         print $template->output();
-
+        my $jauge = $self->get_template( { file => 'jauge.tt' } );
+        $jauge->param( pourcent => 0 );
+        print $jauge->output();
+        while ( my ($borrowernumber, $categorycode) = $sth->fetchrow ) {
+            C4::Members::Messaging::SetMessagingPreferencesFromDefaults( {
+                borrowernumber => $borrowernumber,
+                categorycode   => $categorycode,
+            } );
+            $jauge->param( pourcent => sprintf ("%0.2f", $poucentelement * $element ));
+            print $jauge->output();
+            $element ++;
+        }
+        $dbh->commit();
     }else{
         $self->show_config_pages();
     }
@@ -89,6 +112,9 @@ sub force_borrower_messaging_defaults {
       
      my $sth = $dbh->prepare("SELECT borrowernumber, categorycode FROM borrowers WHERE dateenrolled >= ?");
      $sth->execute($since);
+     my $size = $sth->rows;
+     my $poucentelement = 100 / $size;
+     my $element = 1;
      while ( my ($borrowernumber, $categorycode) = $sth->fetchrow ) {
          #warn "$borrowernumber: $categorycode\n";
          next unless $doit;
@@ -96,6 +122,9 @@ sub force_borrower_messaging_defaults {
              borrowernumber => $borrowernumber,
              categorycode   => $categorycode,
          } );
+     #$template->param( number => $poucentelement * $element);
+     #$element ++;
+     #print $template->output();
      }
      $dbh->commit();
  }

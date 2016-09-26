@@ -29,6 +29,7 @@
             <p>Truncate: <input type="checkbox" class="form-control" name="trunc" id="trunc">  when checked, all previous configuration from all patron accounts will be cleared before the default values are set.</p>
         </div>
         <p><button  class="btn btn-default" onclick="lancerRecherche()">Launch</button></p>
+        <div id="jobstat">Job progress: <span id="pourcentprogress">0</span>%</div><span id="progression">......</span>
     </form>
 </div>
 </div>
@@ -45,6 +46,8 @@
          truncate = document.getElementById('trunc').checked;
          document.getElementById('op').value = 'valide';
          document.getElementById('trunc').value = truncate;
+         info = document.getElementById('progression');
+         info.firstChild.data = "Progression en cours, veuillez patienter ............";
 
      }else{
          document.getElementById('op').value = 'no';
