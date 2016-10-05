@@ -19,8 +19,8 @@
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
 
-            <label class="filterDescription"> <h3> Liste des notices qui seront traitées:</h3></label>
             <input id="submit" type="submit" value="Télécharger les images"/>
+            <label class="filterDescription"> <h3> Liste des notices qui seront traitées:</h3></label>
             <table name="notices" id ="notices">
                 <tr>
                     <td> N° </td>
