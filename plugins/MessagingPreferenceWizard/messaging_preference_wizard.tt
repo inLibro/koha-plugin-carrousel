@@ -47,7 +47,7 @@
          document.getElementById('op').value = 'valide';
          document.getElementById('trunc').value = truncate;
          info = document.getElementById('progression');
-         info.firstChild.data = "Progression en cours, veuillez patienter ............"; 
+         info.firstChild.data = "Current progress, please wait ............";
 
      }else{
          document.getElementById('op').value = 'no';
