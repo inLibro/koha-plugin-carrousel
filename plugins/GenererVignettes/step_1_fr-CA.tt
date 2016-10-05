@@ -19,8 +19,8 @@
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
 
-            <label class="filterDescription"> <h3> Liste des documents qui seront affectés:</h3></label>
-            <input id="submit" type="submit" value="GOO!"/>
+            <label class="filterDescription"> <h3> Liste des notices qui seront traitées:</h3></label>
+            <input id="submit" type="submit" value="Télécharger les images"/>
             <table name="notices" id ="notices">
                 <tr>
                     <td> N° </td>
@@ -47,7 +47,6 @@
 <style>
 
 #submit{
-    width:100px;
     font-size: 100%;
     font-weight: bold;
     height:25px;
