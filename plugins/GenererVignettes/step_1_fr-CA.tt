@@ -10,33 +10,23 @@
     <div id="content">
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
-        <h2>Générer des vignettes pour les notices</h2>
+        <h2>Ce plugin génère une vignette pour chaque notice ayant une zone 856 qui contient un lien vers un fichier pdf. Cette vignette sera enregistrée dans Koha sous la forme d'une image locale.</h2>
 
-        <form method="get" name ="myForm" onsubmit="return validateForm()">
+        <form method="get" name ="myForm" onsubmit="return lancerGeneration()">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
-
             <input id="submit" type="submit" value="Télécharger les images"/>
-            <label class="filterDescription"> <h3> Liste des notices qui seront traitées:</h3></label>
-            <table name="notices" id ="notices">
-                <tr>
-                    <td> N° </td>
-                    <td> Titre </td>
-                    <td> Auteur </td>
-                </tr>
-
-                [% FOREACH notice IN notices %]
-                <tr  id="[% notice.biblionumber %]">
-                    <td> [% notice.biblionumber %] </td>
-                    <td> [% notice.title %]  [% IF notice.title =='' %] Non disponible [% END %] </td>
-                    <td> [% notice.author %] [% IF notice.author =='' %] Non disponible [% END %] </td>
-                </tr>
-                [% END %]
-
-            </table>
+            <label class="filterDescription"> <h3> Le nombre de notices qui ont une zone 856$u et qui n'ont pas de vignettes: [% global %]</h3></label>
+            <label class="filterDescription"> <h3> Le nombre de notices qui ont une zone 856$u et qui ne pointe vers un pdf : [% other %]</h3></label>
+            <label class="filterDescription"> <h3> Le nombre de notices à traiter: [% pdf %]</h3></label>
+            <br>
+            <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">`</span>
+            <br>
+            <br>
+            <label class="filterDescription"> <h6> Remarque: Le plugin télécharge chaque document et vérifie dans l'entête du fichier s'il s'agit d'un document pdf. Seul les fichiers pdf généreront une vignette.</h6>
         </form>
     </div>
 </div>
@@ -59,5 +49,9 @@
 </style>
 
 <script>
+function lancerGeneration(){
+    info = document.getElementById('progression');
+    info.firstChild.data = "Progression en cours, veuillez patienter ............";
+}
 
 </script>

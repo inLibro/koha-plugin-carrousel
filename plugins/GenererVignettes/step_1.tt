@@ -10,33 +10,24 @@
     <div id="content">
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
-        <h2>Generate images for documents that they are missing one</h2>
+        <h2>This plugin will create a thumbnail for each biblio record with a 856 field which contains a link to a pdf file. This thumbnail will be keep in Koha like a local cover image.</h2>
 
-        <form method="get" name ="myForm" onsubmit="return validateForm()">
+        <form method="get" name ="myForm" onsubmit="return lunchGenerate()">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
 
-            <input id="submit" type="submit" value="GOO!"/>
-            <label class="filterDescription"> <h3> List of items that will be affected :</h3></label>
-            <table name="notices" id ="notices">
-                <tr>
-                    <td> N° </td>
-                    <td> Title </td>
-                    <td> Author </td>
-                </tr>
-
-                [% FOREACH notice IN notices %]
-                <tr  id="[% notice.biblionumber %]">
-                    <td> [% notice.biblionumber %] </td>
-                    <td> [% notice.title %]  [% IF notice.title =='' %] Not available [% END %] </td>
-                    <td> [% notice.author %] [% IF notice.author =='' %] Not available [% END %] </td>
-                </tr>
-                [% END %]
-
-            </table>
+            <input id="submit" type="submit" value="OK"/>
+            <label class="filterDescription"> <h3> Number of records with a 856$u field : [% global %]</h3></label>
+            <label class="filterDescription"> <h3> Number of records with a 856$u field and not link to a pdf file : [% other %]</h3></label>
+            <label class="filterDescription"> <h3>  Number of process records : [% pdf %]</h3></label>
+            <br>
+            <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">`</span>
+            <br>
+            <br>
+            <label class="filterDescription"> <h6> Note: The plugin download each file and check its header to determine if it's a pdf file or not. Only pdf files will generate thumbnails.</h6>
         </form>
     </div>
 </div>
@@ -60,5 +51,8 @@
 </style>
 
 <script>
-
+function lunchGenerate(){
+    info = document.getElementById('progression');
+    info.firstChild.data = "Current progress, please wait ............";
+}
 </script>

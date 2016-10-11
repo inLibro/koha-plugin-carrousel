@@ -77,7 +77,9 @@ sub step_1{
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $template = undef;
     my @notices = $self->displayAffected();
-
+    my $pdf = $notices[0];
+    my $other = $notices[1];
+    my $global = $pdf + $other;
     eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
     if(!$template){
         $preferedLanguage = substr $preferedLanguage, 0, 2;
@@ -85,7 +87,9 @@ sub step_1{
     }
     $template = $self->get_template( { file => 'step_1.tt'} ) unless $template;
 
-    $template->param( notices => \@notices);
+    $template->param( global => $global);
+    $template->param( pdf => $pdf);
+    $template->param( other => $other);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
@@ -109,26 +113,41 @@ sub missingModule{
 
 sub displayAffected{
     my ( $self, $args) = @_;
+    my $pdf = 0;
+    my $other = 0;
     my @items;
 
-    my $query = "SELECT a.biblionumber, b.title, b.author FROM biblioitems a, biblio b
+    my $query = "SELECT a.biblionumber, b.title, b.author, EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\")
+ as url  FROM biblioitems a, biblio b
                  WHERE a.biblionumber=b.biblionumber and EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <>''
                  and a.biblionumber not in (select biblionumber from biblioimages)";
     my $stmt = $dbh->prepare($query);
     $stmt->execute();
-
     my $i =0;
+
     while (my $row = $stmt->fetchrow_hashref()) {
-        $items[$i] = $row;
-        $items[$i]->{'title'} =~ s/[,:\/\s]+$//;
-        $i++;
+        my @uris = split / /,$row->{url};
+        next if (scalar @uris eq 0);
+        foreach my $url (@uris) {
+            if($url && $url ne ''){
+                if (substr($url,-3) eq 'pdf'){
+                    $pdf ++;
+                    last;
+                }
+                $other ++;
+            }
+        }
     }
+    $items[0] = $pdf;
+    $items[1] = $other;
     return @items;
 }
 sub genererVignette{
+    my ( $self, $args) = @_;
     my $dbh = C4::Context->dbh;
     my $ua = LWP::UserAgent->new;
 
+    my $template = $self->get_template( { file => 'jauge.tt'} );
     my $query = "SELECT a.biblionumber,EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\")
     FROM biblioitems a
     WHERE EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in(select biblionumber from biblioimages)";
@@ -142,22 +161,19 @@ sub genererVignette{
             my @uris = split / /,$urifield;
 
             foreach my $url (@uris) {
-                if($url && $url ne ''){
+                if($url && $url ne '' && substr($url,-3) eq 'pdf'){
                     my $response = $ua->get($url);
-
                     if(!$response->is_success){
                         warn $response->status_line ;
                         warn "Erreur avec la biblio : $biblionumber";
                     }else{
                         my $contenttype = $response->header('content-type');
                         my $lastmodified = $response->header('last-modified');
-
                         # On vérifie que le fichier à l'URL spécifié est bel et bien un pdf
                         if($contenttype eq "application/pdf"){
                             my @filestodelete = ();
                             my $filename = $url;
                             my $save = '';
-
                             $filename =~ m/.*\/(.*)$/;
                             $filename = $1;
                             $save = "/tmp/$filename";
@@ -172,19 +188,17 @@ sub genererVignette{
                             my $srcimage = GD::Image->new($imageFile);
                             my $replace = 1;
                             C4::Images::PutImage($biblionumber,$srcimage,$replace);
-
                             foreach my $file (@filestodelete){
                                 unlink $file or warn "Could not unlink $file: $!\nNo more images to import.Exiting.";
                             }
-
+                            last;
                         }
                     }
+                    print $template->output();
                 }
             }
         }
     }
-
-
 }
 #Supprimer le plugin avec toutes ses données
 sub uninstall() {
