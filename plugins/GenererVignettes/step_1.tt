@@ -10,8 +10,8 @@
     <div id="content">
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
-        <h2>This plugin will create a thumbnail for each biblio record with a 856 field which contains a link to a pdf file. This thumbnail will be keep in Koha like a local cover image.</h2>
-
+        <p>This plugin will create a thumbnail for each biblio record with a 856 field which contains a link to a pdf file. This thumbnail will be keep in Koha like a local cover image.</p>
+        <hr>
         <form method="get" name ="myForm" onsubmit="return lunchGenerate()">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
@@ -19,15 +19,15 @@
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
 
-            <input id="submit" type="submit" value="OK"/>
-            <label class="filterDescription"> <h3> Number of records with a 856$u field : [% global %]</h3></label>
-            <label class="filterDescription"> <h3> Number of records with a 856$u field and not link to a pdf file : [% other %]</h3></label>
-            <label class="filterDescription"> <h3>  Number of process records : [% pdf %]</h3></label>
+            <label class="filterDescription"> <p>Number of records with a 856$u field: [% global %]</p></label>
+            <label class="filterDescription"> <p>Number of records with a 856$u field linked to a pdf file: [% other %]</p></label>
+            <label class="filterDescription"> <p>Number of records to process: [% pdf %]</p></label>
+            <hr>
+            <input id="submit" type="submit" value="Create thumbnails"/>
+            <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
             <br>
-            <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">`</span>
             <br>
-            <br>
-            <label class="filterDescription"> <h6> Note: The plugin download each file and check its header to determine if it's a pdf file or not. Only pdf files will generate thumbnails.</h6>
+            <label class="filterDescription"> <p>Note: The plugin download each file and check its header to determine if it's a pdf file or not. Only pdf files will generate thumbnails.</p>
         </form>
     </div>
 </div>
@@ -38,16 +38,13 @@
 <style>
 
 #submit{
-    width:100px;
     font-size: 100%;
     font-weight: bold;
     height:25px;
-    background: green;
+    background: #AFBD22;
     margin:3px 0;
 }
-#submit:hover{
-    background: red;
-}
+
 </style>
 
 <script>

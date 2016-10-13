@@ -10,23 +10,24 @@
     <div id="content">
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
-        <h2>Ce plugin génère une vignette pour chaque notice ayant une zone 856 qui contient un lien vers un fichier pdf. Cette vignette sera enregistrée dans Koha sous la forme d'une image locale.</h2>
-
+        <p>Ce plugin génère une vignette pour chaque notice ayant une zone 856 qui contient un lien vers un fichier pdf. Cette vignette sera enregistrée dans Koha sous la forme d'une image locale.</p>
+        <hr>
         <form method="get" name ="myForm" onsubmit="return lancerGeneration()">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
-            <input id="submit" type="submit" value="Télécharger les images"/>
-            <label class="filterDescription"> <h3> Le nombre de notices qui ont une zone 856$u et qui n'ont pas de vignettes: [% global %]</h3></label>
-            <label class="filterDescription"> <h3> Le nombre de notices qui ont une zone 856$u et qui ne pointe vers un pdf : [% other %]</h3></label>
-            <label class="filterDescription"> <h3> Le nombre de notices à traiter: [% pdf %]</h3></label>
+            
+            <label class="filterDescription"> <p>Nombre de notices qui ont une zone 856$u et qui n'ont pas de vignettes : [% global %]</p></label>
+            <label class="filterDescription"> <p>Nombre de notices qui ont une zone 856$u ne pointant pas vers un pdf : [% other %]</p></label>
+            <label class="filterDescription"> <p>Nombre de notices à traiter : [% pdf %]</p></label>
+            <hr>
+            <input id="submit" type="submit" value="Générer les vignettes"/>
+            <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
             <br>
-            <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">`</span>
             <br>
-            <br>
-            <label class="filterDescription"> <h6> Remarque: Le plugin télécharge chaque document et vérifie dans l'entête du fichier s'il s'agit d'un document pdf. Seul les fichiers pdf généreront une vignette.</h6>
+            <label class="filterDescription"> <p> Remarque: Le plugin télécharge chaque document et vérifie dans l'entête du fichier s'il s'agit d'un document pdf. Seuls les fichiers pdf généreront une vignette.</p>
         </form>
     </div>
 </div>
@@ -40,12 +41,10 @@
     font-size: 100%;
     font-weight: bold;
     height:25px;
-    background: green;
+    background: #AFBD22;
     margin:3px 0;
 }
-#submit:hover{
-    background: red;
-}
+
 </style>
 
 <script>
