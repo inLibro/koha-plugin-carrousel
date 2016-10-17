@@ -157,9 +157,10 @@ sub genererVignette{
     $sthSelectPdfUri->execute();
 
     while (my ($biblionumber,$urifield) = $sthSelectPdfUri->fetchrow_array()){
+        # Start the timer to script timeout
+        alarm(-1);
         if($urifield && $urifield ne ''){
             my @uris = split / /,$urifield;
-
             foreach my $url (@uris) {
                 if($url && $url ne '' && substr($url,-3) eq 'pdf'){
                     my $response = $ua->get($url);
