@@ -171,7 +171,7 @@ sub genererVignette{
     my ( $self, $last, $onepourcent) = @_;
     my $dbh = C4::Context->dbh;
     my $ua = LWP::UserAgent->new;
-    $ua->timeout(10);
+    $ua->timeout(5);
     my @fait;
     my $query = "SELECT a.biblionumber,EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\")
     FROM biblioitems a
@@ -202,18 +202,19 @@ sub genererVignette{
                             $filename = $1;
                             $save = "/tmp/$filename";
 
-                            getstore($url,$save); # On télécharge le fichier
-                            push @filestodelete,$save;
+                            if (is_success(getstore($url,$save))){
+                                push @filestodelete,$save;
+                                `pdftocairo $save -png $save -singlefile 2>&1`; # Conversion de pdf à png, seulement pour la première page
+                                my $imageFile = $save . ".png";
+                                push @filestodelete,$imageFile;
 
-                            `pdftocairo $save -png $save -singlefile 2>&1`; # Conversion de pdf à png, seulement pour la première page
-                            my $imageFile = $save . ".png";
-                            push @filestodelete,$imageFile;
-
-                            my $srcimage = GD::Image->new($imageFile);
-                            my $replace = 1;
-                            C4::Images::PutImage($biblionumber,$srcimage,$replace);
-                            foreach my $file (@filestodelete){
-                                unlink $file or warn "Could not unlink $file: $!\nNo more images to import.Exiting.";
+                                my $srcimage = GD::Image->new($imageFile);
+                                my $replace = 1;
+                                C4::Images::PutImage($biblionumber,$srcimage,$replace);
+                                foreach my $file (@filestodelete){
+                                    unlink $file or warn "Could not unlink $file: $!\nNo more images to import.Exiting.";
+                                }
+                                last;
                             }
                         }
                     }
