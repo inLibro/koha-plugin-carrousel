@@ -16,7 +16,10 @@
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
-            <input type="hidden" name="action" value="configure"/>
+            <input type="hidden" id="op" name="op" value=""/>
+            <input type="hidden" id="last" name="last" value="0"/>
+            <input type="hidden" id="onepourcent" name="onepourcent" value="[% onepourcent %]"/>
+            <input type="hidden" id="suite" name="suite" value="[% suite %]"/>
             <!-- end of plugin necessary inputs  -->
             
             <label class="filterDescription"> <p>Nombre de notices qui ont une zone 856$u et qui n'ont pas de vignettes : [% global %]</p></label>
@@ -48,9 +51,26 @@
 </style>
 
 <script>
+$( function() {
+    if ([% suite %] != 0 ){
+        if ([% suite %] > 100){
+            info = document.getElementById('progression');
+            info.firstChild.data = "Traitement terminé correctement";
+            document.getElementById('op').value = '';
+            document.getElementById("formTraitement").submit();
+        }else{
+            document.getElementById('op').value = 'valide';
+            document.getElementById('suite').value = [% suite %];
+            info = document.getElementById('progression');
+            info.firstChild.data = "Progression en cours, veuillez patienter <<<>>>> " + [% suite %] + " %";
+            document.getElementById('last').value = [% lastborrowernumber %];
+            document.getElementById("formTraitement").submit();
+        }
+    }
+});
 function lancerGeneration(){
     info = document.getElementById('progression');
-    info.firstChild.data = "Progression en cours, veuillez patienter ............";
+    info.firstChild.data = "Progression en cours, veuillez patienter <<<>>>> " + [% suite %] + " %";
 }
 
 </script>

@@ -12,18 +12,21 @@
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
         <p>This plugin will create a thumbnail for each biblio record with a 856 field which contains a link to a pdf file. This thumbnail will be keep in Koha like a local cover image.</p>
         <hr>
-        <form method="get" name ="myForm" onsubmit="return lunchGenerate()">
+        <form method="get" id="formTraitement">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
-            <input type="hidden" name="action" value="configure"/>
+            <input type="hidden" id="op" name="op" value=""/>
+            <input type="hidden" id="last" name="last" value="0"/>
+            <input type="hidden" id="onepourcent" name="onepourcent" value="[% onepourcent %]"/>
+            <input type="hidden" id="suite" name="suite" value="[% suite %]"/>
             <!-- end of plugin necessary inputs  -->
 
             <label class="filterDescription"> <p>Number of records with a 856$u field: [% global %]</p></label>
             <label class="filterDescription"> <p>Number of records with a 856$u field linked to a pdf file: [% other %]</p></label>
             <label class="filterDescription"> <p>Number of records to process: [% pdf %]</p></label>
             <hr>
-            <input id="submit" type="submit" value="Create thumbnails"/>
+            <button class="btn btn-default" onclick="lunchGenerate()">Create thumbnails</button>
             <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
             <br>
             <br>
@@ -48,8 +51,26 @@
 </style>
 
 <script>
+$( function() {
+    if ([% suite %] != 0 ){
+        if ([% suite %] > 100){
+            info = document.getElementById('progression');
+            info.firstChild.data = "Process finish correctly";
+            document.getElementById('op').value = '';
+            document.getElementById("formTraitement").submit();
+        }else{
+            document.getElementById('op').value = 'valide';
+            document.getElementById('suite').value = [% suite %];
+            info = document.getElementById('progression');
+            info.firstChild.data = "Current progress, please wait <<<>>>> " + [% suite %] + " %";
+            document.getElementById('last').value = [% lastborrowernumber %];
+            document.getElementById("formTraitement").submit();
+        }
+    }
+} );
 function lunchGenerate(){
+    document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
-    info.firstChild.data = "Current progress, please wait ............";
+    info.firstChild.data = "Current progress, please wait <<<>>>> " + [% suite %] + " %";
 }
 </script>

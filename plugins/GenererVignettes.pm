@@ -1,5 +1,6 @@
 package Koha::Plugin::GenererVignettes;
-# Mehdi Hamidi, 2016 - Inlibro
+# Mehdi Hamidi, 2016 - InLibro
+# Modified by : Bouzid Fergani, 2016 - InLibro
 #
 # This plugin allows you to generate a Carrousel of books from available lists
 # and insert the template into the table system preferences;OpacMainUserBlock
@@ -31,13 +32,13 @@ use C4::Context;
 use C4::Images;
 
 our $dbh = C4::Context->dbh();
-our $VERSION = 1.01;
+our $VERSION = 1.1;
 our $metadata = {
     name            => 'GenererVignettes',
-    author          => 'Mehdi Hamidi',
+    author          => 'Mehdi Hamidi, Bouzid Fergani',
     description     => 'Generate images for documents that they are missing one',
     date_authored   => '2016-06-08',
-    date_updated    => '2016-06-08',
+    date_updated    => '2016-10-21',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -56,19 +57,40 @@ sub new {
 sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $warning = eval{`dpkg -s libcairo2-dev`};
-
     if(!$warning){
         $self->missingModule();
-    } elsif($cgi->param('action')){
-        $self->genererVignette();
-        $self->go_home();
+    } elsif($cgi->param('op') eq 'valide'){
+        my $last = $cgi->param('last');
+        my $onepourcent = $cgi->param('onepourcent');
+        my $progress = $cgi->param('suite');
+        $progress ++;
+        my @fait = $self->genererVignette($last,$onepourcent);
+        my $lastborrowenumber = $fait[0][-1];
+        my $template = undef;
+        eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
+        if(!$template){
+            $preferedLanguage = substr $preferedLanguage, 0, 2;
+            eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
+        }
+        $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
+        my @notices = $self->displayAffected();
+        my $pdf = $notices[0];
+        my $other = $notices[1];
+        my $global = $pdf + $other;
+        $template->param(lastborrowernumber => $lastborrowenumber);
+        $template->param( suite => $progress);
+        $template->param( global => $global);
+        $template->param( pdf => $pdf);
+        $template->param( other => $other);
+        $template->param(onepourcent => $onepourcent);
+        print $cgi->header();
+        print $template->output();
+        #$self->go_home();
     }else{
         $self->step_1();
     }
-
-
-
 }
 
 sub step_1{
@@ -80,6 +102,7 @@ sub step_1{
     my $pdf = $notices[0];
     my $other = $notices[1];
     my $global = $pdf + $other;
+    my $onepourcent = sprintf('%.0f',$global / 100);
     eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
     if(!$template){
         $preferedLanguage = substr $preferedLanguage, 0, 2;
@@ -90,6 +113,9 @@ sub step_1{
     $template->param( global => $global);
     $template->param( pdf => $pdf);
     $template->param( other => $other);
+    $template->param( suite => 0);
+    $template->param(lastborrowernumber => 0);
+    $template->param(onepourcent => $onepourcent);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
@@ -106,7 +132,6 @@ sub missingModule{
         eval {$template = $self->get_template( { file => "missingModule_$preferedLanguage.tt" } )};
     }
     $template = $self->get_template( { file => 'missingModule.tt'} ) unless $template;
-
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
@@ -143,22 +168,20 @@ sub displayAffected{
     return @items;
 }
 sub genererVignette{
-    my ( $self, $args) = @_;
+    my ( $self, $last, $onepourcent) = @_;
     my $dbh = C4::Context->dbh;
     my $ua = LWP::UserAgent->new;
-
-    my $template = $self->get_template( { file => 'jauge.tt'} );
+    $ua->timeout(10);
+    my @fait;
     my $query = "SELECT a.biblionumber,EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\")
     FROM biblioitems a
-    WHERE EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in(select biblionumber from biblioimages)";
-
+    WHERE EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in(select biblionumber from biblioimages) and (a.biblionumber > ?) order by biblionumber asc limit ?";
     # Retourne 856$u, qui est le(s) URI(s) d'une ressource numérique
     my $sthSelectPdfUri = $dbh->prepare($query);
-    $sthSelectPdfUri->execute();
-
+    $sthSelectPdfUri->execute($last,$onepourcent);
     while (my ($biblionumber,$urifield) = $sthSelectPdfUri->fetchrow_array()){
+        push @fait,$biblionumber;
         # Start the timer to script timeout
-        alarm(-1);
         if($urifield && $urifield ne ''){
             my @uris = split / /,$urifield;
             foreach my $url (@uris) {
@@ -192,14 +215,13 @@ sub genererVignette{
                             foreach my $file (@filestodelete){
                                 unlink $file or warn "Could not unlink $file: $!\nNo more images to import.Exiting.";
                             }
-                            last;
                         }
                     }
-                    print $template->output();
                 }
             }
         }
     }
+    return \@fait;
 }
 #Supprimer le plugin avec toutes ses données
 sub uninstall() {
