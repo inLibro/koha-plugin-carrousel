@@ -20,11 +20,20 @@
             <input type="hidden" id="last" name="last" value="0"/>
             <input type="hidden" id="onepourcent" name="onepourcent" value="[% onepourcent %]"/>
             <input type="hidden" id="suite" name="suite" value="[% suite %]"/>
+            <input type="hidden" id="erreur" name="erreur" value="[% erreur %]"/>
+            <input type="hidden" id="progress" name="progress" value="[% progress %]"/>
+            <input type="hidden" id="global" name="global" value="[% global %]"/>
+            <input type="hidden" id="processed" name="processed" value="[% processed %]"/>
+            <input type="hidden" id="pdf" name="pdf" value="[% pdf %]"/>
+            <input type="hidden" id="other" name="other" value="[% other %]"/>
             <!-- end of plugin necessary inputs  -->
 
             <label class="filterDescription"> <p>Number of records with a 856$u field: [% global %]</p></label>
             <label class="filterDescription"> <p>Number of records with a 856$u field linked to a pdf file: [% other %]</p></label>
             <label class="filterDescription"> <p>Number of records to process: [% pdf %]</p></label>
+            <label class="filterDescription"> <p>Number of records processed: [% processed %]</p></label>
+            <label class="filterDescription"> <p>Number of records processed with error when generate vignette : [% erreur %]</p></label>
+            <label class="filterDescription">    Number of record process simultaneously to avoid timeout : </label><input type="text" id="limit" maxlength="1" name="limit" value="5"/>
             <hr>
             <button class="btn btn-default" onclick="lunchGenerate()">Create thumbnails</button>
             <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
@@ -53,16 +62,15 @@
 <script>
 $( function() {
     if ([% suite %] != 0 ){
-        if ([% suite %] > 100){
+        if ([% fin %] == 1){
             info = document.getElementById('progression');
             info.firstChild.data = "Process finish correctly";
             document.getElementById('op').value = '';
             document.getElementById("formTraitement").submit();
         }else{
             document.getElementById('op').value = 'valide';
-            document.getElementById('suite').value = [% suite %];
             info = document.getElementById('progression');
-            info.firstChild.data = "Current progress, please wait <<<>>>> " + [% suite %] + " %";
+            info.firstChild.data = "Current progress, please wait: " + [% progress %] + " %";
             document.getElementById('last').value = [% lastborrowernumber %];
             document.getElementById("formTraitement").submit();
         }
@@ -71,6 +79,6 @@ $( function() {
 function lunchGenerate(){
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
-    info.firstChild.data = "Current progress, please wait <<<>>>> " + [% suite %] + " %";
+    info.firstChild.data = "Current progress, please wait: " + [% progress %] + " %";
 }
 </script>
