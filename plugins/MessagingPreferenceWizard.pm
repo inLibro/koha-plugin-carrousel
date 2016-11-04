@@ -54,25 +54,24 @@ sub tool {
 
         my $sth = $dbh->prepare("SELECT borrowernumber, categorycode FROM borrowers WHERE dateenrolled >= ?");
         $sth->execute($since);
-        my $size = $sth->rows;
-        my $poucentelement = 100 / $size;
-        my $element = 1;
-        my $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } );
-        print $cgi->header();
-        print $template->output();
-        my $jauge = $self->get_template( { file => 'jauge.tt' } );
-        $jauge->param( pourcent => 0 );
-        print $jauge->output();
+        my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+        my $template = undef;
+        eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
+        if(!$template){
+            $preferedLanguage = substr $preferedLanguage, 0, 2;
+            eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
+        }
+        $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } ) unless $template;
         while ( my ($borrowernumber, $categorycode) = $sth->fetchrow ) {
             C4::Members::Messaging::SetMessagingPreferencesFromDefaults( {
                 borrowernumber => $borrowernumber,
                 categorycode   => $categorycode,
             } );
-            $jauge->param( pourcent => sprintf ("%0.2f", $poucentelement * $element ));
-            print $jauge->output();
-            $element ++;
         }
         $dbh->commit();
+        $template->param( fin => 1);
+        print $cgi->header();
+        print $template->output();
     }else{
         $self->show_config_pages();
     }
@@ -82,52 +81,18 @@ sub tool {
 sub show_config_pages {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
-    #my $preferedLanguage = $cgi->cookie('KohaOpacLanguage'); 
-    #my ( $cms_page_count, @cms_pages ) = &get_cms_entries( undef );
-    
-    my $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } );
-
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+    my $template = undef;
+    eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
+    if(!$template){
+        $preferedLanguage = substr $preferedLanguage, 0, 2;
+        eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
+    }
+    $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } ) unless $template;
+    $template->param( fin => 0);
     print $cgi->header();
-    #my $messages =  get_message_type();
-    #$template->param( messages => $messages );
-    #$template->param( cms_pages => @cms_pages );
-    #$template->param( OPACBaseURL => C4::Context->preference('OPACBaseURL'));
-    
     print $template->output();
 }
-
-sub force_borrower_messaging_defaults {
-     my ($doit, $truncate, $since) = @_;
- 
-     $since = '0000-00-00' if (!$since);
-     warn $since;
- 
-     my $dbh = C4::Context->dbh;
-     $dbh->{AutoCommit} = 0;
- 
-     if ( $doit && $truncate ) {
-         my $sth = $dbh->prepare("TRUNCATE borrower_message_preferences");
-         $sth->execute();
-     }
-      
-     my $sth = $dbh->prepare("SELECT borrowernumber, categorycode FROM borrowers WHERE dateenrolled >= ?");
-     $sth->execute($since);
-     my $size = $sth->rows;
-     my $poucentelement = 100 / $size;
-     my $element = 1;
-     while ( my ($borrowernumber, $categorycode) = $sth->fetchrow ) {
-         #warn "$borrowernumber: $categorycode\n";
-         next unless $doit;
-         C4::Members::Messaging::SetMessagingPreferencesFromDefaults( {
-             borrowernumber => $borrowernumber,
-             categorycode   => $categorycode,
-         } );
-     #$template->param( number => $poucentelement * $element);
-     #$element ++;
-     #print $template->output();
-     }
-     $dbh->commit();
- }
 
 # Generic uninstall routine - removes the plugin from plugin pages listing
 sub uninstall() {

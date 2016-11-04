@@ -12,38 +12,57 @@
  <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo;
                        <a href="/cgi-bin/koha/tools/tools-home.pl">Tools</a> &rsaquo;
                        <a href="/cgi-bin/koha/plugins/plugins-home.pl?method=tool">Plugins</a> &rsaquo;
-                       Modify notifications</div>
+                       Enhanced messaging preferences wizard</div>
 <div id="doc3" class="yui-t1">
 <div class="container">
-    <h2>Modification des paramètres de notification</h2>
-    <p>Explication du fonctionnement du plugin</p>
-    <h4>Options</h4>
+    <h2>Enhanced messaging preferences wizard</h2>
+    <p>The plugin uses the "borrowers-force-messaging-defaults" script. This script setups or resets all borrower accounts with the default enhanced messaging preferences values. The default configuration comes from the patron category administration page.</p>
+    <h4>Two options are available.</h4>
     <form method='get'>    
         <input type='hidden' id='class' name='class' value='[% CLASS %]'/>
         <input type="hidden" name="method" value="tool"/>
         <input type='hidden' id='op' name="op" value=''/>
         <div class="form-group">
-            <label for="since">Since:</label>
-            <input type="text" class="form-control" id="since">
+  <p>Since: <input type="text" name='since' id="since">  when a date is entered in the "since" option, only patrons created after this date will be updated.</p>
         </div>
         <div class="form-group">
-            <label>Truncate:</label>
-            <input type="checkbox" class="form-control" name="trunc" id="trunc">
+            <p>Truncate: <input type="checkbox" class="form-control" name="trunc" id="trunc">  when checked, all previous configuration from all patron accounts will be cleared before the default values are set.</p>
         </div>
-        <button  class="btn btn-default" onclick="lancerRecherche()">Lancer</button>
+        <p><button  class="btn btn-default" onclick="lancerRecherche()">Launch</button></p>
+        <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">`</span>
     </form>
 </div>
 </div>
 [% INCLUDE 'intranet-bottom.inc' %]
+<style>
+  .finish {
+      color : green;
+      font-size : 16px;
+  }
+  .debut {
+      color : blue;
+      font-size : 16px;
+      transition: all 0.7s ease-out;
+  }
+</style>
  <script type="text/javascript">
+ $( function() {
+     $( "#since" ).datepicker();
+     if ([% fin %] == 1){
+         info = document.getElementById('progression');
+         info.setAttribute("class","finish");
+         info.firstChild.data = "Finish correctly ";
+     }
+   } );
  function lancerRecherche(){
      if(window.confirm("Do you really want to apply this configuration?")){
          since = document.getElementById('since').value;
-         console.log(document.getElementById('trunc').value);
-         console.log(document.getElementById('trunc').checked);
          truncate = document.getElementById('trunc').checked;
          document.getElementById('op').value = 'valide';
          document.getElementById('trunc').value = truncate;
+         info = document.getElementById('progression');
+         info.setAttribute("class","debut");
+         info.firstChild.data = "Current progress, please wait ............";
 
      }else{
          document.getElementById('op').value = 'no';

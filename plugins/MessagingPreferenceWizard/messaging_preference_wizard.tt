@@ -34,12 +34,26 @@
 </div>
 </div>
 [% INCLUDE 'intranet-bottom.inc' %]
+<style>
+  .finish {
+      color : green;
+      font-size : 16px;
+  }
+  .debut {
+      color : blue;
+      font-size : 16px;
+      transition: all 0.7s ease-out;
+  }
+</style>
  <script type="text/javascript">
  $( function() {
      $( "#since" ).datepicker();
+     if ([% fin %] == 1){
+         info = document.getElementById('progression');
+         info.setAttribute("class","finish");
+         info.firstChild.data = "Finish correctly ";
+     }
    } );
- 
- 
  function lancerRecherche(){
      if(window.confirm("Do you really want to apply this configuration?")){
          since = document.getElementById('since').value;
@@ -47,6 +61,7 @@
          document.getElementById('op').value = 'valide';
          document.getElementById('trunc').value = truncate;
          info = document.getElementById('progression');
+         info.setAttribute("class","debut");
          info.firstChild.data = "Current progress, please wait ............";
 
      }else{
