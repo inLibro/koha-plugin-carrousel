@@ -36,11 +36,11 @@
 [% INCLUDE 'intranet-bottom.inc' %]
 <style>
   .finish {
-      color : green;
+      color : #538200;
       font-size : 16px;
   }
   .debut {
-      color : blue;
+      color : #004D99;
       font-size : 16px;
       transition: all 0.7s ease-out;
   }
