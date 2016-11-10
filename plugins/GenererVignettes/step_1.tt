@@ -17,25 +17,14 @@
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" id="op" name="op" value=""/>
-            <input type="hidden" id="last" name="last" value="0"/>
-            <input type="hidden" id="onepourcent" name="onepourcent" value="[% onepourcent %]"/>
-            <input type="hidden" id="suite" name="suite" value="[% suite %]"/>
-            <input type="hidden" id="erreur" name="erreur" value="[% erreur %]"/>
-            <input type="hidden" id="progress" name="progress" value="[% progress %]"/>
-            <input type="hidden" id="global" name="global" value="[% global %]"/>
-            <input type="hidden" id="processed" name="processed" value="[% processed %]"/>
-            <input type="hidden" id="pdf" name="pdf" value="[% pdf %]"/>
-            <input type="hidden" id="other" name="other" value="[% other %]"/>
+            <input type="hidden" id="dodo" name="dodo" value=""/>
             <!-- end of plugin necessary inputs  -->
 
-            <label class="filterDescription"> <p>Number of records with a 856$u field: [% global %]</p></label>
-            <label class="filterDescription"> <p>Number of records with a 856$u field linked to a pdf file: [% other %]</p></label>
             <label class="filterDescription"> <p>Number of records to process: [% pdf %]</p></label>
-            <label class="filterDescription"> <p>Number of records processed: [% processed %]</p></label>
-            <label class="filterDescription"> <p>Number of records processed with error when generate vignette : [% erreur %]</p></label>
-            <label class="filterDescription">    Number of record process simultaneously to avoid timeout : </label><input type="text" id="limit" maxlength="1" name="limit" value="5"/>
             <hr>
-            <button class="btn btn-default" onclick="lunchGenerate()">Create thumbnails</button>
+            <button id="lunch" class="btn btn-default" onclick="lunchGenerate()">Create thumbnails</button>
+            <br>
+            <br>
             <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
             <br>
             <br>
@@ -56,29 +45,35 @@
     background: #AFBD22;
     margin:3px 0;
 }
-
+.progress {
+    color : red;
+    font-size : 16px;
+}
+.finish {
+    color : green;
+    font-size : 16px;
+}
 </style>
 
 <script>
 $( function() {
-    if ([% suite %] != 0 ){
-        if ([% fin %] == 1){
-            info = document.getElementById('progression');
-            info.firstChild.data = "Process finish correctly";
-            document.getElementById('op').value = '';
-            document.getElementById("formTraitement").submit();
-        }else{
-            document.getElementById('op').value = 'valide';
-            info = document.getElementById('progression');
-            info.firstChild.data = "Current progress, please wait: " + [% progress %] + " %";
-            document.getElementById('last').value = [% lastborrowernumber %];
-            document.getElementById("formTraitement").submit();
-        }
+    if ([% exist %] > 1 ){
+        document.getElementById('lunch').disabled = true;
+        info = document.getElementById('progression');
+        info.setAttribute('class','progress');
+        info.firstChild.data = "This job it's progress in background  - please wait";
+    }
+    if([% wait %] == 1 ){
+        document.getElementById('op').value = '';
+        document.getElementById('lunch').disabled = true;
+        info = document.getElementById('progression')
+        info.setAttribute('class','finish');
+        info.firstChild.data = "The job is lunched correctly in background, please wait";
     }
 } );
 function lunchGenerate(){
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
-    info.firstChild.data = "Current progress, please wait: " + [% progress %] + " %";
+    info.firstChild.data = "Current progress, please wait .................";
 }
 </script>

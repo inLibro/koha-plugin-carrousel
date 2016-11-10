@@ -57,68 +57,48 @@ sub new {
 sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
+    my @sortie = `ps -eo user,bsdstart,command --sort bsdstart`;
+    my @process;
+    foreach my $val (@sortie){
+            push @process, $val if ($val =~ '/plugins/run.pl') ;
+    }
+    my $nombre = scalar (@process);
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $warning = eval{`dpkg -s libcairo2-dev`};
     if(!$warning){
         $self->missingModule();
     } elsif($cgi->param('op') eq 'valide'){
-        my $last = $cgi->param('last');
-        my $numberError = $cgi->param('erreur');
-        my $numberprocessed = $cgi->param('processed');
-        my $onepourcent = $cgi->param('onepourcent');
-        my $numberprocess = $cgi->param('limit') ? $cgi->param('limit'): 5;
-        my $suite = $cgi->param('suite');
-        my $progress = $cgi->param('progress');
-        my $global = $cgi->param('global');
-        my $pdf = $cgi->param('pdf');
-        $suite ++;
-        $onepourcent -=$numberprocess;
-        if ($onepourcent <= 0){
-            $progress ++;
-            $onepourcent = ($global < 50) ? 1 : sprintf('%.0f',$global / 100);
+        my $pid = fork();
+        if ( $pid ){
+            my $template = undef;
+            eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
+            if(!$template){
+                $preferedLanguage = substr $preferedLanguage, 0, 2;
+                eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
+            }
+            $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
+            my $pdf = $self->displayAffected();
+            $template->param(pdf => $pdf);
+            $template->param('wait' => 1);
+            $template->param('exist' => 0);
+            print $cgi->header();
+            print $template->output();
+            exit 0;
+        }else{
+           close STDOUT;
         }
-        my @fait  = $self->genererVignette($last,$numberprocess,$numberError,$numberprocessed);
-        my $lastborrowenumber = $fait[0][-3];
-        $numberError = $fait[0][-2];
-        $numberprocessed = $fait[0][-1];
-        my $end =($numberprocessed == $global) ? 1 : 0;
-        my $template = undef;
-        eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
-        if(!$template){
-            $preferedLanguage = substr $preferedLanguage, 0, 2;
-            eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
-        }
-        $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
-        my $other = $cgi->param('other');
-        $template->param(processed => $numberprocessed);
-        $template->param(progress => $progress);
-        $template->param(erreur => $numberError);
-        $template->param(lastborrowernumber => $lastborrowenumber);
-        $template->param( suite => $suite);
-        $template->param( global => $global);
-        $template->param( pdf => $pdf);
-        $template->param( other => $other);
-        $template->param(onepourcent => $onepourcent);
-        $template->param(fin => $end);
-        print $cgi->header();
-        print $template->output();
-        #$self->go_home();
+        &genererVignette();
     }else{
-        $self->step_1();
+        $self->step_1($nombre);
     }
 }
 
 sub step_1{
-    my ( $self, $args) = @_;
+    my ( $self, $nombre) = @_;
     my $cgi = $self->{'cgi'};
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $template = undef;
-    my @notices = $self->displayAffected();
-    my $pdf = $notices[0];
-    my $other = $notices[1];
-    my $global = $notices[2];
-    my $onepourcent;
-    $onepourcent = ($global < 50) ? 1 : sprintf('%.0f',$global / 100);
+    my $pdf = $self->displayAffected();
     eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
     if(!$template){
         $preferedLanguage = substr $preferedLanguage, 0, 2;
@@ -126,16 +106,9 @@ sub step_1{
     }
     $template = $self->get_template( { file => 'step_1.tt'} ) unless $template;
 
-    $template->param(fin => 0);
-    $template->param(processed => 0);
-    $template->param(progress => 0);
-    $template->param( erreur => 0);
-    $template->param( global => $global);
+    $template->param('wait' => 0);
+    $template->param( exist => $nombre);
     $template->param( pdf => $pdf);
-    $template->param( other => $other);
-    $template->param( suite => 0);
-    $template->param(lastborrowernumber => 0);
-    $template->param(onepourcent => $onepourcent);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
@@ -159,89 +132,60 @@ sub missingModule{
 sub displayAffected{
     my ( $self, $args) = @_;
     my $pdf = 0;
-    my $other = 0;
-    my $global = 0;
-    my @items;
-
-    my $query = "SELECT a.biblionumber, b.title, b.author, EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\")
- as url  FROM biblioitems a, biblio b
-                 WHERE a.biblionumber=b.biblionumber and EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <>''
-                 and a.biblionumber not in (select biblionumber from biblioimages)";
+    my $query = "SELECT a.biblionumber, EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") as url  FROM biblioitems a WHERE EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <>'' and a.biblionumber not in (select biblionumber from biblioimages)";
     my $stmt = $dbh->prepare($query);
     $stmt->execute();
     while (my $row = $stmt->fetchrow_hashref()) {
-        my $ispdf = 0;
-        $global ++;
         my @uris = split / /,$row->{url};
         foreach my $url (@uris) {
             if(substr($url,-3) eq 'pdf'){
                 $pdf ++;
-                $ispdf = 1;
-                last;
             }
         }
-        $other ++ unless $ispdf;
-}
-    $items[0] = $pdf;
-    $items[1] = $other;
-    $items[2] = $global;
-    return @items;
+    }
+    return $pdf;
 }
 sub genererVignette{
-    my ( $self, $last, $numberprocess, $numberError, $numberprocessed) = @_;
+    my ( $self, $args) = @_;
     my $dbh = C4::Context->dbh;
     my $ua = LWP::UserAgent->new(timeout => "5");
-    my @fait;
-    my $ispdf = 0;
     my $query = "SELECT a.biblionumber,EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\")
     FROM biblioitems a
-    WHERE EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in(select biblionumber from biblioimages) and (a.biblionumber > ?) order by biblionumber asc limit ?";
+    WHERE EXTRACTVALUE(a.marcxml,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in(select biblionumber from biblioimages) ";
     # Retourne 856$u, qui est le(s) URI(s) d'une ressource numérique
     my $sthSelectPdfUri = $dbh->prepare($query);
-    $sthSelectPdfUri->execute($last,$numberprocess);
+    $sthSelectPdfUri->execute();
     while (my ($biblionumber,$urifield) = $sthSelectPdfUri->fetchrow_array()){
-        $numberprocessed ++;
-        push @fait,$biblionumber;
         my @uris = split / /,$urifield;
         foreach my $url (@uris) {
-            if(substr($url,-3) eq 'pdf'){
-                $ispdf = 1;
-                my $response = $ua->get($url);
-                if(!$response->is_success){
-                    $numberError ++;
-                }else{
-                    my $contenttype = $response->header('content-type');
-                    my $lastmodified = $response->header('last-modified');
-                    # On vérifie que le fichier à l'URL spécifié est bel et bien un pdf
-                    if($contenttype eq "application/pdf"){
-                        my @filestodelete = ();
-                        my $filename = $url;
-                        my $save = '';
-                        $filename =~ m/.*\/(.*)$/;
-                        $filename = $1;
-                        $save = "/tmp/$filename";
-                        if (is_success(getstore($url,$save))){
-                            push @filestodelete,$save;
-                            `pdftocairo $save -png $save -singlefile 2>&1`; # Conversion de pdf à png, seulement pour la première page
-                            my $imageFile = $save . ".png";
-                            push @filestodelete,$imageFile;
+            my $response = $ua->get($url);
+            if($response->is_success && $response->header('content-type') eq "application/pdf"){
+                my $lastmodified = $response->header('last-modified');
+                # On vérifie que le fichier à l'URL spécifié est bel et bien un pdf
+                my @filestodelete = ();
+                my $filename = $url;
+                my $save = '';
+                $filename =~ m/.*\/(.*)$/;
+                $filename = $1;
+                $save = "/tmp/$filename";
+                if (is_success(getstore($url,$save))){
+                    push @filestodelete,$save;
+                    `pdftocairo $save -png $save -singlefile 2>&1`; # Conversion de pdf à png, seulement pour la première page
+                    my $imageFile = $save . ".png";
+                    push @filestodelete,$imageFile;
 
-                            my $srcimage = GD::Image->new($imageFile);
-                            my $replace = 1;
-                            C4::Images::PutImage($biblionumber,$srcimage,$replace);
-                            foreach my $file (@filestodelete){
-                                unlink $file or warn "Could not unlink $file: $!\nNo more images to import.Exiting.";
-                            }
-                            last;
-                        }
+                    my $srcimage = GD::Image->new($imageFile);
+                    my $replace = 1;
+                    C4::Images::PutImage($biblionumber,$srcimage,$replace);
+                    foreach my $file (@filestodelete){
+                        unlink $file or warn "Could not unlink $file: $!\nNo more images to import.Exiting.";
                     }
+                    last;
                 }
             }
         }
     }
-    push @fait,$numberError;
-    push @fait,$numberprocessed;
-    return \@fait;
+    exit 0;
 }
 #Supprimer le plugin avec toutes ses données
 sub uninstall() {

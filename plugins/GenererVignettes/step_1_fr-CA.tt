@@ -5,7 +5,7 @@
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Acceuil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; GenerateVignettes</div>
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; GenerateVignettes</div>
 <div id="doc3">
     <div id="content">
 
@@ -17,29 +17,17 @@
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" id="op" name="op" value=""/>
-            <input type="hidden" id="last" name="last" value="0"/>
-            <input type="hidden" id="onepourcent" name="onepourcent" value="[% onepourcent %]"/>
-            <input type="hidden" id="suite" name="suite" value="[% suite %]"/>
-            <input type="hidden" id="erreur" name="erreur" value="[% erreur %]"/>
-            <input type="hidden" id="progress" name="progress" value="[% progress %]"/>
-            <input type="hidden" id="global" name="global" value="[% global %]"/>
-            <input type="hidden" id="processed" name="processed" value="[% processed %]"/>
-            <input type="hidden" id="pdf" name="pdf" value="[% pdf %]"/>
-            <input type="hidden" id="other" name="other" value="[% other %]"/>
             <!-- end of plugin necessary inputs  -->
 
-            <label class="filterDescription"> <p>Nombre de notices qui ont une zone 856$u et qui n'ont pas de      vignettes : [% global %]</p></label>
-            <label class="filterDescription"> <p>Nombre de notices qui ont une zone 856$u ne pointant pas vers un pdf : [% other %]</p></label>
-            <label class="filterDescription"> <p>Nombre de notices à traiter : [% pdf %]</p></label>
-            <label class="filterDescription"> <p>Nombre de notices traitées: [% processed %]</p></label>
-            <label class="filterDescription"> <p>Nombre de notices traitées et la génération de vignettes affiche une erreur : [% erreur %]</p></label>
-            <label class="filterDescription">    Nombre de notices à traiter simultanément pour eviter un timeout: </label><input type="text" id="limit" maxlength="1" name="limit" value="5"/>
+            <label class="filterDescription"> <p>Nombre de notices à traiter: [% pdf %]</p></label>
             <hr>
-            <button class="btn btn-default" onclick="lunchGenerate()">Create thumbnails</button>
+            <button id="lunch" class="btn btn-default" onclick="lunchGenerate()">Télécharger les images</button>
+            <br>
+            <br>
             <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
             <br>
             <br>
-            <label class="filterDescription"> <p>Note: The plugin download each file and check its header to determine if it's a pdf file or not. Only pdf files will generate thumbnails.</p>
+            <label class="filterDescription"> <p>Remarque: Le plugin télécharge chaque document et vérifie dans l'entête du fichier s'il s'agit d'un document pdf. Seul les fichiers pdf généreront une vignette.</p>
         </form>
     </div>
 </div>
@@ -56,29 +44,36 @@
     background: #AFBD22;
     margin:3px 0;
 }
-
+.progress {
+    color : red;
+    font-size : 16px;
+}
+.finish {
+    color : green;
+    font-size : 16px;
+}
 </style>
 
 <script>
 $( function() {
-    if ([% suite %] != 0 ){
-        if ([% fin %] == 1){
-            info = document.getElementById('progression');
-            info.firstChild.data = "Traitement achevé correctement";
-            document.getElementById('op').value = '';
-            document.getElementById("formTraitement").submit();
-        }else{
-            document.getElementById('op').value = 'valide';
-            info = document.getElementById('progression');
-            info.firstChild.data = "Progression en cours, veuillez patienter: " + [% progress %] + " %";
-            document.getElementById('last').value = [% lastborrowernumber %];
-            document.getElementById("formTraitement").submit();
-        }
+    if ([% exist %] > 1 ){
+        document.getElementById('lunch').disabled = true;
+        info = document.getElementById('progression');
+        info.setAttribute('class','progress');
+        info.firstChild.data = "Ce processus s'execute en arrière plan, merci de patienter";
     }
+    if([% wait %] == 1 ){
+        document.getElementById('op').value = '';
+        document.getElementById('lunch').disabled = true;
+        info = document.getElementById('progression')
+        info.setAttribute('class','finish');
+        info.firstChild.data = "Ce traitement est bien lancé en arrière plan, merci de patienter";
+    }
+
 } );
 function lunchGenerate(){
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
-    info.firstChild.data = "Progression en cours, veuillez patienter: " + [% progress %] + " %";
+    info.firstChild.data = "Progression en cours, veuillez patienter .................";
 }
 </script>
