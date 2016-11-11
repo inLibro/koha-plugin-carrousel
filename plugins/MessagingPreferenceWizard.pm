@@ -40,6 +40,12 @@ sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
     my $op = $cgi->param('op');
+    my @sortie = `ps -eo user,bsdstart,command --sort bsdstart`;
+    my @process;
+    foreach my $val (@sortie){
+        push @process, $val if ($val =~ '/plugins/run.pl');
+    }
+    my $nombre = scalar (@process);
     my $truncate = $cgi->param('trunc');
     my $since = $cgi->param('since');
     if ($op eq 'valide'){
@@ -55,13 +61,27 @@ sub tool {
         my $sth = $dbh->prepare("SELECT borrowernumber, categorycode FROM borrowers WHERE dateenrolled >= ?");
         $sth->execute($since);
         my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
-        my $template = undef;
-        eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
-        if(!$template){
-            $preferedLanguage = substr $preferedLanguage, 0, 2;
+        my $result = $sth->fetchall_arrayref();
+        my $number = scalar @$result;
+        $sth->execute($since);
+        my $pid = fork();
+        if ( $pid ){
+            my $template = undef;
             eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
+            if(!$template){
+                $preferedLanguage = substr $preferedLanguage, 0, 2;
+                eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
+            }
+            $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } ) unless $template;
+            $template->param('attente' => 1);
+            $template->param( exist => 0);
+            $template->param(decompte => $number);
+            print $cgi->header();
+            print $template->output();
+            exit 0;
+        }else{
+            close STDOUT;
         }
-        $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } ) unless $template;
         while ( my ($borrowernumber, $categorycode) = $sth->fetchrow ) {
             C4::Members::Messaging::SetMessagingPreferencesFromDefaults( {
                 borrowernumber => $borrowernumber,
@@ -69,17 +89,15 @@ sub tool {
             } );
         }
         $dbh->commit();
-        $template->param( fin => 1);
-        print $cgi->header();
-        print $template->output();
+        exit 0;
     }else{
-        $self->show_config_pages();
+        $self->show_config_pages($nombre);
     }
 }
 
 # CRUD handler - Displays the UI for listing of existing pages.
 sub show_config_pages {
-    my ( $self, $args ) = @_;
+    my ( $self, $nombre) = @_;
     my $cgi = $self->{'cgi'};
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $template = undef;
@@ -89,7 +107,10 @@ sub show_config_pages {
         eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
     }
     $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } ) unless $template;
-    $template->param( fin => 0);
+    $template->param('attente' => 0);
+    $template->param( exist => $nombre);
+    $template->param( number => 0);
+    $template->param( decompte => 0);
     print $cgi->header();
     print $template->output();
 }

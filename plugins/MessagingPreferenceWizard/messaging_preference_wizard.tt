@@ -1,6 +1,9 @@
 [% USE KohaDates %]
  [% INCLUDE 'doc-head-open.inc' %]
  <title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Modify notifications</title>
+  [%  IF exist  > 1 %]
+  <meta http-equiv="refresh" content="300">
+  [% END %]
  [% INCLUDE 'doc-head-close.inc' %]
  [% INCLUDE 'calendar.inc' %]
  </head>
@@ -18,7 +21,7 @@
     <h2>Enhanced messaging preferences wizard</h2>
     <p>The plugin uses the "borrowers-force-messaging-defaults" script. This script setups or resets all borrower accounts with the default enhanced messaging preferences values. The default configuration comes from the patron category administration page.</p>
     <h4>Two options are available.</h4>
-    <form method='get'>    
+    <form method='get' id="formTraitement">
         <input type='hidden' id='class' name='class' value='[% CLASS %]'/>
         <input type="hidden" name="method" value="tool"/>
         <input type='hidden' id='op' name="op" value=''/>
@@ -28,32 +31,51 @@
         <div class="form-group">
             <p>Truncate: <input type="checkbox" class="form-control" name="trunc" id="trunc">  when checked, all previous configuration from all patron accounts will be cleared before the default values are set.</p>
         </div>
-        <p><button  class="btn btn-default" onclick="lancerRecherche()">Launch</button></p>
-        <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">`</span>
+        <p><button id="lunch" class="btn btn-default" onclick="lancerRecherche()">Launch</button></p>
+        <div><span id="number">&nbsp;</span></div>
+        <div><span id="progression">&nbsp;</span></div>
     </form>
 </div>
 </div>
 [% INCLUDE 'intranet-bottom.inc' %]
 <style>
-  .finish {
-      color : #538200;
+ .finish {
+      color : green;
       font-size : 16px;
   }
+ .progress {
+     color : red;
+     font-size : 16px;
+ }
   .debut {
-      color : #004D99;
+      color : blue;
       font-size : 16px;
       transition: all 0.7s ease-out;
+  }
+  .texte {
+      font-size : 16px;
   }
 </style>
  <script type="text/javascript">
  $( function() {
      $( "#since" ).datepicker();
-     if ([% fin %] == 1){
+     document.getElementById('lunch').disabled = false;
+     if ([% exist %] > 1 ){
+         document.getElementById('lunch').disabled = true;
          info = document.getElementById('progression');
-         info.setAttribute("class","finish");
-         info.firstChild.data = "Finish correctly ";
+         info.setAttribute('class','progress');
+         info.firstChild.data = "This job progresses in background  - please wait";
      }
-   } );
+     if([% attente %] == 1 ){
+         document.getElementById('lunch').disabled = true;
+         info = document.getElementById('progression');
+         info.setAttribute('class','finish');
+         decompte = document.getElementById('number');
+         decompte.setAttribute('class','texte');
+         decompte.firstChild.data = " Number of borrowers to process: " + [% decompte %];
+         info.firstChild.data = "The job is lunched correctly in background, please wait";
+     }
+} );
  function lancerRecherche(){
      if(window.confirm("Do you really want to apply this configuration?")){
          since = document.getElementById('since').value;
