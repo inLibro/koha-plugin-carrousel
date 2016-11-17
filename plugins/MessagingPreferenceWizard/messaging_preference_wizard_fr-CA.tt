@@ -2,8 +2,8 @@
  [% INCLUDE 'doc-head-open.inc' %]
  <title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Modify notifications</title>
  [%  IF exist  > 1 %]
-   <meta http-equiv="refresh" content="300">
- [% END %]
+   <meta http-equiv="refresh" content="30">
+   [% END %]
  [% INCLUDE 'doc-head-close.inc' %]
  [% INCLUDE 'calendar.inc' %]
  </head>
@@ -59,7 +59,7 @@
  <script type="text/javascript">
  $( function() {
      $( "#since" ).datepicker();
-     if ([% exist %] > 1 ){
+     if ([% exist %] > 1 && [% lock %] > 0){
          document.getElementById('lunch').disabled = true;
          info = document.getElementById('progression');
          info.setAttribute('class','progress');

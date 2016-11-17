@@ -14,6 +14,7 @@ use C4::Context;
 use Pod::Usage;
 use Getopt::Long;
 use Data::Dumper;
+use File::Spec;
 
 our $VERSION = 1.1;
 
@@ -41,11 +42,13 @@ sub tool {
     my $cgi = $self->{'cgi'};
     my $op = $cgi->param('op');
     my @sortie = `ps -eo user,bsdstart,command --sort bsdstart`;
+    my @lockfile = `ls -s /tmp/.PluginMessaging.lock`;
     my @process;
     foreach my $val (@sortie){
         push @process, $val if ($val =~ '/plugins/run.pl');
     }
     my $nombre = scalar (@process);
+    my $lock = scalar (@lockfile);
     my $truncate = $cgi->param('trunc');
     my $since = $cgi->param('since');
     if ($op eq 'valide'){
@@ -75,6 +78,7 @@ sub tool {
             $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } ) unless $template;
             $template->param('attente' => 1);
             $template->param( exist => 0);
+            $template->param( lock => 0);
             $template->param(decompte => $number);
             print $cgi->header();
             print $template->output();
@@ -82,6 +86,7 @@ sub tool {
         }else{
             close STDOUT;
         }
+        open  my $fh,">",File::Spec->catdir("/tmp/",".PluginMessaging.lock");
         while ( my ($borrowernumber, $categorycode) = $sth->fetchrow ) {
             C4::Members::Messaging::SetMessagingPreferencesFromDefaults( {
                 borrowernumber => $borrowernumber,
@@ -89,15 +94,16 @@ sub tool {
             } );
         }
         $dbh->commit();
+        `rm /tmp/.PluginMessaging.lock`;
         exit 0;
     }else{
-        $self->show_config_pages($nombre);
+        $self->show_config_pages($nombre,$lock);
     }
 }
 
 # CRUD handler - Displays the UI for listing of existing pages.
 sub show_config_pages {
-    my ( $self, $nombre) = @_;
+    my ( $self, $nombre, $lock) = @_;
     my $cgi = $self->{'cgi'};
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $template = undef;
@@ -109,6 +115,7 @@ sub show_config_pages {
     $template = $self->get_template( { file => 'messaging_preference_wizard.tt' } ) unless $template;
     $template->param('attente' => 0);
     $template->param( exist => $nombre);
+    $template->param( lock => $lock);
     $template->param( number => 0);
     $template->param( decompte => 0);
     print $cgi->header();
