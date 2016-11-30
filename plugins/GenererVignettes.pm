@@ -30,6 +30,7 @@ use base qw(Koha::Plugins::Base);
 use C4::Auth;
 use C4::Context;
 use C4::Images;
+use File::Spec;
 
 our $dbh = C4::Context->dbh();
 our $VERSION = 1.1;
@@ -57,17 +58,20 @@ sub new {
 sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
+    my $op = $cgi->param('op');
     my @sortie = `ps -eo user,bsdstart,command --sort bsdstart`;
+    my @lockfile = `ls -s /tmp/.PluginGenerateVignette.lock`;
     my @process;
     foreach my $val (@sortie){
             push @process, $val if ($val =~ '/plugins/run.pl') ;
     }
     my $nombre = scalar (@process);
+    my $lock = scalar (@lockfile);
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $warning = eval{`dpkg -s libcairo2-dev`};
     if(!$warning){
         $self->missingModule();
-    } elsif($cgi->param('op') eq 'valide'){
+    } elsif( $op && $op eq 'valide'){
         my $pid = fork();
         if ( $pid ){
             my $template = undef;
@@ -81,20 +85,24 @@ sub tool {
             $template->param(pdf => $pdf);
             $template->param('wait' => 1);
             $template->param('exist' => 0);
-            print $cgi->header();
+            $template->param( lock => 0);
+            print $cgi->header(-type => 'text/html',-charset => 'utf-8');
             print $template->output();
             exit 0;
         }else{
            close STDOUT;
         }
+        open  my $fh,">",File::Spec->catdir("/tmp/",".PluginGenerateVignette.lock");
         &genererVignette();
+        `rm /tmp/.PluginGenerateVignette.lock`;
+        exit 0;
     }else{
-        $self->step_1($nombre);
+        $self->step_1($nombre,$lock);
     }
 }
 
 sub step_1{
-    my ( $self, $nombre) = @_;
+    my ( $self, $nombre, $lock) = @_;
     my $cgi = $self->{'cgi'};
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $template = undef;
@@ -108,6 +116,7 @@ sub step_1{
 
     $template->param('wait' => 0);
     $template->param( exist => $nombre);
+    $template->param( lock => $lock);
     $template->param( pdf => $pdf);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
@@ -185,7 +194,6 @@ sub genererVignette{
             }
         }
     }
-    exit 0;
 }
 #Supprimer le plugin avec toutes ses données
 sub uninstall() {

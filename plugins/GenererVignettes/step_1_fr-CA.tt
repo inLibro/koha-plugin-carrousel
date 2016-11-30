@@ -1,6 +1,9 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
 <title>Koha: GenerateVignettes Plugin</title>
+[%  IF exist  > 1 %]
+    <meta http-equiv="refresh" content="30">
+[% END %]
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
@@ -48,6 +51,12 @@
     color : red;
     font-size : 16px;
 }
+.debut {
+    color : blue;
+    font-size : 16px;
+    transition: all 0.7s ease-out;
+ }
+
 .finish {
     color : green;
     font-size : 16px;
@@ -56,7 +65,8 @@
 
 <script>
 $( function() {
-    if ([% exist %] > 1 ){
+    document.getElementById('lunch').disabled = false;
+    if ([% exist %] > 1 && [% lock %] > 0 ){
         document.getElementById('lunch').disabled = true;
         info = document.getElementById('progression');
         info.setAttribute('class','progress');
@@ -74,6 +84,7 @@ $( function() {
 function lunchGenerate(){
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
+    info.setAttribute("class","debut");
     info.firstChild.data = "Progression en cours, veuillez patienter .................";
 }
 </script>
