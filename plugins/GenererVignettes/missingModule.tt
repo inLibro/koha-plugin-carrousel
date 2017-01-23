@@ -20,7 +20,7 @@
             <!-- end of plugin necessary inputs  -->
 
             <div class="alert">
-                    <h2>This plugin cannot be used, the module : libcairo2-dev is missing, please contact your system administrator</h2>
+                    <h2>This plugin cannot be used, the commande : pdftocairo is not available, please contact your system administrator or install necessary package for use this command</h2>
             </div>
     </div>
 </div>

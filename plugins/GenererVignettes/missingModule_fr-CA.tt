@@ -20,7 +20,7 @@
             <!-- end of plugin necessary inputs  -->
 
             <div class="alert">
-                    <h2>Ce plugin ne peut pas être utilisé, car le module : ibcairo2-dev n'est pas installé </h2>
+                    <h2>Ce plugin ne peut pas être utilisé, car la commande : pdftocairo  n'est pas disponible, veuillez contacter votre administrateur ou installer le package qui permet d'utiliser la commande </h2>
             </div>
     </div>
 </div>

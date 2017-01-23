@@ -69,7 +69,8 @@ sub tool {
     my $lock = scalar (@lockfile);
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $warning = eval{`dpkg -s libcairo2-dev`};
-    if(!$warning){
+    my $pdftocairo = "/usr/bin/pdftocairo";
+    unless ( -e  $pdftocairo){
         $self->missingModule();
     } elsif( $op && $op eq 'valide'){
         my $pid = fork();
