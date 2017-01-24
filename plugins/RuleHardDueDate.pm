@@ -27,6 +27,8 @@ use CGI;
 use C4::Context;
 use C4::Branch;
 use Koha::DateUtils;
+use C4::Members;
+use C4::Koha;
 
 our $VERSION = 1.1;
 
@@ -55,6 +57,8 @@ sub tool {
      my $branchcode = $cgi->param('branch');
      my $harduedate = $cgi->param('duedate');
      my $addcancel = $cgi->param('addcancel');
+     my $category = $cgi->param('category');
+     my $itemtype = $cgi->param('itemtype');
      if ($op && $op eq 'valide'){
          my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
          my $template = undef;
@@ -65,9 +69,11 @@ sub tool {
          }
          $template = $self->get_template( { file => 'rule_hard_due_date.tt' } ) unless $template;
          my $branchloop = &GetBranchs();
-         &UpdateHardDueDate($branchcode,$harduedate,$addcancel);
+         my $categorieloop = &GetBorrowercategoryList();
+         &UpdateHardDueDate($branchcode,$harduedate,$addcancel,$category,$itemtype);
          $template->param(
              branchloop => $branchloop,
+             categorieloop => $categorieloop,
              confirmation => 1,
          );
          print $cgi->header(-type => 'text/html',-charset => 'utf-8');
@@ -89,8 +95,12 @@ sub tool {
      }
      $template = $self->get_template( { file => 'rule_hard_due_date.tt' } ) unless $template;
      my $branchloop = &GetBranchs();
+     my $categorieloop = &GetBorrowercategoryList();
+     my $itemtypeloop = &GetItemsTypes();
      $template->param(
          branchloop => $branchloop,
+         categorieloop => $categorieloop,
+         itemtypeloop => $itemtypeloop,
          confirmation  => 0,
      );
      print $cgi->header(-type => 'text/html',-charset => 'utf-8');
@@ -98,17 +108,33 @@ sub tool {
  }
 
  sub UpdateHardDueDate {
-     my ($branchcode, $hardduedate, $addcancel) = @_;
+     my ($branchcode, $hardduedate, $addcancel, $category, $itemtype) = @_;
      my $dbh   = C4::Context->dbh;
      my $issues_affected = 0;
      my $hard_due_date = ($addcancel eq 'add') ? $hardduedate : undef;
      my $sql = qq{
          UPDATE issuingrules
          SET hardduedate = ?, hardduedatecompare = ?
-         WHERE branchcode = ?
      };
+     my $where;
+     my $wherebranch = ($branchcode eq "all") ? "" : " branchcode = '$branchcode'";
+     $where = " WHERE $wherebranch" if $wherebranch;
+     my $whereCat = ($category eq "all") ? "" : " categorycode = '$category'";
+     #$wheres = ($where) ? $where : "";
+     if ($where) {
+         $where = ($whereCat) ? $where ." AND " . $whereCat : $where;
+     }else{
+         $where = ($whereCat) ? " WHERE $whereCat " : ''
+     }
+     my $whereItType =  ($itemtype eq "all") ? "" : " itemtype = '$itemtype'";
+     if ($where){
+         $where = ($whereItType) ? $where . " AND " . $whereItType : $where;
+     }else{
+         $where = ($whereItType) ? " WHERE $whereItType " : '';
+     }
+     $sql .= $where if ($where);
      my $sth = $dbh->prepare($sql);
-     $sth->execute($hard_due_date,-1,$branchcode);
+     $sth->execute($hard_due_date,-1);
  }
 
 sub GetBranchs {
@@ -121,6 +147,19 @@ sub GetBranchs {
         };
     }
     return $branchloop;
+}
+
+sub GetItemsTypes {
+    my $itemtypes = GetItemTypes;
+    my @itemtypesloop;
+    foreach my $thisitemtype ( sort keys %$itemtypes ) {
+        my %row = (
+            value       => $thisitemtype,
+            description => $itemtypes->{$thisitemtype}->{translated_description},
+        );
+        push @itemtypesloop, \%row;
+    }
+    return \@itemtypesloop
 }
 
 sub uninstall() {

@@ -15,8 +15,8 @@
         <h2>Réglage de la date d'échéance</h2>
         <p> Ce plugin vous permet:
             <ul class='classul'>
-                <li>De mettre en place une date d'échéance pour une  branche selectionnée.</li>
-                <li>De remettre la branche sans date d'échéance.</li>
+                <li>De mettre en place une date d'échéance pour une  branche selectionnée, une catégorie d'utilisateur ainsi que le type d'item, L'opérateur entre les trois condition est AND.</li>
+                <li>De remettre la branche, la catégorie et le type de l'item  sans date d'échéance.</li>
             <ul>
         </p>
         <form method='get' id="formTraitement">
@@ -24,6 +24,8 @@
             <input type="hidden" name="method" value="tool"/>
             <input type='hidden' id='op' name="op" value=''/>
             <input type='hidden' id='branch' name='branch' value=''>
+            <input type='hidden' id='category' name='category' value=''>
+            <input type='hidden' id='itemtype' name='itemtype' value=''>
             <input type='hidden' id='addcancel' name='addcancel' value=''>
             <p> Choix d'opération :
             <select id="typeoperation" onchange="changeSelect()">
@@ -31,12 +33,34 @@
                 <option value="cancel">Annuler la date d'échéance</option>
             </select></p>
             <div id="addharddate">
-                <p><label id='labelduedate'> Mette la date d'échéance à: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()">  <span id="forbranch">pour la branche : </span>
+                <p><label id='labelduedate'> Mette la date d'échéance à: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>
+                <div>
+                    <p><span id="forbranch">pour la branche : </span>
                     <select id="branchs">
+                        <option value="all">Toutes</option>
+                        <option value="*">Defaul</option>
                         [% FOREACH b IN branchloop %]
                             <option value="[% b.value %]">[% b.branchname %]</option>
                         [% END %]
-                    </select>
+                     </select>
+                     <span id="forbranch"> catégorie: </span>
+                     <select id="categories">
+                         <option value="all">Toutes</option>
+                         <option value="*">Defaut</option>
+                         [% FOREACH c IN categorieloop %]
+                             <option value="[% c.categorycode %]">[% c.description %]</option>
+                         [% END %]
+                     </select>
+                     <br><span id="forbranch"> type de l'item: </span>
+                     <select id="itemtypes">
+                         <option value="all">Tous</option>
+                         <option value="*">Defaut</option>
+                         [% FOREACH i IN itemtypeloop %]
+                             <option value="[% i.value %]">[% i.description %]</option>
+                         [% END %]
+                     </select>
+                     </p>
+                     </div>
                     <button id="save"  onclick="update()">Appliquer</button>
                 </p>
             </div>
@@ -67,6 +91,8 @@
            if(window.confirm("Est ce que vous voulez appliquer ces changements ?")){
                document.getElementById('op').value = 'valide';
                document.getElementById('branch').value = document.getElementById('branchs').value;
+               document.getElementById('category').value = document.getElementById('categories').value;
+               document.getElementById('itemtype').value = document.getElementById('itemtypes').value;
                if (operation == 'cancel'){
                    document.getElementById('addcancel').value = 'cancel';
                }else{

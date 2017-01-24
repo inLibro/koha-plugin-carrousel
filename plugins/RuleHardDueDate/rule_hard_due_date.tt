@@ -19,6 +19,8 @@
             <input type="hidden" name="method" value="tool"/>
             <input type='hidden' id='op' name="op" value=''/>
             <input type='hidden' id='branch' name='branch' value=''>
+            <input type='hidden' id='category' name='category' value=''>
+            <input type='hidden' id='itemtype' name='itemtype' value=''>
             <input type='hidden' id='addcancel' name='addcancel' value=''>
             <p> Operation choice :
             <select id="typeoperation" onchange="changeSelect()">
@@ -26,12 +28,35 @@
                 <option value="cancel"> Cancel hard due date</option>
             </select></p>
             <div id="addharddate">
-                <p><label id='labelduedate'> Hard due date to: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()">  <span id="forbranch"> for branch: </span> 
+                <p><label id='labelduedate'> Hard due date to: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>  
+                <div>
+                    <p><span id="forbranch"> branch: </span>
                     <select id="branchs">
+                        <option value="all">All</option>
+                        <option value="*">Default</option>
                         [% FOREACH b IN branchloop %]
                             <option value="[% b.value %]">[% b.branchname %]</option>
                         [% END %]
                     </select>
+                    <span id="forbranch"> category: </span>
+                    <select id="categories">
+                        <option value="all">All</option>
+                        <option value="*">Default</option>
+                        [% FOREACH c IN categorieloop %]
+                            <option value="[% c.categorycode %]">[% c.description %]</option>
+                        [% END %]
+                    </select>
+                    <br><span id="forbranch"> item type: </span>
+                    <select id="itemtypes">
+                        <option value="all">All</option>
+                        <option value="*">Default</option>
+                        [% FOREACH i IN itemtypeloop %]
+                            <option value="[% i.value %]">[% i.description %]</option>
+                        [% END %]
+                    </select>
+                    </p>
+
+                    </div>
                     <button id="save"  onclick="update()">Apply</button>
                 </p>
             </div>
@@ -60,6 +85,8 @@
            if(window.confirm("Do you really want to apply this configuration?")){
                document.getElementById('op').value = 'valide';
                document.getElementById('branch').value = document.getElementById('branchs').value;
+               document.getElementById('category').value = document.getElementById('categories').value;
+               document.getElementById('itemtype').value = document.getElementById('itemtypes').value;
                if (operation == 'cancel'){
                    document.getElementById('addcancel').value = 'cancel';
                }else{
