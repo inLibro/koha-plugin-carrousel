@@ -1,6 +1,6 @@
 [% USE KohaDates %]
 [% INCLUDE 'doc-head-open.inc' %]
-<title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Mise à jour de la date d'echéance</title>
+<title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Mise à jour des dates d'échéance</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <body>
     [% INCLUDE 'header.inc' %]
@@ -15,8 +15,8 @@
         <h2>Réglage de la date d'échéance</h2>
         <p> Ce plugin vous permet:
             <ul class='classul'>
-                <li>De mettre en place une date d'échéance pour une  branche selectionnée, une catégorie d'utilisateur ainsi que le type d'item, L'opérateur entre les trois condition est AND.</li>
-                <li>De remettre la branche, la catégorie et le type de l'item  sans date d'échéance.</li>
+                <li>de paramétrer la date d'échéance d'un prêt pour une site, une catégorie d'utilisateur et un type de document. Il est possible de modifier soit les règles par défaut, soit toutes les règles de circulation.</li>
+                <li>d'annuler ce paramétrage.</li>
             <ul>
         </p>
         <form method='get' id="formTraitement">
@@ -29,32 +29,32 @@
             <input type='hidden' id='addcancel' name='addcancel' value=''>
             <p> Choix d'opération :
             <select id="typeoperation" onchange="changeSelect()">
-                <option value="add">Ajouter une date d'échéance</option>
-                <option value="cancel">Annuler la date d'échéance</option>
+                <option value="add"> Ajouter une date d'échéance</option>
+                <option value="cancel"> Annuler une date d'échéance</option>
             </select></p>
             <div id="addharddate">
-                <p><label id='labelduedate'> Mette la date d'échéance à: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>
+                <p><label id='labelduedate'> Paramétrer la date d'échéance à: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>
                 <div>
-                    <p><span id="forbranch">pour la branche : </span>
+                    <p><span id="forbranch"> site : </span>
                     <select id="branchs">
-                        <option value="all">Toutes</option>
-                        <option value="*">Defaul</option>
+                        <option value="all">Tous</option>
+                        <option value="*">Par défaut</option>
                         [% FOREACH b IN branchloop %]
                             <option value="[% b.value %]">[% b.branchname %]</option>
                         [% END %]
                      </select>
-                     <span id="forbranch"> catégorie: </span>
+                     <br><span id="forbranch"> catégorie d'adhérent : </span>
                      <select id="categories">
                          <option value="all">Toutes</option>
-                         <option value="*">Defaut</option>
+                         <option value="*">Par défaut</option>
                          [% FOREACH c IN categorieloop %]
                              <option value="[% c.categorycode %]">[% c.description %]</option>
                          [% END %]
                      </select>
-                     <br><span id="forbranch"> type de l'item: </span>
+                     <br><span id="forbranch"> type de document : </span>
                      <select id="itemtypes">
                          <option value="all">Tous</option>
-                         <option value="*">Defaut</option>
+                         <option value="*">Par défaut</option>
                          [% FOREACH i IN itemtypeloop %]
                              <option value="[% i.value %]">[% i.description %]</option>
                          [% END %]
@@ -86,9 +86,9 @@
        var operation = document.getElementById('typeoperation').value;
        var dateDue = document.getElementById('duedate').value;
        if (dateDue == '' && operation == 'add'){
-           alert ("Vous devez selectionner une date d'échéance");
+           alert ("Vous devez sélectionner une date d'échéance");
        }else{
-           if(window.confirm("Est ce que vous voulez appliquer ces changements ?")){
+           if(window.confirm("Souhaitez-vous appliquer ces changements ?")){
                document.getElementById('op').value = 'valide';
                document.getElementById('branch').value = document.getElementById('branchs').value;
                document.getElementById('category').value = document.getElementById('categories').value;
