@@ -15,7 +15,7 @@
         <h2>Réglage de la date d'échéance</h2>
         <p> Ce plugin vous permet:
             <ul class='classul'>
-                <li>de paramétrer la date d'échéance d'un prêt pour une site, une catégorie d'utilisateur et un type de document. Il est possible de modifier soit les règles par défaut, soit toutes les règles de circulation.</li>
+                <li>de paramétrer la date d'échéance d'un prêt pour un site, une catégorie d'utilisateur et un type de document. Il est possible de modifier soit les règles par défaut, soit toutes les règles de circulation.</li>
                 <li>d'annuler ce paramétrage.</li>
             <ul>
         </p>
@@ -78,7 +78,7 @@
     $( function() {
         $( "#duedate" ).datepicker({ dateFormat: 'yy-mm-dd' });
         if ([% confirmation %] ){
-            alert ("La modification est faite correctement");
+            alert ("La modification a été faite correctement");
             document.getElementById('formTraitement').submit();
         }
     });

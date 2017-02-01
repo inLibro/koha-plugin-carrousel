@@ -15,7 +15,7 @@
         <h2>Rule Hard Due Date</h2>
         <p> This plugin allows you :
            <ul class='classul'>
-               <li>to set a specific hard due date for selected branches, patron cartegories and item types. The settings can either apply to the default circulation rules or all of them.</li>
+               <li>to set a specific hard due date for a selected branch, patron cartegory and item type. The settings can either apply to the default circulation rules or to all of them.</li>
                <li>to rollback the settings.</li>
            </ul>
         </p>
