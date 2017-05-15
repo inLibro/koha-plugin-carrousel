@@ -36,13 +36,13 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.1;
+our $VERSION = 1.2;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',
     description     => 'Allows to generate a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2016-06-06',
+    date_updated    => '2017-05-15',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
