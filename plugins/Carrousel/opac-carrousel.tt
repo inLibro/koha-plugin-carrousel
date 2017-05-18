@@ -39,12 +39,16 @@
     top : 0;
 }
 #title-text{
+[% IF txtColor %]
     color : #[%txtColor%];
+[% END %]
 }
 .carousel-control,
 .carousel-caption
 {
+[% IF bgColor %]
     background-color : #[%bgColor%];
+[% END %]
     z-index:1000;
     cursor : pointer;
 }
@@ -57,7 +61,9 @@
 usel-control,
 .carousel-caption
 {
+[% IF bgColor %]
     background-color : #[%bgColor%];
+[% END %]
     z-index:1000;
 }
 
