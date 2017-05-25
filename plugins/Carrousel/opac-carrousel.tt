@@ -15,6 +15,13 @@
 </div>
 
 <style>
+[% UNLESS txtColor %]
+   [% txtColor = 'ffffff' %]
+[% END %]
+[% UNLESS bgColor %]
+    [% bgColor = '373737' %]
+[% END %]
+
 .carrouselFrame {
     background: #DDDDDD;
     border-radius: 8px;
@@ -39,16 +46,12 @@
     top : 0;
 }
 #title-text{
-[% IF txtColor %]
     color : #[%txtColor%];
-[% END %]
 }
 .carousel-control,
 .carousel-caption
 {
-[% IF bgColor %]
     background-color : #[%bgColor%];
-[% END %]
     z-index:1000;
     cursor : pointer;
 }
@@ -61,9 +64,7 @@
 usel-control,
 .carousel-caption
 {
-[% IF bgColor %]
     background-color : #[%bgColor%];
-[% END %]
     z-index:1000;
 }
 

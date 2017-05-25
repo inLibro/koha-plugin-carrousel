@@ -36,13 +36,13 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.2;
+our $VERSION = 1.3;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',
     description     => 'Allows to generate a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2017-05-15',
+    date_updated    => '2017-05-25',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -274,7 +274,7 @@ sub getThumbnailUrl
 
         if ( C4::Context->preference("OPACAmazonCoverImages") ) {
             my $URL = "https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg";
-            #print : "\n Url is $URL \n";
+            #warn "\n Url is $URL \n";
             my $request = HTTP::Request->new(GET => $URL);
             my $ua = LWP::UserAgent->new;
             my $response = $ua->request($request);
@@ -286,35 +286,37 @@ sub getThumbnailUrl
 
         if ( C4::Context->preference("GoogleJackets") ) {
             my $URL = getThumbnailOnJsonPage ("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA");
-            #print : "\n Url is $URL \n";
+            #warn "\n Url is $URL \n";
             if ($URL ne 0) {
                 return $URL;
             }
         }
 
         if ( C4::Context->preference("OPACLocalCoverImages") ) {
-            my $URL = "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
-            #print : "\n Url is $URL \n";
+            my $opac_URL = C4::Context->preference("OPACBaseURL");
+            my $image_relative_URL = "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
+            my $URL = $opac_URL . $image_relative_URL;
+            #warn "\n Url is $URL \n";
             my $request = HTTP::Request->new(GET => $URL);
             my $ua = LWP::UserAgent->new;
             my $response = $ua->request($request);
 
             if ( $response->is_success )
             {
-                return $URL;
+                return $image_relative_URL;
             }
         }
 
         if ( C4::Context->preference("OpenLibraryCovers") ) {
             my $URL = "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg";
-            # print : "\n Url is $URL \n";
+            #warn "\n Url is $URL \n";
             my $request = HTTP::Request->new(GET => $URL."?default=false");
             my $ua = LWP::UserAgent->new;
             my $response = $ua->request($request);
 
             if ($response->is_success)
             {
-                return "<a href='/cgi-bin/koha/opac-detail.pl?biblionumber=$biblionumber'> <img border='0' class='cloudcarousel' src='$URL' ";
+                return $URL;
             }
         }
     }
