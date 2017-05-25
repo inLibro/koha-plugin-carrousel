@@ -25,7 +25,6 @@ use base qw(Koha::Plugins::Base);
 
 use CGI;
 use C4::Context;
-use C4::Branch;
 use Koha::DateUtils;
 use C4::Members;
 use C4::Koha;
@@ -138,7 +137,7 @@ sub tool {
  }
 
 sub GetBranchs {
-    my $branches = GetBranches();
+    my $branches = { map { $_->branchcode => $_->unblessed } Koha::Libraries->search };
     my $branchloop;
     for my $thisbranch (sort { $branches->{$a}->{branchname} cmp $branches->{$b}->{branchname} } keys %{$branches}) {
         push @{$branchloop}, {
