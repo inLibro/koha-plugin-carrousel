@@ -301,7 +301,7 @@ sub getThumbnailUrl
             my $ua = LWP::UserAgent->new;
             my $response = $ua->request($request);
 
-            if ( $response->is_success )
+            if ( $response->is_success && $response->header("content-length" ) != 43)
             {
                 return $image_relative_URL;
             }
