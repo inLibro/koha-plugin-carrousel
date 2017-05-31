@@ -71,7 +71,9 @@ sub tool {
     if($useSql){
         $self->loadShelves();
     }else{
-        @shelves =  Koha::Virtualshelves->search();
+        @shelves =  Koha::Virtualshelves->search(undef,
+            { order_by => { -asc => 'shelfname' }
+        });
     }
 
     if ($cgi->param('action')){
@@ -88,7 +90,7 @@ sub tool {
 sub loadShelves{
     my ( $self, $args) = @_;
     my $dbh = $dbh;
-    my $stmt = $dbh->prepare("select * from virtualshelves");
+    my $stmt = $dbh->prepare("SELECT * FROM virtualshelves ORDER BY shelfname");
     $stmt->execute();
 
     my $i =0;
