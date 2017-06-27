@@ -55,11 +55,7 @@ $(document).ready(function() {
 	<div id="bd">
 		<div id="yui-main">
 			<div class="yui-b">
-<<<<<<< HEAD
-                <img src="http://master-intranet/plugin/Koha/Plugin/ILL/images/logo_inlibro.png" alt="Logo inLibro" width="300px" height="77px"/>
-=======
                 <a href="https://inlibro.com"><img src="http://master-intranet/plugin/Koha/Plugin/ILL/images/logo_inlibro.png" alt="Logo inLibro" width="300px" height="77px"/></a>
->>>>>>> a8f1836... cam4315: Ajout du plugin prêt entre bibliothèques
 				<form method="post">
 				<h1>ILL request manager</h1>
 				<input type='hidden' name='class' value='[% class %]'>
