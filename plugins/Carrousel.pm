@@ -36,13 +36,13 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.3;
+our $VERSION = 1.4;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',
     description     => 'Allows to generate a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2017-05-25',
+    date_updated    => '2017-06-28',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -204,7 +204,7 @@ sub generateCarroussel{
             my %image = ( url => $url, title => $title, biblionumber => $biblionumber );
             push @images, \%image;
         }else{
-            warn "There was no image found in for \" $title \"\n";
+            warn "There was no image found for biblionumber $biblionumber : \" $title \"\n";
         }
     }
 
@@ -269,6 +269,24 @@ sub getThumbnailUrl
     }elsif($marcflavour eq 'UNIMARC'){
         @isbns = $record->field('010');
     }
+
+    # We look for image localy, if available we return relative path and exit function.
+    if ( C4::Context->preference("OPACLocalCoverImages") ) {
+        my $opac_URL = C4::Context->preference("OPACBaseURL");
+        my $image_relative_URL = "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
+        my $URL = $opac_URL . $image_relative_URL;
+        #warn "\n Url is $URL \n";
+        my $request = HTTP::Request->new(GET => $URL);
+        my $ua = LWP::UserAgent->new;
+        my $response = $ua->request($request);
+
+        if ( $response->is_success && $response->header("content-length" ) != 43)
+        {
+            return $image_relative_URL;
+        }
+    }
+
+    #If there is not local thumbnail, we look for one on Amazon, Google and Openlibrary in this order and we will exit when a thumbnail is found.
     foreach my $field ( @isbns )
     {
         my $isbn = GetNormalizedISBN( $field->subfield('a') );
@@ -291,21 +309,6 @@ sub getThumbnailUrl
             #warn "\n Url is $URL \n";
             if ($URL ne 0) {
                 return $URL;
-            }
-        }
-
-        if ( C4::Context->preference("OPACLocalCoverImages") ) {
-            my $opac_URL = C4::Context->preference("OPACBaseURL");
-            my $image_relative_URL = "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
-            my $URL = $opac_URL . $image_relative_URL;
-            #warn "\n Url is $URL \n";
-            my $request = HTTP::Request->new(GET => $URL);
-            my $ua = LWP::UserAgent->new;
-            my $response = $ua->request($request);
-
-            if ( $response->is_success && $response->header("content-length" ) != 43)
-            {
-                return $image_relative_URL;
             }
         }
 
