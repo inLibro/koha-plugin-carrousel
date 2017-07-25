@@ -26,7 +26,13 @@
                     [% END %]
                 </select>
             </div>
+            [% IF shelves %]
             <input id="submit" type="submit" value="Generate">
+            [% ELSE %]
+            <div class="alert alert-danger">
+                <strong>You have no lists!</strong> Create lists so you can generate a carrousel.
+            </div>
+            [% END %]
         </form>
 
     </div>

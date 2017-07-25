@@ -42,7 +42,7 @@ our $metadata = {
     author          => 'Mehdi Hamidi',
     description     => 'Allows to generate a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2017-06-28',
+    date_updated    => '2017-07-25',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -124,13 +124,15 @@ sub step_1{
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     #La template par défault est en anglais et tout depend du cookie, il va charger la template en français
     my $template = undef;
-
-    eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
-    if(!$template){
-        $preferedLanguage = substr $preferedLanguage, 0, 2;
-        eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
+    if ($preferedLanguage) {
+        eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
+        if(!$template){
+            $preferedLanguage = substr $preferedLanguage, 0, 2;
+            eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
+        }
+    } else {
+        $template = $self->get_template( { file => 'step_1.tt' } );
     }
-    $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
 
     $template->param(shelves => \@shelves, selectedShelf => $self->retrieve_data('selectedShelf'));
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
@@ -222,7 +224,8 @@ sub generateCarroussel{
                 { binmode => ':utf8' }
                 ) || warn "Unable to generate Carrousel, ". $tt->error();
 
-$self->insertIntoPref($data);
+
+    $self->insertIntoPref($data);
 }
 
 sub insertIntoPref{
@@ -232,8 +235,9 @@ sub insertIntoPref{
 
     my $value;
     while (my $row = $stmt->fetchrow_hashref()) {
-        $value ="$row->{'value'}";
+        $value =$row->{'value'};
     }
+    $stmt->finish();
 
     # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
     my $first_line = "<!-- Debut du carrousel -->";
@@ -247,14 +251,8 @@ sub insertIntoPref{
         $value =~ s/$first_line.*?$second_line/$data/s;
     }
 
-    my $query = $dbh->prepare("update systempreferences set value= ? where variable='OpacMainUserBlock'");
-    $query->bind_param(1,$value);
-    #Executer le update sur le champ value de table systempreferences avec la nouvelle carrousel
-    $query->execute();
-
-    #Fermer toutes connections avec la BD
-    $query->finish();
-    $stmt->finish();
+    #Update system preference
+    C4::Context->set_preference( 'OpacMainUserBlock' , $value );
 }
 
 sub getThumbnailUrl
@@ -365,12 +363,15 @@ sub configure{
     }else{
         #La template par défault est en anglais et tout depend du cookie, il va charger la template en français
         my $template = undef;
-        eval {$template = $self->get_template( { file => "configure_" . $preferedLanguage . ".tt" } )};
-        if(!$template){
-            $preferedLanguage = substr $preferedLanguage, 0, 2;
-            eval {$template = $self->get_template( { file => "configure_$preferedLanguage.tt" } )};
+        if ($preferedLanguage){
+            eval {$template = $self->get_template( { file => "configure_" . $preferedLanguage . ".tt" } )};
+            if(!$template){
+                $preferedLanguage = substr $preferedLanguage, 0, 2;
+                eval {$template = $self->get_template( { file => "configure_$preferedLanguage.tt" } )};
+            }
+        } else {
+            $template = $self->get_template( { file => 'configure.tt' } );
         }
-        $template = $self->get_template( { file => 'configure.tt' } ) unless $template;
 
         $template->param(
             shelves       => \@shelves,
