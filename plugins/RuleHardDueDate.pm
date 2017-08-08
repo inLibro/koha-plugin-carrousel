@@ -29,18 +29,24 @@ use Koha::DateUtils;
 use C4::Members;
 use C4::Koha;
 
-our $VERSION = 1.1;
+our $VERSION = 1.2;
 
 our $metadata = {
     name   => 'Rules hard due dates',
     author => 'Bouzid Fergani',
     description => 'Rules hard due dates',
     date_authored   => '2016-12-20',
-    date_updated    => '2015-12-20',
-    minimum_version => '3.1406000',
+    date_updated    => '2017-08-08',
+    minimum_version => '16.05',
     maximum_version => undef,
     version         => $VERSION,
 };
+my $new_version =0;
+eval("use Koha::ItemTypes");
+eval("use Koha::Patron::Categories");
+if(!$@){
+    $new_version =1;
+}
 
 sub new {
     my ( $class, $args ) = @_;
@@ -68,7 +74,12 @@ sub tool {
          }
          $template = $self->get_template( { file => 'rule_hard_due_date.tt' } ) unless $template;
          my $branchloop = &GetBranchs();
-         my $categorieloop = &GetBorrowercategoryList();
+        my $categorieloop;
+        if($new_version) {
+            $categorieloop = Koha::Patron::Categories->search();
+        }else{
+            $categorieloop = &GetBorrowercategoryList();
+        }
          &UpdateHardDueDate($branchcode,$harduedate,$addcancel,$category,$itemtype);
          $template->param(
              branchloop => $branchloop,
@@ -94,7 +105,12 @@ sub tool {
      }
      $template = $self->get_template( { file => 'rule_hard_due_date.tt' } ) unless $template;
      my $branchloop = &GetBranchs();
-     my $categorieloop = &GetBorrowercategoryList();
+     my $categorieloop;
+     if($new_version) {
+         $categorieloop = Koha::Patron::Categories->search;
+     }else{
+         $categorieloop = &GetBorrowercategoryList();
+     }
      my $itemtypeloop = &GetItemsTypes();
      $template->param(
          branchloop => $branchloop,
@@ -149,12 +165,18 @@ sub GetBranchs {
 }
 
 sub GetItemsTypes {
-    my $itemtypes = GetItemTypes;
+    my $itemtypes;
+    if ($new_version){
+        $itemtypes = { map { $_->itemtype => $_->unblessed } Koha::ItemTypes->search };
+    } else{
+        $itemtypes = GetItemTypes();
+    }
+
     my @itemtypesloop;
     foreach my $thisitemtype ( sort keys %$itemtypes ) {
         my %row = (
             value       => $thisitemtype,
-            description => $itemtypes->{$thisitemtype}->{translated_description},
+            description => $itemtypes->{$thisitemtype}->{description},
         );
         push @itemtypesloop, \%row;
     }
@@ -168,3 +190,4 @@ sub uninstall() {
      return C4::Context->dbh->do("DROP TABLE $table");
  }
 
+1;

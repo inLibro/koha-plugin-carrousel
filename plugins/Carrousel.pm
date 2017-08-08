@@ -49,7 +49,7 @@ our $metadata = {
 };
 
 our $useSql = 0;
-if (!(eval("use Koha::Virtualshelves") || eval("use Koha::Virtualshelfcontents"))) {
+if (!(eval("use Koha::Virtualshelves") || !(eval("use Koha::Virtualshelfcontents")))) {
     $useSql =1;
 }
 our @shelves;
