@@ -1,0 +1,117 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<!-- Head-->
+<title>Koha:ChangeDueDate Plugin</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<!-- Body-->
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; ChangeDueDate</div>
+<div id="doc3">
+    <div id="content">
+
+        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+
+        <div id="div-dataset-1" align="center">
+            <h2>Change return date</h2>
+            <canvas id="graph-dataset-1" width="600", height="300" style="margin: 0;" onclick="init()"></canvas>
+            
+            <!-- First table -->
+            <table id="table-dataset-1">
+                <tr>
+                    <th>Type</th>
+                    <th>Prêts</th>
+                </tr>
+                [% FOREACH key IN types %]
+                <tr>
+                    <td>[% key.type %]</td>
+                    <td>[% key.count %]</td>
+                </tr>
+                [% END %]
+            </table>
+            <!-- End first table -->
+        </div>
+
+        <div id="div-dataset-2" align="center">
+            <h2>Change return date</h2>
+            <canvas id="graph-dataset-2" width="600", height="300" style="margin: 0;" onclick="init()"></canvas>
+            
+            <!-- First table -->
+            <table id="table-dataset-">
+                <tr>
+                    <th>Type</th>
+                    <th>Prêts</th>
+                </tr>
+                [% FOREACH key IN types %]
+                <tr>
+                    <td>[% key.type %]</td>
+                    <td>[% key.count %]</td>
+                </tr>
+                [% END %]
+            </table>
+            <!-- End first table -->
+        </div>
+
+    </div>
+</div>
+<!-- Footer-->
+[% INCLUDE 'intranet-bottom.inc' %]
+
+<script type="text/javascript">
+    var canvas;
+    var context;
+    
+    var dayName = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    var dayLoan = [% loans %];
+    var margin = 25;
+
+    var typeDict = {[% FOREACH key IN types -%]
+"[% key.type %]":[% key.count %],
+[%- END %]}
+    
+    function init() {
+        canvas = document.getElementById('graph-dataset-1');
+        context = canvas.getContext('2d');
+        drawBarGraph(toDict(dayName, dayLoan));
+    }
+
+    function drawBarGraph(series) {
+        // Get maximum value, and round it up?, all values are drawn relatively to this
+        var maxValue = 0;
+        for (var key in series)
+            maxValue = (maxValue > series[key] ? maxValue : series[key]);
+
+        // Draw graph background
+        context.fillStyle = 'rgb(40,40,40)';
+        context.fillRect(margin, margin, canvas.width - 2 * margin, canvas.height - 2 * margin);
+
+        // Draw bars
+        var w = (canvas.width - 2 * margin) / (7*2+8)
+        var h = (canvas.height - 2 * margin) - margin / 2;
+        var i = 0;
+        for (var key in series) {
+            context.fillStyle = 'hsl('+(255 / 14) * i+',80%,70%)';
+            context.fillRect(margin + (3 * i + 1) * w, canvas.height - margin, 2*w,- (h * (series[key] / maxValue)));
+            i++;
+            console
+        }
+        // Save context
+        context.save();
+    }
+
+    function drawPieGraph(values, names) {
+        // Draw graph background
+        context.fillStyle = 'rgb(40,40,40)';
+        context.fillRect(margin, margin, canvas.width - 2 * margin, canvas.height - 2 * margin);
+    }
+
+    function toDict(keys, values) {
+        var dict = {};
+        var min = (keys.length < values.length ? keys.length : values.length);
+
+        for (i = 0; i < min; i++)
+            dict[keys[i]] = values[i];
+
+        return dict;
+    }
+
+</script>
