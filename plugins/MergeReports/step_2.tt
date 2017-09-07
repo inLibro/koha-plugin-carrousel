@@ -1,0 +1,128 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<!-- Head-->
+<title>Koha:ChangeDueDate Plugin</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<!-- Body-->
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; MergeReports</div>
+<div id="doc3">
+    <div id="content">
+
+        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+        <h2>Reports results</h2>
+            [% FOREACH key IN results.keys %]
+                <h3>[% key %]</h3>
+                <table>
+                    [% FOREACH row IN results.$key %]
+                        <tr>
+                        <th>[% row %]</th>
+                        </tr>
+                    [% END %]
+                </table>
+            [% END %]
+    </div>
+</div>
+<!-- Footer-->
+[% INCLUDE 'intranet-bottom.inc' %]
+
+<style>
+
+#content{
+    width: 500px;
+}
+
+th {
+    padding:10px;    
+}
+
+select{
+    width: 70%;
+}
+.alignment{
+    float:right;
+    margin: 0;
+    padding: 0;
+}
+.filter{
+    margin-top: 2%;
+    padding-top: 2%
+}
+
+#submit{
+    font-weight: bold;
+    height:25px;
+}
+</style>
+
+
+<script>
+$(function() {
+    $( "#ExpecReturnFromDate" ).datepicker();
+    $( "#ExpecReturnToDate" ).datepicker();
+
+    $( "#ExpecCheckoutFromDate" ).datepicker();
+    $( "#ExpecCheckoutToDate" ).datepicker();
+
+    $( "#newDate" ).datepicker();
+
+    $( ".datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
+});
+function checkValue(){
+    var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
+    var ExpecCheckoutFromDate = document.getElementById('ExpecCheckoutFromDate').value;
+    var borrowerFrom = document.getElementById('borrowerFrom').value;
+
+    if(ExpecReturnFromDate ==''){
+        document.getElementById('ExpecReturnToDate').disabled = true;
+    } else{
+        document.getElementById('ExpecReturnToDate').disabled = false;
+    }
+
+    if(ExpecCheckoutFromDate ==''){
+        document.getElementById('ExpecCheckoutToDate').disabled = true;
+    } else{
+        document.getElementById('ExpecCheckoutToDate').disabled = false;
+    }
+
+    if(borrowerFrom ==''){
+        document.getElementById('borrowerTo').disabled = true;
+    } else{
+        document.getElementById('borrowerTo').disabled = false;
+    }
+    if (borrowerFrom <=0 && borrowerFrom !=''){
+        alert("value of borrower can not be less than 1");
+        document.getElementById('borrowerFrom').value =null;
+        document.getElementById('borrowerTo').disabled = true;
+    }
+
+
+}
+checkValue();
+function validateForm(){
+    var borrower = document.forms["myForm"]["borrowerFrom"].value;
+    var itemTypes = document.forms["myForm"]["itemTypes"].value;
+    var categories = document.forms["myForm"]["categories"].value;
+    var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
+    var ExpecCheckoutFromDate = document.getElementById('ExpecCheckoutFromDate').value;
+    var newDate = document.getElementById('newDate').value;
+    var check = true;
+    var message;
+
+    if (newDate=="") {
+        message ="The new return date is mandatory";
+        check=false;
+    }
+
+    if(borrower == "" && itemTypes == "none" && categories == "none" && ExpecReturnFromDate =='' && ExpecCheckoutFromDate==''){
+        message ="You have to use atleast one filter";
+        check= false;
+
+    }
+    if(!check)
+    alert(message);
+
+
+    return check;
+}
+</script>
