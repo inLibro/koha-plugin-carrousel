@@ -22,14 +22,14 @@
 
             <div class="filters">
                 <div class="filter">
-                    <table>
-                        [% FOREACH report IN reports %]
-                            <tr>
-                                <th>[% report.report_name %]</th>
-                                <th><input type="checkbox" name="[% report.report_name %]" value="report_name"></th>
-                            </tr>
-                        [% END %]
-                    </table>
+                <table>
+                    [% FOREACH report IN reports %]              
+                        <tr>
+                            <th>[% report.report_name %]</th>
+                            <th><input type="checkbox" name="[% report.id %]" value="report_name"></th>
+                        <tr>
+                    [% END %]
+                </table>
                 </div>
             </div>
 

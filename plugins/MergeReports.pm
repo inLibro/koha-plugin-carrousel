@@ -58,8 +58,8 @@ sub tool {
     my $cgi = $self->{'cgi'};
 
     if ($cgi->param('action')){
-        $self->changeDate();
-        $self->go_home();
+        $self->mergeReports();
+        #$self->go_home();
     }else{
         $self->step_1();
     }
@@ -96,6 +96,68 @@ sub loadReports{
     }
     return @reports;
 }
+
+sub mergeReports{
+    my ( $self, $args) = @_;
+    my $cgi = $self->{'cgi'};
+    my @reportsId;
+    my $stmt = $dbh->prepare("select * from saved_sql");
+    $stmt->execute();
+    my $i =0;
+    while (my $row = $stmt->fetchrow_hashref()) {
+        $reportsId[$i] = $row->{'id'};
+        $i++;
+    }
+    my %runnedReports;
+    foreach my $reportId (@reportsId){
+        if ($cgi->param($reportId)){
+            my $stmt = $dbh->prepare("select * from saved_sql where id=$reportId");
+            $stmt->execute();           
+            for my $row ($stmt->fetchrow_hashref()){
+                my $fetchStmt = $dbh->prepare("$row->{'savedsql'}");
+                my $reportName = $row->{'report_name'};
+                $fetchStmt->execute();
+                my @resultRows;
+                my $j =0;
+                while(my $resultRow = $fetchStmt->fetchrow_hashref()){
+                    $resultRows[$j] = \$resultRow;
+                }
+                $runnedReports{$reportName} = \@resultRows;
+                use Data::Dumper;
+                warn Dumper(%runnedReports);
+                #my $fields = $fetchStmt->{NAME};
+                #my %hash;
+                #my $#resultSet = @fields;
+                #while( $resultSet = $sth->fetchrow_array() ) {
+                #    my $j=0;
+                #    foreach my $resultRow ($resultSet){
+                #        $hash{ $item } = $fields[$j];
+                #    }
+                #}
+                #$runnedReports{$reportName} = $fetchedRow;
+                
+            }
+        }
+    }
+    $self->step_2(\%runnedReports);
+}
+
+sub step_2{
+    my ( $self, $runnedReports) = @_;
+    my $cgi = $self->{'cgi'};
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+    my $template = undef;
+    eval {$template = $self->get_template( { file => "step_2_" . $preferedLanguage . ".tt" } )};
+    if(!$template){
+        $preferedLanguage = substr $preferedLanguage, 0, 2;
+        eval {$template = $self->get_template( { file => "step_2_$preferedLanguage.tt" } )};
+    }
+    $template = $self->get_template( { file => 'step_2.tt' } ) unless $template;
+    $template->param( results => $runnedReports);
+    print $cgi->header(-type => 'text/html',-charset => 'utf-8');
+    print $template->output();
+ }
+
 
 #Supprimer le plugin avec toutes ses données
 sub uninstall() {
