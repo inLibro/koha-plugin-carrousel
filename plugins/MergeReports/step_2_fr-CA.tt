@@ -1,81 +1,47 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha:ChangeDueDate Plugin</title>
+<title>Koha:MergeReports Plugin</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; ChangeDueDate</div>
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; MergeReports</div>
 <div id="doc3">
     <div id="content">
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
-        <h2>Change return date</h2>
-
-        <form method="get" name ="myForm" onsubmit="return validateForm()">
-            <!-- Necessary for the plugin to run, do not remove  -->
-            <input type="hidden" name="class" value="[% CLASS %]"/>
-            <input type="hidden" name="method" value="[% METHOD %]"/>
-            <input type="hidden" name="action" value="configure"/>
-            <!-- end of plugin necessary inputs  -->
-
-
-            <div class="filters">
-                <div class="filter">
-                    <label class="filterDescription"> Category of borrower : </label>
-                    <select name="categories" id ="categories" class="alignment">
-                        <option  value="none"> None</option>
-                        [% FOREACH category IN categories %]
-                        <option  value="[% category.categorycode %]"> [% category.categorycode %] - [% category.description %]</option>
+        <h2>Résultats des rapports</h2>
+            [% FOREACH key IN results.keys.sort %]
+            [% beenthrough = 0 %]
+            [% rows=0 %]
+                <h4>[% key %]</h4>
+                [% IF results.$key.size >= 1 %]
+                <table>
+                    [% FOREACH resultItems IN results.$key %]
+                    <tr>
+                        [% FOREACH itemKey IN resultItems.keys.sort %]
+                            [% IF beenthrough == 0 || rows % 20 == 0%]
+                                [% IF itemKey == "count(*)" %]
+                                    <td>Total</td>
+                                [% ELSE %]
+                                    <td>[% itemKey %]</td>
+                                [% END %]
+                            [% END %]
                         [% END %]
-                    </select>
-                </div>
-
-                <div class="filter">
-                    <label class="filterDescription"> List of item types : </label>
-                    <select name="itemTypes" id ="itemTypes" class="alignment">
-                        <option value="none"> None</option>
-                        [% FOREACH itemType IN itemTypes %]
-                        <option value="[% itemType.itemtype %]"> [% itemType.itemtype %] - [% itemType.description %]</option>
+                    </tr>
+                    <tr>
+                        [% FOREACH itemKey IN resultItems.keys.sort %]
+                            <td>[% resultItems.$itemKey %]</td>
                         [% END %]
-                    </select>
-                </div>
-
-                <div class="filter">
-                    <label class="filterDescription">Borrower number :</label>
-                    <div name="borrowers" id ="borrowers" class="alignment">
-                        <input type="number" name="borrowerFrom" id="borrowerFrom" onchange="checkValue()" placeholder="From"/>
-                        <input type="number" name="borrowerTo" id="borrowerTo" placeholder="To"/>
-                    </div>
-                </div>
-
-                <div class="filter">
-                    Expected return date :
-                    <div class="alignment">
-                        <input type="text" name="ExpecReturnFromDate" id="ExpecReturnFromDate" class="datepicker" onchange="checkValue()" placeholder="From"/>
-                        <input type="text" name="ExpecReturnToDate" id="ExpecReturnToDate" class="datepicker" placeholder="To"/>
-                    </div>
-                </div>
-
-                <div class="filter">
-                    Checkout date :
-                    <div class="alignment">
-                        <input type="text" name="ExpecCheckoutFromDate" id="ExpecCheckoutFromDate" class="datepicker" onchange="checkValue()" placeholder="From"/>
-                        <input type="text" name="ExpecCheckoutToDate" id="ExpecCheckoutToDate" class="datepicker" placeholder="To"/>
-                    </div>
-                </div>
-
-            </div>
-
-            <br><br>
-            <div class="newReturnDate">
-                New return date: <input type="text" name="newDate" id="newDate" class="datepicker">
-            </div>
-
-            <input id="submit" type="submit" value="Change"/>
-        </form>
-
-
+                    [% beenthrough = 1 %]
+                    [% rows = rows+1 %]
+                    </tr>
+                    [% END %]
+                </table>
+                [% ELSE %]
+                    <p>la recherche n'a retournée aucun résultat</p>    
+                [% END %]
+            [% END %]
     </div>
 </div>
 <!-- Footer-->
@@ -85,6 +51,10 @@
 
 #content{
     width: 500px;
+}
+
+th {
+    padding:10px;    
 }
 
 select{

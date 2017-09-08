@@ -1,6 +1,6 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha:ChangeDueDate Plugin</title>
+<title>Koha:MergeReports Plugin</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
@@ -11,6 +11,7 @@
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
         <h2>Merge Reports</h2>
+        <h4>select the reports you wish to run and merge</h4>
 
         <form method="get" name ="myForm" onsubmit="return validateForm()">
             <!-- Necessary for the plugin to run, do not remove  -->
@@ -33,7 +34,7 @@
                 </div>
             </div>
 
-            <input id="submit" type="submit" value="Change"/>
+            <input id="submit" type="submit" value="Run Reports"/>
         </form>
 
 

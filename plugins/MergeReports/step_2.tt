@@ -1,6 +1,6 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha:ChangeDueDate Plugin</title>
+<title>Koha:MergeReports Plugin</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
@@ -11,15 +11,36 @@
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
         <h2>Reports results</h2>
-            [% FOREACH key IN results.keys %]
-                <h3>[% key %]</h3>
+            [% FOREACH key IN results.keys.sort %]
+            [% beenthrough = 0 %]
+            [% rows=0 %]
+                <h4>[% key %]</h4>
+                [% IF results.$key.size >= 1 %]
                 <table>
-                    [% FOREACH row IN results.$key %]
-                        <tr>
-                        <th>[% row %]</th>
-                        </tr>
+                    [% FOREACH resultItems IN results.$key %]
+                    <tr>
+                        [% FOREACH itemKey IN resultItems.keys.sort %]
+                            [% IF beenthrough == 0 || rows % 20 == 0%]
+                                [% IF itemKey == "count(*)" %]
+                                    <td>Total</td>
+                                [% ELSE %]
+                                    <td>[% itemKey %]</td>
+                                [% END %]
+                            [% END %]
+                        [% END %]
+                    </tr>
+                    <tr>
+                        [% FOREACH itemKey IN resultItems.keys.sort %]
+                            <td>[% resultItems.$itemKey %]</td>
+                        [% END %]
+                    [% beenthrough = 1 %]
+                    [% rows = rows+1 %]
+                    </tr>
                     [% END %]
                 </table>
+                [% ELSE %]
+                    <p>no results to display</p>    
+                [% END %]
             [% END %]
     </div>
 </div>

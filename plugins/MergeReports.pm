@@ -120,25 +120,15 @@ sub mergeReports{
                 my @resultRows;
                 my $j =0;
                 while(my $resultRow = $fetchStmt->fetchrow_hashref()){
-                    $resultRows[$j] = \$resultRow;
+                    $resultRows[$j] = $resultRow;
+                    $j++;
                 }
                 $runnedReports{$reportName} = \@resultRows;
-                use Data::Dumper;
-                warn Dumper(%runnedReports);
-                #my $fields = $fetchStmt->{NAME};
-                #my %hash;
-                #my $#resultSet = @fields;
-                #while( $resultSet = $sth->fetchrow_array() ) {
-                #    my $j=0;
-                #    foreach my $resultRow ($resultSet){
-                #        $hash{ $item } = $fields[$j];
-                #    }
-                #}
-                #$runnedReports{$reportName} = $fetchedRow;
-                
             }
         }
     }
+    use Data::Dumper;
+    warn Dumper(%runnedReports);
     $self->step_2(\%runnedReports);
 }
 
