@@ -1,140 +1,141 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
 <title>Koha:StatChart Plugin</title>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min.js"></script>
-<script type="text/javascript">    
-    var margin = 10;
-    
-    function init() {
-        [% IF graphs.0 == 1 %]
-        var graph1 = new Chart (
-            document.getElementById('graph-dataset-1').getContext("2d"), 
-            {
-                type: 'bar',
-                data: {
-                    labels: ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'],
-                    datasets : [{
-                        label: 'Nombre de prêts',
-                        data: [% loans %],
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)',
-                            'rgba(255, 159, 64, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(255,99,132,1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    title: {
-                        display: true,
-                        text: "Emprunts par jour de la semaine",
-                    },
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero:true
-                            }
-                        }]
-                    }
-                }
-            });
-        [% END %]
+<link rel='stylesheet' type='text/css' href='[%PLUGIN_PATH%]/style.css'>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.js'></script>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js'></script>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js'></script>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min.js'></script>
+<script type='text/javascript'>    
+	var margin = 10;
+	
+	function init() {
+		[% IF graphs.0 == 1 %]
+		var graph0 = new Chart (
+			document.getElementById('graph-dataset-1').getContext('2d'), 
+			{
+				type: 'bar',
+				data: {
+					labels: ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'],
+					datasets : [{
+						label: 'Nombre de prêts',
+						data: [% loansPerDay %],
+						backgroundColor: [
+							'rgba(255, 99, 132, 0.2)',
+							'rgba(54, 162, 235, 0.2)',
+							'rgba(255, 206, 86, 0.2)',
+							'rgba(75, 192, 192, 0.2)',
+							'rgba(153, 102, 255, 0.2)',
+							'rgba(255, 159, 64, 0.2)'
+						],
+						borderColor: [
+							'rgba(255,99,132,1)',
+							'rgba(54, 162, 235, 1)',
+							'rgba(255, 206, 86, 1)',
+							'rgba(75, 192, 192, 1)',
+							'rgba(153, 102, 255, 1)',
+							'rgba(255, 159, 64, 1)'
+						],
+						borderWidth: 1
+					}]
+				},
+				options: {
+					title: {
+						display: true,
+						text: 'Emprunts par jour de la semaine',
+					},
+					legend: {
+						display: false,
+					},
+					scales: {
+						yAxes: [{
+							ticks: {
+								beginAtZero:true
+							}
+						}]
+					}
+				}
+			});
+		[% END %]
 
-        [% IF graphs.1 == 1 %]
-        var graph1 = new Chart (
-            document.getElementById('graph-dataset-2').getContext("2d"), 
-            {
-                type: 'bar',
-                data: {
-                    labels: [[% FOREACH key IN types -%]
-                            "[% key.type %]",
-                            [%- END %]],
-                    datasets : [{
-                        label: 'Nombre de prêts',
-                        data: [ [% FOREACH key IN types -%]
-                                [%- key.count -%],
-                                [%- END %]],
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)',
-                            'rgba(255, 159, 64, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(255,99,132,1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    title: {
-                        display: true,
-                        text: "Emprunts par type de document",
-                    },
-                    scales: {
-                        yAxes: [{
-                            ticks: {
-                                beginAtZero:true
-                            }
-                        }]
-                    }
-                }
-            });
-        [% END %]
-    }
+		[% IF graphs.1 == 1 %]
+		var graph1 = new Chart (
+			document.getElementById('graph-dataset-2').getContext('2d'), 
+			{
+				type: 'pie',
+				data: {
+					labels: [[% FOREACH key IN loansPerType -%]
+							'[% key.type %]',
+							[%- END %]],
+					datasets : [{
+						label: 'Loans',
+						data: [ [% FOREACH key IN loansPerType -%]
+								[%- key.count -%],
+								[%- END %]],
+						backgroundColor: [
+							'rgba(255, 99, 132, 0.2)',
+							'rgba(54, 162, 235, 0.2)',
+							'rgba(255, 206, 86, 0.2)',
+							'rgba(75, 192, 192, 0.2)',
+							'rgba(153, 102, 255, 0.2)',
+							'rgba(255, 159, 64, 0.2)'
+						],
+						borderColor: [
+							'rgba(255,99,132,1)',
+							'rgba(54, 162, 235, 1)',
+							'rgba(255, 206, 86, 1)',
+							'rgba(75, 192, 192, 1)',
+							'rgba(153, 102, 255, 1)',
+							'rgba(255, 159, 64, 1)'
+						],
+						borderWidth: 1
+					}]
+				},
+				options: {
+					title: {
+						display: true,
+						text: 'Emprunts par type de document'
+					},
+					legend: {
+						display: true,
+						position: 'right'
+					}
+				}
+			});
+		[% END %]
+	}
 
-    window.onload = init;
+	window.onload = init;
 </script>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; <a href="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::StatChart&method=tool">StatChart</a> &rsaquo; Graphiques</div>
-<div id="doc3">
-    <div id="content">
+<div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Accueil</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; <a href='/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::StatChart&method=tool'>StatChart</a> &rsaquo; Graphiques</div>
+<div id='doc3'>
+	<div id='content' align='center'>
 
-        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+		<img src='[%PLUGIN_PATH%]/images/inLibro_CP.png'/>
 
-        <table align="center">
-            <tr>
-                [% IF graphs.0 == 1 %]
-                <td>
-                    <div id="div-dataset-1" align="center">
-                        <canvas id="graph-dataset-1" width="600", height="300" style="margin: 0;"></canvas>
-                    </div>
-                </td>
-                [% END %]
-                [% IF graphs.1 == 1 %]
-                <td>
-                    <div id="div-dataset-2" align="center">
-                        <canvas id="graph-dataset-2" width="600", height="300" style="margin: 0;"></canvas>
-                    </div>
-                </td>
-                [% END %]
-            </tr>
-        </table>
-    </div>
+		<table>
+			<tr>
+				[% IF graphs.0 == 1 %]
+				<td class='td-graph'>
+					<div id='div-dataset-1' align='center'>
+						<canvas id='graph-dataset-1' width='600', height='300' style='margin: 0;'></canvas>
+					</div>
+				</td>
+				[% END %]
+				[% IF graphs.1 == 1 %]
+				<td class='td-graph'>
+					<div id='div-dataset-2' align='center'>
+						<canvas id='graph-dataset-2' width='600', height='300' style='margin: 0;'></canvas>
+					</div>
+				</td>
+				[% END %]
+			</tr>
+		</table>
+	</div>
 </div>
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]

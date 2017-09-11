@@ -1,24 +1,25 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
 <title>Koha:StatChart Plugin</title>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min.js"></script>
-<script type="text/javascript">    
+<link rel='stylesheet' type='text/css' href='[%PLUGIN_PATH%]/style.css'>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.js'></script>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js'></script>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js'></script>
+<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min.js'></script>
+<script type='text/javascript'>    
 	var margin = 10;
 	
 	function init() {
 		[% IF graphs.0 == 1 %]
-		var graph1 = new Chart (
-			document.getElementById('graph-dataset-1').getContext("2d"), 
+		var graph0 = new Chart (
+			document.getElementById('graph-dataset-1').getContext('2d'), 
 			{
 				type: 'bar',
 				data: {
 					labels: ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'],
 					datasets : [{
 						label: 'Loans',
-						data: [% loans %],
+						data: [% loansPerDay %],
 						backgroundColor: [
 							'rgba(255, 99, 132, 0.2)',
 							'rgba(54, 162, 235, 0.2)',
@@ -41,7 +42,10 @@
 				options: {
 					title: {
                         display: true,
-                        text: "Loans per day of the week",
+                        text: 'Loans per day of the week'
+                    },
+                    legend: {
+                    	display: false
                     },
 					scales: {
 						yAxes: [{
@@ -56,16 +60,16 @@
 
 		[% IF graphs.1 == 1 %]
 		var graph1 = new Chart (
-			document.getElementById('graph-dataset-2').getContext("2d"), 
+			document.getElementById('graph-dataset-2').getContext('2d'), 
 			{
-				type: 'bar',
+				type: 'pie',
 				data: {
-					labels: [[% FOREACH key IN types -%]
-							"[% key.type %]",
+					labels: [[% FOREACH key IN loansPerType -%]
+							'[% key.type %]',
 							[%- END %]],
 					datasets : [{
 						label: 'Loans',
-						data: [ [% FOREACH key IN types -%]
+						data: [ [% FOREACH key IN loansPerType -%]
 								[%- key.count -%],
 								[%- END %]],
 						backgroundColor: [
@@ -90,16 +94,13 @@
 				options: {
 					title: {
                         display: true,
-                        text: "Loans per document type",
+                        text: 'Loans per document type',
                     },
-					scales: {
-						yAxes: [{
-							ticks: {
-								beginAtZero:true
-							}
-						}]
-					}
-    			}
+                    legend: {
+                    	display: true,
+                    	position: 'right',
+                    },
+				}
 			});
 		[% END %]
 	}
@@ -110,25 +111,25 @@
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; <a href="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::StatChart&method=tool">StatChart</a> &rsaquo; Charts</div>
-<div id="doc3">
-	<div id="content">
+<div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Home</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; <a href='/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::StatChart&method=tool'>StatChart</a> &rsaquo; Charts</div>
+<div id='doc3'>
+	<div id='content' align='center'>
 
-		<img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+		<img src='[%PLUGIN_PATH%]/images/inLibro_CP.png'/>
 
-		<table align="center">
+		<table>
 			<tr>
 				[% IF graphs.0 == 1 %]
-				<td>
-					<div id="div-dataset-1" align="center">
-						<canvas id="graph-dataset-1" width="600", height="300" style="margin: 0;"></canvas>
+				<td class='td-graph'>
+					<div id='div-dataset-1' align='center'>
+						<canvas id='graph-dataset-1' width='600', height='300' style='margin: 0;'></canvas>
 					</div>
 				</td>
 				[% END %]
 				[% IF graphs.1 == 1 %]
-				<td>
-					<div id="div-dataset-2" align="center">
-						<canvas id="graph-dataset-2" width="600", height="300" style="margin: 0;"></canvas>
+				<td class='td-graph'>
+					<div id='div-dataset-2' align='center'>
+						<canvas id='graph-dataset-2' width='600', height='300' style='margin: 0;'></canvas>
 					</div>
 				</td>
 				[% END %]

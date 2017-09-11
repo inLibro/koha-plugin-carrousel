@@ -84,18 +84,18 @@ sub graph {
 	my $cgi = $self->{'cgi'};
 	my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
 
-	my $loans = "";
-	my @types = ();
+	my $loansPerDay = "";
+	my @loansPerType = ();
 
 	my @graphs = (0, 0);
 	for my $key ($cgi->param('graphs')) {
 		if ($key eq "loans-per-day") {
 			$graphs[0] = 1;
-			$loans = '[' . join(',',$self->fetchLoansPerDayOfWeek()) . ']';
+			$loansPerDay = '[' . join(',',$self->fetchLoansPerDayOfWeek()) . ']';
 		}
 		if ($key eq "loans-per-type") {
 			$graphs[1] = 1;
-			@types = fetchIssuesPerItemType();
+			@loansPerType = fetchLoansPerItemType();
 		}        
 	}
    
@@ -104,7 +104,7 @@ sub graph {
 	eval {$template = $self->get_template( { file => "graph_$preferedLanguage.tt" } )};
 	$template = $self->get_template( { file => "graph.tt" } ) unless $template;
 	
-	$template->param(graphs => \@graphs, loans => $loans, types => \@types);
+	$template->param(graphs => \@graphs, loansPerDay => $loansPerDay, loansPerType => \@loansPerType);
 	print $cgi->header(-type => 'text/html',-charset => 'utf-8');
 	print $template->output();
 }
@@ -124,7 +124,7 @@ sub fetchLoansPerDayOfWeek {
 	return @list;
 }
 
-sub fetchIssuesPerItemType {
+sub fetchLoansPerItemType {
 	my ($self, $args) = @_;
 
 	my @list;
