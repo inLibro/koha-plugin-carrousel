@@ -1,0 +1,73 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<!-- Head-->
+<title>Koha:StatChart Plugin</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<!-- Body-->
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; StatChart</div>
+<div id="doc3">
+	<div id="content">
+
+		<img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+		<h2>Générer des graphiques</h2>
+
+		<form method="get" name ="form-dataset-select">
+			<!-- Necessary for the plugin to run, do not remove  -->
+			<input type="hidden" name="class" value="[% CLASS %]"/>
+			<input type="hidden" name="method" value="[% METHOD %]"/>
+			<input type="hidden" name="action" value="generate"/>
+			<!-- end of plugin necessary inputs  -->
+
+
+			<table>
+				<tr>
+					<th>Données</th>
+					<th></th>
+				</tr>
+				<tr>
+					<td><label>Emprunts par jour de la semaine</label></td>
+					<td style="text-align: center;"><input type="checkbox" name="graphs" value="loans-per-day"></td>
+				</tr>
+				<tr>
+					<td><label>Emprunts par type de document</label></td>
+					<td style="text-align: center;"><input type="checkbox" name="graphs" value="loans-per-type"></td>
+				</tr>
+			</table>
+
+			<br>
+
+
+			<input id="submit" type="submit" value="Générer"/>
+		</form>
+
+
+	</div>
+</div>
+<!-- Footer-->
+[% INCLUDE 'intranet-bottom.inc' %]
+
+<style>
+
+#content{
+	width: 520px;
+}
+
+select{
+	width: 70%;
+}
+.alignment{
+	float:right;
+	margin: 0;
+	padding: 0;
+}
+.filter{
+	margin-top: 2%;
+	padding-top: 2%
+}
+
+#submit{
+	font-weight: bold;
+	height:25px;
+}
+</style>
