@@ -39,6 +39,32 @@ our $metadata = {
 	version         => $VERSION,
 };
 
+my @graph_presets = (
+	{ 
+		id => 'graph-loans-dow',
+		title_en => "Loans per day of the week", 
+		title_fr => "Emprunts par jour de la semaine",
+		type => "bar",
+		query => "SELECT DAYOFWEEK(issuedate), DAYNAME(issuedate), COUNT(issuedate) FROM (SELECT issuedate FROM issues UNION SELECT issuedate FROM old_issues) AS all_issues GROUP BY DAYOFWEEK(issuedate);"
+	},
+	{ 
+		id => 'graph-loans-itype',
+		title_en => "Loans per document type", 
+		title_fr => "Emprunts par type de document",
+		type => "pie",
+		query => "SELECT items.itype, itemtypes.description, COUNT(items.itype) FROM ((SELECT itemnumber FROM issues) UNION (SELECT itemnumber FROM old_issues)) as all_issues INNER JOIN items ON all_issues.itemnumber=items.itemnumber INNER JOIN itemtypes ON items.itype=itemtypes.itemtype GROUP BY items.itype ORDER BY COUNT(items.itype) DESC;"
+	},
+	{ 
+		id => 'graph-loans-year',
+		title_en => "Loans per years", 
+		title_fr => "Emprunts par année",
+		type => "bar",
+		query => "SELECT YEAR(issuedate), YEAR(issuedate), COUNT(*) FROM (SELECT issuedate FROM issues UNION SELECT issuedate FROM old_issues) AS all_issues GROUP BY YEAR(issuedate) ORDER BY YEAR(issuedate) ASC;"
+	}
+);
+
+my $locale = "en_US";
+
 our $dbh = C4::Context->dbh();
 sub new {
 	my ( $class, $args ) = @_;
@@ -69,12 +95,11 @@ sub tool {
 sub home {
 	my ( $self, $args) = @_;
 	my $cgi = $self->{'cgi'};
-	my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+	$locale = $cgi->cookie('KohaOpacLanguage');
 	
-	my $template = undef;
-	eval {$template = $self->get_template( { file => "home_$preferedLanguage.tt" } )};
-	$template = $self->get_template( { file => "home.tt" } ) unless $template;
+	my $template = $self->get_template( { file => "home.tt" } );
 
+	$template->param(locale => substr($locale, 0, 2), graph_presets => \@graph_presets);
 	print $cgi->header(-type => 'text/html',-charset => 'utf-8');
 	print $template->output();
 }
@@ -82,63 +107,67 @@ sub home {
 sub graph {
 	my ( $self, $args) = @_;
 	my $cgi = $self->{'cgi'};
-	my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+	$locale = $cgi->cookie('KohaOpacLanguage');
 
-	my $loansPerDay = "";
-	my @loansPerType = ();
-
-	my @graphs = (0, 0);
+	# Get all checked graphs
+	my @graphs;
 	for my $key ($cgi->param('graphs')) {
-		if ($key eq "loans-per-day") {
-			$graphs[0] = 1;
-			$loansPerDay = '[' . join(',',$self->fetchLoansPerDayOfWeek()) . ']';
+		for my $preset (@graph_presets) {
+			if ($key eq $preset->{id}) {
+				push @graphs, { type=> $preset->{type}, title => $preset->{'title_' . substr($locale, 0, 2)}, data => fetch($preset->{query})};
+
+				# Graph with weekday as keys need some help :)
+				if ($key eq 'graph-loans-dow') {
+					$graphs[$#graphs]{data} = weekday_fixer(@{$graphs[$#graphs]{data}});
+				}
+			}
 		}
-		if ($key eq "loans-per-type") {
-			$graphs[1] = 1;
-			@loansPerType = fetchLoansPerItemType();
-		}        
 	}
    
-	my $template = undef;
-
-	eval {$template = $self->get_template( { file => "graph_$preferedLanguage.tt" } )};
-	$template = $self->get_template( { file => "graph.tt" } ) unless $template;
+	my $template = $self->get_template( { file => "graph.tt" } );
 	
-	$template->param(graphs => \@graphs, loansPerDay => $loansPerDay, loansPerType => \@loansPerType);
+	$template->param(locale => substr($locale, 0, 2), graphs => \@graphs);
 	print $cgi->header(-type => 'text/html',-charset => 'utf-8');
 	print $template->output();
 }
 
-
-sub fetchLoansPerDayOfWeek {
-	my ( $self, $args) = @_;
-
-	my @list = (0,0,0,0,0,0,0);
-	my $sql = $dbh->prepare("SELECT UNIX_TIMESTAMP(issuedate) FROM issues UNION SELECT UNIX_TIMESTAMP(issuedate) FROM old_issues;");
-	$sql->execute();
-
-	while(my $row = $sql->fetchrow_array) {
-		@list[(DateTime->from_epoch(epoch => $row))->day_of_week() % 7]++;
-	}
-	
-	return @list;
-}
-
-sub fetchLoansPerItemType {
-	my ($self, $args) = @_;
+# Fetch data from MySQL table
+# The query must always return 3 values, a code for each value, a name for each value, 
+# and the corresponding numerical value, in that order
+sub fetch {
+	my $query = shift;
 
 	my @list;
-	my $total;
-	# haha my sql
-	my $sql = $dbh->prepare("SELECT items.itype, itemtypes.description, COUNT(items.itype) FROM ((SELECT itemnumber FROM issues) UNION (SELECT itemnumber FROM old_issues)) as all_issues INNER JOIN items ON all_issues.itemnumber=items.itemnumber INNER JOIN itemtypes ON items.itype=itemtypes.itemtype GROUP BY items.itype ORDER BY COUNT(items.itype) DESC;");
+	my $sql = $dbh->prepare( $query );
 	$sql->execute();
 
-	while (my @row = $sql->fetchrow_array) {
-		$total += $row[2];
-		push @list, {code => $row[1], type => $row[1], count => $row[2]};
+	while(my @row = $sql->fetchrow_array) {
+		push @list, {key => $row[0], name => $row[1], count => $row[2]};
 	}
+	
+	return \@list;	
+}
 
-	return @list;
+# Fixes datasets where the x-axis are weekdays.
+# It does this in two ways : ensures all days are present even if the "count" is 0, and
+# translates the dayname to the current locale
+sub weekday_fixer {
+	my @list = @_;
+
+	my %dayname = (
+		'en' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sathurday'],
+		'fr' => ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
+	);
+
+	for my $i (0..6) {
+		if ($list[$i]{key} != $i + 1) {
+			splice @list, $i, 0, {key => $i + 1, name => $dayname{substr($locale, 0, 2)}[$i], count => 0};
+		}
+		else {
+			$list[$i]{name} = $dayname{substr($locale, 0, 2)}[$i];
+		}
+	}
+	return \@list;
 }
 
 #Supprimer le plugin avec toutes ses données

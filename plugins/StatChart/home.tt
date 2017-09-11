@@ -6,14 +6,21 @@
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
+
+[% IF locale == 'fr' %]
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; StatChart</div>
+[% ELSE %]
 <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; StatChart</div>
+[% END %]
+
 <div id="doc3" >
 	<div id="content" align="center">
 		<img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
 
 		<div id="form-selection">
 			<form method="get" name ="form-dataset-select">
-				<h2>Generate statistics charts</h2>
+				[% locale %]
+				<h2>[% IF locale == 'fr' %]Générer des graphiques[% ELSE %]Generate statistics charts[% END %]</h2>
 				<!-- Necessary for the plugin to run, do not remove  -->
 				<input type="hidden" name="class" value="[% CLASS %]"/>
 				<input type="hidden" name="method" value="[% METHOD %]"/>
@@ -23,23 +30,22 @@
 
 				<table>
 					<tr>
-						<th>Dataset</th>
+						
+						<th>[% IF locale == 'fr' %]Données[% ELSE %]Datasets[% END %]</th>
 						<th></th>
 					</tr>
+					[% FOREACH preset IN graph_presets %]
 					<tr>
-						<td><label>Loans per day of the week</label></td>
-						<td style="text-align: center;"><input type="checkbox" name="graphs" value="loans-per-day"></td>
+						<td><label>[% IF locale == 'fr' %][% preset.title_fr %][% ELSE %][% preset.title_en %][% END %]</label></td>
+						<td style="text-align: center;"><input type="checkbox" name="graphs" value="[% preset.id %]"></td>
 					</tr>
-					<tr>
-						<td><label>Loans per document type</label></td>
-						<td style="text-align: center;"><input type="checkbox" name="graphs" value="loans-per-type"></td>
-					</tr>
+					[% END %]
 				</table>
 
 				<br>
 
 				<div align="right">
-					<input id="submit" type="submit" value="Generate"/>
+					<input id="submit" type="submit" value="[% IF locale == 'fr' %]Générer[% ELSE %]Generate[% END %]"/>
 				</div>
 			</form>
 		</div>
