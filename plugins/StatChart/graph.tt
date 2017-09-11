@@ -19,7 +19,7 @@
 				data: {
 					labels: [[% FOREACH key IN graph.data %]'[% key.name %]',[% END %]],
 					datasets : [{
-						label: 'Loans',
+						label: '[% graph.units %]',
 						data: [[% FOREACH key IN graph.data %][% key.count %],[% END %]],
 						backgroundColor: [[% h = 0 %][% FOREACH j IN [0 .. graph.data.size] %]hsva_to_rgba_str([% h %], 1, 0.8, 0.2),[% h = h + 1 / graph.data.size %][% END %]],
 						borderColor: [[% h = 0 %][% FOREACH j IN [0 .. graph.data.size] %]hsva_to_rgba_str([% h %], 1, 0.8, 1),[% h = h + 1 / graph.data.size %][% END %]],
@@ -82,6 +82,7 @@
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
+
 [% IF locale == 'fr' %]
 <div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Accueil</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; <a href='/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::StatChart&method=tool'>StatChart</a> &rsaquo; Graphiques</div>
 [% ELSE %]
@@ -90,7 +91,7 @@
 
 <div id='doc3'>
 	<div id='content' align='center'>
-		<img src='[%PLUGIN_PATH%]/images/inLibro_CP.png'/>
+		<img width='400px' src='[%PLUGIN_PATH%]/images/inLibro_[% locale %].svg'/>
 
 		<table>
 			<tr>
@@ -109,5 +110,6 @@
 		</table>
 	</div>
 </div>
+
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
