@@ -13,14 +13,13 @@
         <h2>Reports results</h2>
             [% FOREACH key IN results.keys.sort %]
             [% beenthrough = 0 %]
-            [% rows=0 %]
                 <h4>[% key %]</h4>
                 [% IF results.$key.size >= 1 %]
                 <table>
                     [% FOREACH resultItems IN results.$key %]
                     <tr>
                         [% FOREACH itemKey IN resultItems.keys.sort %]
-                            [% IF beenthrough == 0 || rows % 20 == 0%]
+                            [% IF beenthrough == 0 %]
                                 [% IF itemKey == "count(*)" %]
                                     <td>Total</td>
                                 [% ELSE %]
@@ -50,7 +49,8 @@
 <style>
 
 #content{
-    width: 500px;
+    width: 100%;
+    max-width:800px;
 }
 
 th {
@@ -73,6 +73,10 @@ select{
 #submit{
     font-weight: bold;
     height:25px;
+}
+
+table {
+    width:100%;
 }
 </style>
 

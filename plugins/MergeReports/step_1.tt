@@ -11,7 +11,7 @@
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
         <h2>Merge Reports</h2>
-        <h4>select the reports you wish to run and merge</h4>
+        <h4>Note: reports that need parameters cannot be generated</h4>
 
         <form method="get" name ="myForm" onsubmit="return validateForm()">
             <!-- Necessary for the plugin to run, do not remove  -->
@@ -20,33 +20,68 @@
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
 
+            <h3>Report's main title</h3>
+            <input type="text" id="mainTitle" placeholder="title">
 
-            <div class="filters">
-                <div class="filter">
-                <table>
-                    [% FOREACH report IN reports %]              
-                        <tr>
-                            <th>[% report.report_name %]</th>
-                            <th><input type="checkbox" name="[% report.id %]" value="report_name"></th>
-                        <tr>
-                    [% END %]
-                </table>
-                </div>
-            </div>
+            <h4>Report's main description</h4>
+            <input type="text" id="mainDescription" placeholder="description"><br>
+
+            <input id="addSection" type="button" value="add section" onclick="addsection();" />
+
+            <hr>
 
             <input id="submit" type="submit" value="Run Reports"/>
         </form>
 
-
     </div>
 </div>
+
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close_btn">&times;</span>
+        <input type="text" id="searchInput" onkeyup="search()" placeholder="Search here...">
+        <table id="myTable">
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Group</th>
+                <th>SubGroup</th>
+                <th></th>
+            </tr>
+            [% FOREACH report IN reports %]
+                <tr>
+                    <td>[% report.id %]</td>
+                    <td>[% report.report_name %]</td>
+                    <td>[% report.report_group %]</td>
+                    <td>[% report.report_subgroup %]</td>
+                    <td style="text-align:center;"><input type="radio" id="checkboxes" class="radiobutton" value="report_name">
+                    <input type="hidden" class="id_rb" value="[% report.id %]">
+                    <input type="hidden" class="name_rb" value="[% report.report_name %]"></td>
+                <tr>
+            [% END %]
+        </table>
+        <input id="popUpBtn" type="button" value="Add Reports" onClick="addreports();"/>
+  </div>
+</div>
+
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
 
 <style>
 
 #content{
-    width: 500px;
+    width: 100%;
+    max-width:800px;
+}
+
+#myTable{
+    width:100%;
+    text-align:left;
+}
+
+#searchInput{
+    width:90%;
+    margin:10px 0px;
 }
 
 th {
@@ -61,19 +96,58 @@ select{
     margin: 0;
     padding: 0;
 }
-.filter{
-    margin-top: 2%;
-    padding-top: 2%
-}
 
 #submit{
     font-weight: bold;
     height:25px;
 }
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    margin:0;
+    padding:0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.1); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 60%; /* Could be more or less, depending on screen size */
+}
+
+.close_btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close_btn:hover,
+.close_btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+.reportTag {
+    margin:5px 0;
+    border: 1px solid #AAAAAA;
+    background-color:#F6F6F6;
+    padding:2px;
+}
 </style>
 
 
 <script>
+var lastClicked;
 $(function() {
     $( "#ExpecReturnFromDate" ).datepicker();
     $( "#ExpecReturnToDate" ).datepicker();
@@ -141,5 +215,91 @@ function validateForm(){
 
 
     return check;
+}
+
+function search() {
+  // Declare variables 
+  var input, filter, table, tr, td, i;
+  input = document.getElementById("searchInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("myTable");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 1; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td");
+    var containsString=false;
+      for (j = 0; j < 3; j++) {
+      if(td[j]){
+        if (td[j].innerHTML.toUpperCase().indexOf(filter) > -1) {
+          containsString=true;
+        }
+      }
+      if(containsString){
+        tr[i].style.display = "";
+      }else{
+        tr[i].style.display = "none";
+      }
+    } 
+  }
+}
+
+function addsection() {
+    var endSection = document.getElementsByTagName('hr')[document.getElementsByTagName('hr').length - 1];
+    $(endSection).after(""+
+        "<div class='section'>"+
+            "<h3>Section's title</h3>"+
+            "<input type='text' class='sectionTitle' placeholder='title'>"+
+            "<h4>Section's description</h4>"+
+            "<input type='text' class='sectionDescription' placeholder='description'><br>"+
+            "<input id='addReport' type='button' value='add reports' onclick='addreport(this);' />"+
+        "</div>"+
+        "<hr>");
+}
+
+function addreport(sectionBtn) {
+    lastClicked = sectionBtn;
+    var modal = document.getElementById('myModal');
+    var btn = document.getElementById("addReport");
+    var span = document.getElementsByClassName("close_btn")[0];
+    modal.style.display = "block";
+
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+}
+
+function addreports() {
+// Declare variables 
+  var input, filter, table, tr, td, i, rb, tmp;
+  table = document.getElementById("myTable");
+  tr = table.getElementsByTagName("tr");
+  var reportInfo = [];
+  for (i = 1; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td");
+    if(td[4]){
+        tmp = td[4].getElementsByClassName("radiobutton");
+        rb = tmp[0];
+        if(rb.checked){
+            tmp = td[4].getElementsByClassName('id_rb');
+            reportInfo[0] = tmp[0].value;
+            tmp = td[4].getElementsByClassName('name_rb');
+            reportInfo[1] = tmp[0].value;
+        }
+    }
+  }
+  console.log(reportInfo);
+  document.getElementById('myModal').style.display="none";
+  $(lastClicked).before('<div class="reportTag">' + reportInfo[1] + ' (#' + reportInfo[0] + ')<input id="removeReport" type="button" value="remove" onclick="removereport(this.parentElement);" /></div>');
+}
+
+function removereport(nodeBtn){
+    nodeBtn.remove();
 }
 </script>
