@@ -100,40 +100,76 @@ sub loadReports{
 sub mergeReports{
     my ( $self, $args) = @_;
     my $cgi = $self->{'cgi'};
-    my @reportsId;
-    my $stmt = $dbh->prepare("select * from saved_sql");
-    $stmt->execute();
-    my $i =0;
-    while (my $row = $stmt->fetchrow_hashref()) {
-        $reportsId[$i] = $row->{'id'};
-        $i++;
-    }
-    my %runnedReports;
-    foreach my $reportId (@reportsId){
-        if ($cgi->param($reportId)){
-            my $stmt = $dbh->prepare("select * from saved_sql where id=$reportId");
-            $stmt->execute();           
-            for my $row ($stmt->fetchrow_hashref()){
-                my $fetchStmt = $dbh->prepare("$row->{'savedsql'}");
-                my $reportName = $row->{'report_name'};
-                $fetchStmt->execute();
-                my @resultRows;
-                my $j =0;
-                while(my $resultRow = $fetchStmt->fetchrow_hashref()){
-                    $resultRows[$j] = $resultRow;
-                    $j++;
+#    my @reportsId;
+#    my $stmt = $dbh->prepare("select * from saved_sql");
+#    $stmt->execute();
+#    my $i =0;
+#    while (my $row = $stmt->fetchrow_hashref()) {
+#        $reportsId[$i] = $row->{'id'};
+#        $i++;
+#    }
+#    my %runnedReports;
+#    foreach my $reportId (@reportsId){
+#        if ($cgi->param($reportId)){
+#            my $stmt = $dbh->prepare("select * from saved_sql where id=$reportId");
+#            $stmt->execute();           
+#            for my $row ($stmt->fetchrow_hashref()){
+#                my $fetchStmt = $dbh->prepare("$row->{'savedsql'}");
+#                my $reportName = $row->{'report_name'};
+#                $fetchStmt->execute();
+#                my @resultRows;
+#                my $j =0;
+#                while(my $resultRow = $fetchStmt->fetchrow_hashref()){
+#                    $resultRows[$j] = $resultRow;
+#                    $j++;
+#                }
+#                $runnedReports{$reportName} = \@resultRows;
+#            }
+#        }
+#    }
+    my %finalReport;
+    my $endOfReport=0;
+    my $section = 0;
+    my $mainTitle = $cgi->param('mainTitle');
+    my $mainDescription = $cgi->param('mainDescription');
+    while($endOfReport == 0){ #parcourt les sections
+        if($cgi->param($section . '_sectionTitle')){
+            my $key;
+            my %sectionData;
+            foreach $key ($cgi->param) { #parcourt les rapports de la section
+                my %sectionReports;
+                $sectionData{'sectionTitle'} = $cgi->param($section . '_sectionTitle');
+                $sectionData{'sectionDescription'} = $cgi->param($section . '_sectionDescription');
+                if(substr($key, 0, 2) eq $section . "_" && index($key, 'section') < 0){
+                    my $reportId = substr($key, 2);
+                    my @resultRows;
+                    my $stmt = $dbh->prepare("select * from saved_sql where id=$reportId");
+                    $stmt->execute();
+                    for my $row ($stmt->fetchrow_hashref()){
+                        my $fetchStmt = $dbh->prepare("$row->{'savedsql'}");
+                        my $reportName = $row->{'report_name'};
+                        $fetchStmt->execute();
+                        my $j =0;
+                        while(my $resultRow = $fetchStmt->fetchrow_hashref()){
+                            $resultRows[$j] = $resultRow;
+                            $j++;
+                        }
+                    }
+                    $sectionReports{$cgi->param($key)} = \@resultRows;                    
                 }
-                $runnedReports{$reportName} = \@resultRows;
+                $sectionData{'reports'} = \%sectionReports;
             }
+            $finalReport{$section} = \%sectionData;
+            $section++;
+        }else{
+            $endOfReport=1;
         }
     }
-    use Data::Dumper;
-    warn Dumper(%runnedReports);
-    $self->step_2(\%runnedReports);
+    $self->step_2(\%finalReport, $mainTitle, $mainDescription);
 }
 
 sub step_2{
-    my ( $self, $runnedReports) = @_;
+    my ( $self, $finalReport, $mainTitle, $mainDescription) = @_;
     my $cgi = $self->{'cgi'};
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $template = undef;
@@ -143,7 +179,7 @@ sub step_2{
         eval {$template = $self->get_template( { file => "step_2_$preferedLanguage.tt" } )};
     }
     $template = $self->get_template( { file => 'step_2.tt' } ) unless $template;
-    $template->param( results => $runnedReports);
+    $template->param( finalReport => $finalReport, mainTitle => $mainTitle, mainDescription => $mainDescription);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
  }

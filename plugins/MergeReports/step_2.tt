@@ -10,37 +10,48 @@
     <div id="content">
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
-        <h2>Reports results</h2>
-            [% FOREACH key IN results.keys.sort %]
+        <h1 class="mainTitle">[% mainTitle %]</h1>
+        <h2 class="mainDescription">[% mainDescription %]</h2>
+        [% FOREACH key IN finalReport.keys %]
+            <hr>
+            [% section = finalReport.$key %]
+            <h3 class="sectionTitle">[% section.sectionTitle %]</h3>
+            <h4 class="sectionDescription">[% section.sectionDescription %]</h4>
+            [% FOREACH reportName IN section.reports.keys %]
+            un rapport
+            [% report = section.reports.$reportName %]
             [% beenthrough = 0 %]
-                <h4>[% key %]</h4>
-                [% IF results.$key.size >= 1 %]
-                <table>
-                    [% FOREACH resultItems IN results.$key %]
-                    <tr>
-                        [% FOREACH itemKey IN resultItems.keys.sort %]
-                            [% IF beenthrough == 0 %]
-                                [% IF itemKey == "count(*)" %]
-                                    <td>Total</td>
-                                [% ELSE %]
-                                    <td>[% itemKey %]</td>
+                <h4>[% reportName %]</h4>
+                [% IF report.size >= 1 %]
+                    <table>
+                        [% FOREACH resultItems IN report %]
+                        <tr>
+                            [% FOREACH itemKey IN resultItems.keys.sort %]
+                                [% IF beenthrough == 0 %]
+                                    [% IF itemKey == "count(*)" %]
+                                        <th>Total</th>
+                                    [% ELSE %]
+                                        <th>[% itemKey %]</th>
+                                    [% END %]
                                 [% END %]
                             [% END %]
+                        </tr>
+                        <tr>
+                            [% FOREACH itemKey IN resultItems.keys.sort %]
+                                <td>[% resultItems.$itemKey %]</td>
+                            [% END %]
+                        [% beenthrough = 1 %]
+                        </tr>
                         [% END %]
-                    </tr>
-                    <tr>
-                        [% FOREACH itemKey IN resultItems.keys.sort %]
-                            <td>[% resultItems.$itemKey %]</td>
-                        [% END %]
-                    [% beenthrough = 1 %]
-                    [% rows = rows+1 %]
-                    </tr>
-                    [% END %]
-                </table>
+                    </table>
                 [% ELSE %]
                     <p>no results to display</p>    
                 [% END %]
+
             [% END %]
+
+        [% END %]
+            
     </div>
 </div>
 <!-- Footer-->
@@ -77,6 +88,41 @@ select{
 
 table {
     width:100%;
+}
+
+table th{
+}
+
+table td {
+    padding:5px;
+}
+
+.mainTitle {
+    font-size:2rem;
+    margin:5px 0px 10px 0px;
+    padding:0px;
+}
+
+.mainDescription {
+    font-size:0.9rem;
+    text-align:justify;
+    font-weight:normal;
+    margin:0px 0px 50px 0px;
+    padding:0px;
+}
+
+.sectionTitle {
+    font-size:1.5rem;
+    margin:10px 0px;
+    padding:0px;
+}
+
+.sectionDescription {
+    font-size:0.8rem;
+    text-align:justify;
+    font-weight:normal;
+    margin:0px 0px 30px 0px;
+    padding:0px;
 }
 </style>
 

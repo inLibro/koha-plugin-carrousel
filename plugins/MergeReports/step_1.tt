@@ -13,7 +13,7 @@
         <h2>Merge Reports</h2>
         <h4>Note: reports that need parameters cannot be generated</h4>
 
-        <form method="get" name ="myForm" onsubmit="return validateForm()">
+        <form method="get" name ="myForm" onsubmit="return prepareForm()">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
@@ -21,10 +21,10 @@
             <!-- end of plugin necessary inputs  -->
 
             <h3>Report's main title</h3>
-            <input type="text" id="mainTitle" placeholder="title">
+            <input type="text" name="mainTitle" id="mainTitle" placeholder="title">
 
             <h4>Report's main description</h4>
-            <input type="text" id="mainDescription" placeholder="description"><br>
+            <input type="text" name="mainDescription" id="mainDescription" placeholder="description"><br>
 
             <input id="addSection" type="button" value="add section" onclick="addsection();" />
 
@@ -54,13 +54,13 @@
                     <td>[% report.report_name %]</td>
                     <td>[% report.report_group %]</td>
                     <td>[% report.report_subgroup %]</td>
-                    <td style="text-align:center;"><input type="radio" id="checkboxes" class="radiobutton" value="report_name">
+                    <td style="text-align:center;"><input type="radio" id="checkboxes" name="check" class="radiobutton" value="report_name">
                     <input type="hidden" class="id_rb" value="[% report.id %]">
                     <input type="hidden" class="name_rb" value="[% report.report_name %]"></td>
                 <tr>
             [% END %]
         </table>
-        <input id="popUpBtn" type="button" value="Add Reports" onClick="addreports();"/>
+        <input id="popUpBtn" type="button" value="Add Reports" onClick="addreport();"/>
   </div>
 </div>
 
@@ -249,18 +249,19 @@ function addsection() {
     $(endSection).after(""+
         "<div class='section'>"+
             "<h3>Section's title</h3>"+
-            "<input type='text' class='sectionTitle' placeholder='title'>"+
+            "<input type='text' name='sectionTitle' class='sectionTitle' placeholder='title'>"+
             "<h4>Section's description</h4>"+
-            "<input type='text' class='sectionDescription' placeholder='description'><br>"+
-            "<input id='addReport' type='button' value='add reports' onclick='addreport(this);' />"+
+            "<input type='text' name='sectionDescription' class='sectionDescription' placeholder='description'><br>"+
+            "<div class='reports_container'></div>"+
+            "<input id='chooseReport' type='button' value='add reports' onclick='choosereport(this);' />"+
         "</div>"+
         "<hr>");
 }
 
-function addreport(sectionBtn) {
+function choosereport(sectionBtn) {
     lastClicked = sectionBtn;
     var modal = document.getElementById('myModal');
-    var btn = document.getElementById("addReport");
+    var btn = document.getElementById("chooseReport");
     var span = document.getElementsByClassName("close_btn")[0];
     modal.style.display = "block";
 
@@ -275,7 +276,7 @@ function addreport(sectionBtn) {
     }
 }
 
-function addreports() {
+function addreport() {
 // Declare variables 
   var input, filter, table, tr, td, i, rb, tmp;
   table = document.getElementById("myTable");
@@ -294,12 +295,27 @@ function addreports() {
         }
     }
   }
-  console.log(reportInfo);
   document.getElementById('myModal').style.display="none";
-  $(lastClicked).before('<div class="reportTag">' + reportInfo[1] + ' (#' + reportInfo[0] + ')<input id="removeReport" type="button" value="remove" onclick="removereport(this.parentElement);" /></div>');
+  $(lastClicked).prev().append(''+
+    '<div class="reportTag">'+
+        '<input type="hidden" id="'+ reportInfo[0] +'" value="'+ reportInfo[1] +'">'+
+        reportInfo[1] +  
+        '<input id="removeReport" type="button" value="remove" onclick="removereport(this.parentElement);" />'+
+    '</div>');
 }
 
-function removereport(nodeBtn){
+function removereport(nodeBtn) {
     nodeBtn.remove();
+}
+
+function prepareForm() {
+    $(".section").each(function(index) {
+        $(this).find(".sectionTitle").attr('name', index +'_sectionTitle');
+        $(this).find(".sectionDescription").attr('name', index +'_sectionDescription');
+        $(this).find(".reports_container").find('input[type=hidden]').each(function(index2) {
+            $(this).attr('name', index + '_' + $(this).attr('id'));
+        });
+    });
+    return true;
 }
 </script>
