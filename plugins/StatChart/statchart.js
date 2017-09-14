@@ -1,29 +1,33 @@
 var graphs = [];
 
-var bg_satur = 0.6;
-var bg_light = 1;
-var bg_alpha = 1;
-
-var bo_satur = 0.6;
-var bo_light = 1;
-var bo_alpha = 1;
+var saturation = 0.6;
+var lightness = 1;
+var alpha = 1;
 
 var dict;
 var locale;
 
 function add_bar_chart(ctx, title, xlabels, ylabel, values) {
-	var bo = [];
-	var bg = [];
+	var colors = [];
+
+	var has_negative = false;
+	for (var i = 0; i < values[0].length; i++) {
+		if (values[0][i] < 0) {
+			has_negative = true;
+			break;
+		}
+	}
+
+	if (has_negative == true)
+		for (var i = 0; i < values[0].length; i++)
+			colors.push(hsva_to_rgba_str((values[0][i] < 0 ? 0 : 0.3),saturation, 0.9, alpha));
+	else
+		colors = get_palette(xlabels.length);
 
 	title = localize(title, locale);
 	for (var i = 0; i < xlabels.length; i++)
 		xlabels[i] = localize(xlabels[i], locale);
 	ylabel = localize(ylabel, locale);
-
-	for (var i = 0, h = 0; i < xlabels.length; i++, h += (1 / xlabels.length) - 0.2*(1 / xlabels.length)*Math.cos(2*(i / xlabels.length)*Math.PI)) {
-		bg.push(hsva_to_rgba_str(h , bg_satur , bg_light - 0.03*bg_light + 0.03*bg_light*Math.cos(2*h*Math.PI), bg_alpha));
-		bo.push(hsva_to_rgba_str(h , bo_satur , bo_light - 0.03*bo_light + 0.03*bo_light*Math.cos(2*h*Math.PI), bo_alpha));
-	}
 
 	graphs.push(new Chart(
 		ctx, {
@@ -33,8 +37,8 @@ function add_bar_chart(ctx, title, xlabels, ylabel, values) {
 				datasets : [{
 					label: ylabel,
 					data: values[0],
-					backgroundColor: bg,
-					borderColor: bo,
+					backgroundColor: colors,
+					borderColor: colors,
 					borderWidth: 1
 				}]
 			},
@@ -62,6 +66,7 @@ function add_bar_chart(ctx, title, xlabels, ylabel, values) {
 
 function add_stacked_bar_chart(ctx, title, xlabels, ylabels, series) {
 	var datasets = [];
+	var colors = get_palette(series.length);
 
 	title = localize(title, locale);
 	for (var i = 0; i < xlabels.length; i++)
@@ -70,17 +75,16 @@ function add_stacked_bar_chart(ctx, title, xlabels, ylabels, series) {
 		ylabels[i] = localize(ylabels[i], locale);
 
 	for (var i = 0, h = 0; i < series.length; i++, h += 1 / series.length) {
-		var bg = [], bo = [];
+		var colorcopy = [];
 		for (var j = 0; j < series[i].length; j++) {
-			bg.push(hsva_to_rgba_str(h , bg_satur , bg_light - 0.03*bg_light + 0.03*bg_light*Math.cos(2*h*Math.PI), bg_alpha));
-			bo.push(hsva_to_rgba_str(h , bo_satur , bo_light - 0.03*bo_light + 0.03*bo_light*Math.cos(2*h*Math.PI), bo_alpha));
+			colorcopy.push(colors[i]);
 		}
 
 		datasets.push({
 			label: ylabels[i],
 			data: series[i],
-			backgroundColor: bg,
-			borderColor: bo,
+			backgroundColor: colorcopy,
+			borderColor: colorcopy,
 			borderWidth: 1
 		});
 	}
@@ -115,17 +119,11 @@ function add_stacked_bar_chart(ctx, title, xlabels, ylabels, series) {
 }
 
 function add_pie_chart(ctx, title, xlabels, values) {
-	var bo = [];
-	var bg = [];
+	var colors = get_palette(xlabels.length);
 
 	title = localize(title, locale);
 	for (var i = 0; i < xlabels.length; i++)
 		xlabels[i] = localize(xlabels[i], locale);
-
-	for (var i = 0, h = 0; i < xlabels.length; i++, h += (1 / xlabels.length) - 0.2*(1 / xlabels.length)*Math.cos(2*(i / xlabels.length)*Math.PI)) {
-		bg.push(hsva_to_rgba_str(h , bg_satur , bg_light - 0.03*bg_light + 0.03*bg_light*Math.cos(2*h*Math.PI), bg_alpha));
-		bo.push(hsva_to_rgba_str(h , bo_satur , bo_light - 0.03*bo_light + 0.03*bo_light*Math.cos(2*h*Math.PI), bo_alpha));
-	}
 
 	graphs.push(new Chart(
 		ctx, {
@@ -135,8 +133,8 @@ function add_pie_chart(ctx, title, xlabels, values) {
 				datasets : [{
 					label: "",
 					data: values[0],
-					backgroundColor: bg,
-					borderColor: bo,
+					backgroundColor: colors,
+					borderColor: colors,
 					borderWidth: 1
 				}]
 			},
@@ -153,6 +151,20 @@ function add_pie_chart(ctx, title, xlabels, values) {
 			}
 		}
 	));
+}
+
+function get_palette(length) {
+	var palette = [];
+	for (var i = 0, h = 0; i < length; i++, h += (1 / length) - 0.2*(1 / length) * Math.cos(2 * (i / length) * Math.PI)) {
+		palette.push(
+			hsva_to_rgba_str(
+				h, 
+				saturation + (length > 10 && i % 2 ? 0.1 : 0), 
+				lightness - 0.03 * lightness + 0.03 * lightness * Math.cos(2 * h * Math.PI) - ( length > 10 && i % 2 ? 0.1 : 0), 
+				alpha)
+			);
+	}	
+	return palette;
 }
 
 function hsva_to_rgba_str(h, s, v, a) {

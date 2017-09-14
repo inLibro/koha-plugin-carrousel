@@ -96,7 +96,42 @@ my @graph_presets = (
         ylabels => ["Checkouts", "Check-ins"],
         query =>
             "SELECT allhours.h, IFNULL(cout,0), IFNULL(chin, 0) FROM (SELECT 0 as h UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10 UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15 UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19 UNION ALL SELECT 20 UNION ALL SELECT 21 UNION ALL SELECT 22 UNION ALL SELECT 23) AS allhours LEFT JOIN (SELECT HOUR(issuedate) AS h, COUNT(*) as cout FROM (SELECT * FROM old_issues UNION SELECT * FROM issues) AS allissues GROUP BY HOUR(issuedate)) AS coutable ON coutable.h=allhours.h LEFT JOIN (SELECT HOUR(returndate) AS h, COUNT(*) as chin FROM old_issues GROUP BY HOUR(returndate)) AS chintable ON chintable.h=allhours.h;"
-    }
+    },
+    {   id      => 'graph-budgets',
+        type    => "pie",
+        title   => "Budget allocation",
+        ylabels => ["Budget"],
+        query => 
+            "SELECT budget_period_description, budget_period_total FROM aqbudgetperiods ORDER BY budget_period_total DESC;"
+    },
+    {   id      => 'graph-items-branch',
+        type    => "pie",
+        title   => "Items per branch",
+        ylabels => ["Items"],
+        query => 
+            "SELECT branchname, COUNT(*) FROM items JOIN branches ON items.homebranch=branches.branchcode;"
+    },
+    {   id      => 'graph-items-status',
+        type    => "pie",
+        title   => "Items per status",
+        ylabels => ["Items"],
+        query => 
+            "SELECT lib, count(*) FROM items JOIN authorised_values AS av ON items.notforloan=av.authorised_value WHERE av.category='NOT_LOAN' GROUP BY lib;"
+    },
+    {   id      => 'graphs-items-location',
+        type    => 'pie',
+        title   => 'Items per location',
+        ylabels => ['Items'],
+        query =>
+            "SELECT lib, COUNT(*) FROM items JOIN authorised_values AS av ON av.authorised_value=items.location WHERE av.category='LOC' GROUP BY lib;"
+    },
+    {   id      => 'graphs-accountlines-amount',
+        type    => 'bar',
+        title   => 'Amount per transaction type',
+        ylabels => ['Amount'],
+        query =>
+            "SELECT de, SUM(amount) FROM accountlines LEFT JOIN (SELECT 'A' AS ty, 'Account management fee' AS de UNION SELECT 'C', 'Credit' UNION SELECT 'F', 'Overdue fine' UNION SELECT 'FOR', 'Forgiven' UNION SELECT 'FU', 'Overdue, still accruing' UNION SELECT 'L', 'Lost item' UNION SELECT 'LR', 'Lost item returned/refunded' UNION SELECT 'M', 'Sundry' UNION SELECT 'N', 'New card' UNION SELECT 'PAY', 'Payment' UNION SELECT 'W', 'Writeoff') AS descriptors ON accountlines.accounttype=descriptors.ty GROUP BY ty ORDER BY SUM(amount);"
+    }        
 );
 
 our $dbh = C4::Context->dbh();
@@ -153,7 +188,7 @@ sub PageChart {
 
     # For every checked preset, build a graph and add it to the graph array
     my @graphs;
-    for my $key ( $cgi->param('graphs') ) {
+    for my $key ( $cgi->param('checkbox-preset') ) {
         for (my $i = 0; $i < @graph_presets; $i++) {
             if ( $key eq $graph_presets[$i]{id} ) {
                 push @graphs, build_graph($graph_presets[$i]);
@@ -195,6 +230,17 @@ sub build_graph {
             $series[$j - 1][$i] = $row[$j]
         }
         $i++;
+    }
+
+    if ($preset->{id} eq 'graphs-accountlines-amount') {
+        warn Dumper(\{
+          id => $preset->{id},
+          type => $preset->{type},
+          title => $preset->{title},
+          xlabels => \@xlabels,
+          ylabels => $preset->{ylabels},
+          series => \@series
+        });
     }
 
     # Return the hash

@@ -50,7 +50,7 @@
 				[%- i = 0 %][% FOREACH graph IN graphs -%]
 				<td class='td-graph'>
 					<div id='div-dataset-[% i %]' align='center'>
-						<canvas id='graph-dataset-[% i %]' width='700', height='350' style='margin: 0;'></canvas>
+						<canvas id='graph-dataset-[% i %]' width='700px', height='350px' style='margin: 0;'></canvas>
 					</div>
 				</td>
 					[% IF (i + 1) mod 2 == 0 %]

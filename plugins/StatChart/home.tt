@@ -13,6 +13,12 @@
 		*/
 	}
 
+	function toggle(source) {
+		checkboxes = document.getElementsByName('checkbox-preset');
+		for(var i=0; i < checkboxes.length; i++)
+			checkboxes[i].checked = source.checked;
+	}
+
 	window.onload = init;
 </script>
 [% INCLUDE 'doc-head-close.inc' %]
@@ -31,15 +37,15 @@
 				<input type='hidden' name='method' value='[% METHOD %]'/>
 				<input type='hidden' name='action' value='generate'/>
 				<!-- end of plugin necessary inputs  -->
-				<table>
+				<table id="table-preset">
 					<tr>
 						<th>Datasets</th>
-						<th></th>
+						<th><input type='checkbox' onClick="toggle(this)"></th>
 					</tr>
 					[% i = 0 %][% FOREACH preset IN graph_presets %]
 					<tr>
 						<td id="td-preset-[% i %]">[% preset.title %]</td>
-						<td style='text-align: center;'><input type='checkbox' name='graphs' value='[% preset.id %]'></td>
+						<td style='text-align: center;'><input type='checkbox' name='checkbox-preset' value='[% preset.id %]'></td>
 					</tr>
 					[% i = i + 1 %][% END %]
 				</table>
