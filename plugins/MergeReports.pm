@@ -134,12 +134,12 @@ sub mergeReports{
     my $mainDescription = $cgi->param('mainDescription');
     while($endOfReport == 0){ #parcourt les sections
         if($cgi->param($section . '_sectionTitle')){
-            my $key;
             my %sectionData;
+            my $key;
+            my %sectionReports;
+            $sectionData{'sectionTitle'} = $cgi->param($section . '_sectionTitle');
+            $sectionData{'sectionDescription'} = $cgi->param($section . '_sectionDescription');
             foreach $key ($cgi->param) { #parcourt les rapports de la section
-                my %sectionReports;
-                $sectionData{'sectionTitle'} = $cgi->param($section . '_sectionTitle');
-                $sectionData{'sectionDescription'} = $cgi->param($section . '_sectionDescription');
                 if(substr($key, 0, 2) eq $section . "_" && index($key, 'section') < 0){
                     my $reportId = substr($key, 2);
                     my @resultRows;
@@ -155,15 +155,18 @@ sub mergeReports{
                             $j++;
                         }
                     }
-                    $sectionReports{$cgi->param($key)} = \@resultRows;                    
+                    $sectionReports{$cgi->param($key)} = [@resultRows];
                 }
-                $sectionData{'reports'} = \%sectionReports;
             }
+            $sectionData{'reports'} = \%sectionReports;
             $finalReport{$section} = \%sectionData;
-            $section++;
+            use Data::Dumper;
+            warn "7777777777777777777" . Dumper(%finalReport);
         }else{
             $endOfReport=1;
         }
+        $section++;
+
     }
     $self->step_2(\%finalReport, $mainTitle, $mainDescription);
 }

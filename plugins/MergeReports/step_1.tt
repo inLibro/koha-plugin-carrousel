@@ -10,8 +10,8 @@
     <div id="content">
 
         <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
-        <h2>Merge Reports</h2>
-        <h4>Note: reports that need parameters cannot be generated</h4>
+        <h2 class="page_title">Merge Reports</h2>
+        <h4 class="page_description">Note: reports that need parameters cannot be generated</h4>
 
         <form method="get" name ="myForm" onsubmit="return prepareForm()">
             <!-- Necessary for the plugin to run, do not remove  -->
@@ -20,17 +20,17 @@
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
 
-            <h3>Report's main title</h3>
+            <h3 class="input_label">Report's main title</h3>
             <input type="text" name="mainTitle" id="mainTitle" placeholder="title">
 
-            <h4>Report's main description</h4>
+            <h4 class="input_label">Report's main description</h4>
             <input type="text" name="mainDescription" id="mainDescription" placeholder="description"><br>
-
-            <input id="addSection" type="button" value="add section" onclick="addsection();" />
 
             <hr>
 
-            <input id="submit" type="submit" value="Run Reports"/>
+            <input id="addSection" class="step_btn" type="button" value="add section" onclick="addsection();" />
+
+            <input id="submit" class="step_btn" type="submit" value="Run Reports"/>
         </form>
 
     </div>
@@ -60,7 +60,7 @@
                 <tr>
             [% END %]
         </table>
-        <input id="popUpBtn" type="button" value="Add Reports" onClick="addreport();"/>
+        <input id="popUpBtn" class="btn" type="button" value="Add Report" onClick="addreport();"/>
   </div>
 </div>
 
@@ -143,6 +143,27 @@ select{
     background-color:#F6F6F6;
     padding:2px;
 }
+.page_title {
+    margin:30px 0px 20px 0px;
+}
+.page_description {
+    margin:10px 0px 40px 0px
+}
+#submit {
+    float:right;
+}
+#chooseReport {
+    margin:10px 0px 20px 0px;
+}
+#removeSection {
+    float:right;
+}
+.step_btn {
+    font-size: 14px;
+}
+.input_label {
+    margin-top: 15px;
+}
 </style>
 
 
@@ -159,63 +180,6 @@ $(function() {
 
     $( ".datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
 });
-function checkValue(){
-    var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
-    var ExpecCheckoutFromDate = document.getElementById('ExpecCheckoutFromDate').value;
-    var borrowerFrom = document.getElementById('borrowerFrom').value;
-
-    if(ExpecReturnFromDate ==''){
-        document.getElementById('ExpecReturnToDate').disabled = true;
-    } else{
-        document.getElementById('ExpecReturnToDate').disabled = false;
-    }
-
-    if(ExpecCheckoutFromDate ==''){
-        document.getElementById('ExpecCheckoutToDate').disabled = true;
-    } else{
-        document.getElementById('ExpecCheckoutToDate').disabled = false;
-    }
-
-    if(borrowerFrom ==''){
-        document.getElementById('borrowerTo').disabled = true;
-    } else{
-        document.getElementById('borrowerTo').disabled = false;
-    }
-    if (borrowerFrom <=0 && borrowerFrom !=''){
-        alert("value of borrower can not be less than 1");
-        document.getElementById('borrowerFrom').value =null;
-        document.getElementById('borrowerTo').disabled = true;
-    }
-
-
-}
-checkValue();
-function validateForm(){
-    var borrower = document.forms["myForm"]["borrowerFrom"].value;
-    var itemTypes = document.forms["myForm"]["itemTypes"].value;
-    var categories = document.forms["myForm"]["categories"].value;
-    var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
-    var ExpecCheckoutFromDate = document.getElementById('ExpecCheckoutFromDate').value;
-    var newDate = document.getElementById('newDate').value;
-    var check = true;
-    var message;
-
-    if (newDate=="") {
-        message ="The new return date is mandatory";
-        check=false;
-    }
-
-    if(borrower == "" && itemTypes == "none" && categories == "none" && ExpecReturnFromDate =='' && ExpecCheckoutFromDate==''){
-        message ="You have to use atleast one filter";
-        check= false;
-
-    }
-    if(!check)
-    alert(message);
-
-
-    return check;
-}
 
 function search() {
   // Declare variables 
@@ -248,12 +212,13 @@ function addsection() {
     var endSection = document.getElementsByTagName('hr')[document.getElementsByTagName('hr').length - 1];
     $(endSection).after(""+
         "<div class='section'>"+
-            "<h3>Section's title</h3>"+
+            "<input id='removeSection' class='step_btn' type='button' value='Remove Section' onclick='removesection(this.parentElement);' />"+
+            "<h3 class='input_label'>Section's title</h3>"+
             "<input type='text' name='sectionTitle' class='sectionTitle' placeholder='title'>"+
-            "<h4>Section's description</h4>"+
+            "<h4 class='input_label'>Section's description</h4>"+
             "<input type='text' name='sectionDescription' class='sectionDescription' placeholder='description'><br>"+
             "<div class='reports_container'></div>"+
-            "<input id='chooseReport' type='button' value='add reports' onclick='choosereport(this);' />"+
+            "<input id='chooseReport' class='step_btn' type='button' value='add report' onclick='choosereport(this);' />"+
         "</div>"+
         "<hr>");
 }
@@ -300,12 +265,17 @@ function addreport() {
     '<div class="reportTag">'+
         '<input type="hidden" id="'+ reportInfo[0] +'" value="'+ reportInfo[1] +'">'+
         reportInfo[1] +  
-        '<input id="removeReport" type="button" value="remove" onclick="removereport(this.parentElement);" />'+
+        '<input id="removeReport" class="step_btn" type="button" value="remove" onclick="removenode(this.parentElement);" />'+
     '</div>');
 }
 
-function removereport(nodeBtn) {
-    nodeBtn.remove();
+function removenode(node) {
+    node.remove();
+}
+
+function removesection(node) {
+    $(node).next().remove();
+    node.remove();
 }
 
 function prepareForm() {

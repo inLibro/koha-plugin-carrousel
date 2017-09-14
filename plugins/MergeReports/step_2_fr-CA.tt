@@ -9,39 +9,47 @@
 <div id="doc3">
     <div id="content">
 
-        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
-        <h2>Résultats des rapports</h2>
-            [% FOREACH key IN results.keys.sort %]
+        <h1 class="mainTitle">[% mainTitle %]</h1>
+        <h2 class="mainDescription">[% mainDescription %]</h2>
+        [% FOREACH key IN finalReport.keys.sort %]
+            <hr>
+            [% section = finalReport.$key %]
+            <h3 class="sectionTitle">[% section.sectionTitle %]</h3>
+            <h4 class="sectionDescription">[% section.sectionDescription %]</h4>
+            [% FOREACH reportName IN section.reports.keys.sort %]
+            [% report = section.reports.$reportName %]
             [% beenthrough = 0 %]
-            [% rows=0 %]
-                <h4>[% key %]</h4>
-                [% IF results.$key.size >= 1 %]
-                <table>
-                    [% FOREACH resultItems IN results.$key %]
-                    <tr>
-                        [% FOREACH itemKey IN resultItems.keys.sort %]
-                            [% IF beenthrough == 0 || rows % 20 == 0%]
-                                [% IF itemKey == "count(*)" %]
-                                    <td>Total</td>
-                                [% ELSE %]
-                                    <td>[% itemKey %]</td>
+                <h4>[% reportName %]</h4>
+                [% IF report.size >= 1 %]
+                    <table>
+                        [% FOREACH resultItems IN report %]
+                        <tr>
+                            [% FOREACH itemKey IN resultItems.keys.sort %]
+                                [% IF beenthrough == 0 %]
+                                    [% IF itemKey == "count(*)" %]
+                                        <th>Total</th>
+                                    [% ELSE %]
+                                        <th>[% itemKey %]</th>
+                                    [% END %]
                                 [% END %]
                             [% END %]
+                        </tr>
+                        <tr>
+                            [% FOREACH itemKey IN resultItems.keys.sort %]
+                                <td>[% resultItems.$itemKey %]</td>
+                            [% END %]
+                        [% beenthrough = 1 %]
+                        </tr>
                         [% END %]
-                    </tr>
-                    <tr>
-                        [% FOREACH itemKey IN resultItems.keys.sort %]
-                            <td>[% resultItems.$itemKey %]</td>
-                        [% END %]
-                    [% beenthrough = 1 %]
-                    [% rows = rows+1 %]
-                    </tr>
-                    [% END %]
-                </table>
+                    </table>
                 [% ELSE %]
-                    <p>la recherche n'a retournée aucun résultat</p>    
+                    <p>no results to display</p>    
                 [% END %]
+
             [% END %]
+
+        [% END %]
+        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
     </div>
 </div>
 <!-- Footer-->
@@ -50,7 +58,8 @@
 <style>
 
 #content{
-    width: 500px;
+    width: 100%;
+    max-width:800px;
 }
 
 th {
@@ -74,76 +83,51 @@ select{
     font-weight: bold;
     height:25px;
 }
+
+table {
+    width:100%;
+    margin-bottom:20px;
+}
+
+table td {
+    padding:5px;
+}
+
+.mainTitle {
+    font-size:2rem;
+    margin:35px 0px 10px 0px;
+    padding:0px;
+}
+
+.mainDescription {
+    font-size:0.9rem;
+    text-align:justify;
+    font-weight:normal;
+    margin:0px 0px 50px 0px;
+    padding:0px;
+}
+
+.sectionTitle {
+    font-size:1.5rem;
+    margin:30px 0px 10px 0px;
+    padding:0px;
+}
+
+.sectionDescription {
+    font-size:0.8rem;
+    text-align:justify;
+    font-weight:normal;
+    margin:0px 0px 30px 0px;
+    padding:0px;
+}
+img {
+    display:block;
+    margin:20px auto;
+
+}
+hr {
+    border: 0;
+    height: 2px;
+    background: #999;
+}
 </style>
-
-
-<script>
-$(function() {
-    $( "#ExpecReturnFromDate" ).datepicker();
-    $( "#ExpecReturnToDate" ).datepicker();
-
-    $( "#ExpecCheckoutFromDate" ).datepicker();
-    $( "#ExpecCheckoutToDate" ).datepicker();
-
-    $( "#newDate" ).datepicker();
-
-    $( ".datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
-});
-function checkValue(){
-    var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
-    var ExpecCheckoutFromDate = document.getElementById('ExpecCheckoutFromDate').value;
-    var borrowerFrom = document.getElementById('borrowerFrom').value;
-
-    if(ExpecReturnFromDate ==''){
-        document.getElementById('ExpecReturnToDate').disabled = true;
-    } else{
-        document.getElementById('ExpecReturnToDate').disabled = false;
-    }
-
-    if(ExpecCheckoutFromDate ==''){
-        document.getElementById('ExpecCheckoutToDate').disabled = true;
-    } else{
-        document.getElementById('ExpecCheckoutToDate').disabled = false;
-    }
-
-    if(borrowerFrom ==''){
-        document.getElementById('borrowerTo').disabled = true;
-    } else{
-        document.getElementById('borrowerTo').disabled = false;
-    }
-    if (borrowerFrom <=0 && borrowerFrom !=''){
-        alert("value of borrower can not be less than 1");
-        document.getElementById('borrowerFrom').value =null;
-        document.getElementById('borrowerTo').disabled = true;
-    }
-
-
-}
-checkValue();
-function validateForm(){
-    var borrower = document.forms["myForm"]["borrowerFrom"].value;
-    var itemTypes = document.forms["myForm"]["itemTypes"].value;
-    var categories = document.forms["myForm"]["categories"].value;
-    var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
-    var ExpecCheckoutFromDate = document.getElementById('ExpecCheckoutFromDate').value;
-    var newDate = document.getElementById('newDate').value;
-    var check = true;
-    var message;
-
-    if (newDate=="") {
-        message ="The new return date is mandatory";
-        check=false;
-    }
-
-    if(borrower == "" && itemTypes == "none" && categories == "none" && ExpecReturnFromDate =='' && ExpecCheckoutFromDate==''){
-        message ="You have to use atleast one filter";
-        check= false;
-
-    }
-    if(!check)
-    alert(message);
-
-
-    return check;
-}
-</script>

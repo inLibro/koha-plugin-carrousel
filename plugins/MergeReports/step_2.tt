@@ -9,16 +9,14 @@
 <div id="doc3">
     <div id="content">
 
-        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
         <h1 class="mainTitle">[% mainTitle %]</h1>
         <h2 class="mainDescription">[% mainDescription %]</h2>
-        [% FOREACH key IN finalReport.keys %]
+        [% FOREACH key IN finalReport.keys.sort %]
             <hr>
             [% section = finalReport.$key %]
             <h3 class="sectionTitle">[% section.sectionTitle %]</h3>
             <h4 class="sectionDescription">[% section.sectionDescription %]</h4>
-            [% FOREACH reportName IN section.reports.keys %]
-            un rapport
+            [% FOREACH reportName IN section.reports.keys.sort %]
             [% report = section.reports.$reportName %]
             [% beenthrough = 0 %]
                 <h4>[% reportName %]</h4>
@@ -51,7 +49,7 @@
             [% END %]
 
         [% END %]
-            
+        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
     </div>
 </div>
 <!-- Footer-->
@@ -88,9 +86,7 @@ select{
 
 table {
     width:100%;
-}
-
-table th{
+    margin-bottom:20px;
 }
 
 table td {
@@ -99,7 +95,7 @@ table td {
 
 .mainTitle {
     font-size:2rem;
-    margin:5px 0px 10px 0px;
+    margin:35px 0px 10px 0px;
     padding:0px;
 }
 
@@ -113,7 +109,7 @@ table td {
 
 .sectionTitle {
     font-size:1.5rem;
-    margin:10px 0px;
+    margin:30px 0px 10px 0px;
     padding:0px;
 }
 
@@ -124,76 +120,14 @@ table td {
     margin:0px 0px 30px 0px;
     padding:0px;
 }
+img {
+    display:block;
+    margin:20px auto;
+
+}
+hr {
+    border: 0;
+    height: 2px;
+    background: #999;
+}
 </style>
-
-
-<script>
-$(function() {
-    $( "#ExpecReturnFromDate" ).datepicker();
-    $( "#ExpecReturnToDate" ).datepicker();
-
-    $( "#ExpecCheckoutFromDate" ).datepicker();
-    $( "#ExpecCheckoutToDate" ).datepicker();
-
-    $( "#newDate" ).datepicker();
-
-    $( ".datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
-});
-function checkValue(){
-    var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
-    var ExpecCheckoutFromDate = document.getElementById('ExpecCheckoutFromDate').value;
-    var borrowerFrom = document.getElementById('borrowerFrom').value;
-
-    if(ExpecReturnFromDate ==''){
-        document.getElementById('ExpecReturnToDate').disabled = true;
-    } else{
-        document.getElementById('ExpecReturnToDate').disabled = false;
-    }
-
-    if(ExpecCheckoutFromDate ==''){
-        document.getElementById('ExpecCheckoutToDate').disabled = true;
-    } else{
-        document.getElementById('ExpecCheckoutToDate').disabled = false;
-    }
-
-    if(borrowerFrom ==''){
-        document.getElementById('borrowerTo').disabled = true;
-    } else{
-        document.getElementById('borrowerTo').disabled = false;
-    }
-    if (borrowerFrom <=0 && borrowerFrom !=''){
-        alert("value of borrower can not be less than 1");
-        document.getElementById('borrowerFrom').value =null;
-        document.getElementById('borrowerTo').disabled = true;
-    }
-
-
-}
-checkValue();
-function validateForm(){
-    var borrower = document.forms["myForm"]["borrowerFrom"].value;
-    var itemTypes = document.forms["myForm"]["itemTypes"].value;
-    var categories = document.forms["myForm"]["categories"].value;
-    var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
-    var ExpecCheckoutFromDate = document.getElementById('ExpecCheckoutFromDate').value;
-    var newDate = document.getElementById('newDate').value;
-    var check = true;
-    var message;
-
-    if (newDate=="") {
-        message ="The new return date is mandatory";
-        check=false;
-    }
-
-    if(borrower == "" && itemTypes == "none" && categories == "none" && ExpecReturnFromDate =='' && ExpecCheckoutFromDate==''){
-        message ="You have to use atleast one filter";
-        check= false;
-
-    }
-    if(!check)
-    alert(message);
-
-
-    return check;
-}
-</script>
