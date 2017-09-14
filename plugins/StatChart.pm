@@ -232,17 +232,6 @@ sub build_graph {
         $i++;
     }
 
-    if ($preset->{id} eq 'graphs-accountlines-amount') {
-        warn Dumper(\{
-          id => $preset->{id},
-          type => $preset->{type},
-          title => $preset->{title},
-          xlabels => \@xlabels,
-          ylabels => $preset->{ylabels},
-          series => \@series
-        });
-    }
-
     # Return the hash
     return {
       id => $preset->{id},
