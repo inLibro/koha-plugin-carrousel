@@ -29,6 +29,7 @@ use C4::Suggestions;
 use C4::Members;
 use Data::Dumper;
 use Koha::DateUtils;
+use Koha::Patrons;
 use C4::Languages qw(getlanguage);
 
 my $input           = new CGI;
@@ -108,11 +109,11 @@ else{
     );
 }
 
-my ( $borr ) = GetMemberDetails( $borrowernumber );
+my $patron = Koha::Patrons->find( $borrowernumber );
 
 if ( $op eq "add_confirm" )
 {
-    my $borr = GetMemberDetails( $borrowernumber );
+    #my $borr = GetMemberDetails( $borrowernumber );
     my $baseurl = C4::Context->preference("staffClientBaseURL");
     my $message ='';
 
@@ -129,21 +130,21 @@ if ( $op eq "add_confirm" )
         $message .= "<td class='serial datavue'>Nom :</td>";
         $message .= "<td class='datavue'>" .
                 "<a href='$baseurl/cgi-bin/koha/members/moremember.pl?borrowernumber=$borrowernumber'>" .
-                ( $borr->{'title'}     ? encode( 'utf-8', $borr->{'title'} . ' ')      : '' ) .
-                ( $borr->{'firstname'} ? encode( 'utf-8', $borr->{'firstname'} . ' ' ) : '' ) .
-                ( $borr->{'surname'}   ? encode( 'utf-8', $borr->{'surname'} . ' ' )   : '' ) . "</a><br/></td>";
+                ( $patron->{'title'}     ? encode( 'utf-8', $patron->{'title'} . ' ')      : '' ) .
+                ( $patron->{'firstname'} ? encode( 'utf-8', $patron->{'firstname'} . ' ' ) : '' ) .
+                ( $patron->{'surname'}   ? encode( 'utf-8', $patron->{'surname'} . ' ' )   : '' ) . "</a><br/></td>";
         $message .= "</tr>";
         $message .= "<tr>";
         $message .= "<td class='serial datavue'>T&#233;l&#233;phone :</td>";
-        $message .= "<td class='datavue'>" . encode('utf-8', $borr->{'phone'} ) . '<br/>' if $borr->{'phone'};
+        $message .= "<td class='datavue'>" . encode('utf-8', $patron->{'phone'} ) . '<br/>' if $patron->{'phone'};
         $message .= "</td></tr>";
         $message .= "<tr>";
         $message .= "<td class='serial datavue'>Courriel :</td>";
-        $message .= "<td class='datavue'><a href='mailto:" . $borr->{'email'} ."'>"  . encode('utf-8', $borr->{'email'} ) . '</a><br/>' if $borr->{'email'};
+        $message .= "<td class='datavue'><a href='mailto:" . $patron->{'email'} ."'>"  . encode('utf-8', $patron->{'email'} ) . '</a><br/>' if $patron->{'email'};
         $message .= "</td></tr>";
         $message .= "<tr>";
         $message .= "<td class='serial datavue'>Service :</td>";
-        $message .= "<td class='datavue'>"  . encode('utf-8', GetSortDetails( 'Services', $borr->{'sort1'} ) ) . '<br/>' if $borr->{'sort1'};
+        $message .= "<td class='datavue'>"  . encode('utf-8', GetSortDetails( 'Services', $patron->{'sort1'} ) ) . '<br/>' if $patron->{'sort1'};
         $message .= "</td></tr>";
         $message .= "<tr>";
         $message .= "<td class='serial datavue'>Factur&#233; &#224; :</td>";
@@ -201,7 +202,7 @@ if ( $op eq "add_confirm" )
                $message .= "Acc&#233;der &#224; la <a href='http://$baseurl/cgi-bin/koha/tools/ill.pl'>liste de PEB</a>";
                $message .= "</body></html>";
 
-    my $lib = Koha::Libraries->find($borr->{'branchcode'});
+    my $lib = Koha::Libraries->find($patron->{'branchcode'});
     my $updateemailaddress = $lib->{'branchemail'};
     # Une regex de email parmi tant d'autres. Voir : http://regexlib.com/REDetails.aspx?regexp_id=3122
     $updateemailaddress = C4::Context->preference('KohaAdminEmailAddress') unless( $updateemailaddress =~ /^[0-9a-zA-Z]+([0-9a-zA-Z]*[-._+])*[0-9a-zA-Z]+@[0-9a-zA-Z]+([-.][0-9a-zA-Z]+)*([0-9a-zA-Z]*[.])[a-zA-Z]{2,6}$/);
@@ -285,15 +286,17 @@ if ( $op ne 'add')
 }
 
 $template->param(
-#    suggestions_loop => $suggestions_loop,
-    title            => $booktitle,
-    author           => $author,
-    status           => $status,
-    BORROWER_INFO    => $borr,
-#    suggestedbyme    => $suggestedbyme,
-    "op_$op"         => 1,
-    illview          => 1,
-    OPAC_URL         => "/plugin/ILL/opac-ill.pl",
+
+    #    suggestions_loop => $suggestions_loop,
+    title  => $booktitle,
+    author => $author,
+    status => $status,
+    patron => $patron,
+
+    #    suggestedbyme    => $suggestedbyme,
+    "op_$op" => 1,
+    illview  => 1,
+    OPAC_URL => "/plugin/Koha/Plugin/ILL/opac-ill.pl",
 );
 
 output_html_with_http_headers $input, $cookie, $template->output;

@@ -1,28 +1,26 @@
 [% USE Koha %]
-[% INCLUDE 'doc-head-open.inc' %][% IF ( LibraryNameTitle ) %][% LibraryNameTitle %][% ELSE %]Koha online[% END %] Catalog &rsaquo;
-[% IF ( op_add ) %]Nouvelle demande PEB[% END %]
-[% IF ( op_else ) %]Demandes PEB[% END %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>
+	[%- IF ( op_add ) -%]Nouvelle demande PEB
+	[%- ELSE -%]Demandes PEB
+	[%- END -%]
+</title>
 [% INCLUDE 'doc-head-close.inc' %]
-
 [% BLOCK cssinclude %][% END %]
-<style>
-    table {
-        width: 100%;
-    }
-</style>
 <script src="[% interface%]/[% theme %]/lib/jquery/jquery.js"></script>
 <script type="text/JavaScript" language="JavaScript">
-
        $(function() {
-            $("#CheckAll").click(function(){
+            $("#CheckAll").click(function()
+            {
                     $("[name=deleteRequest]").attr('checked', true);
                     return false;
-                });
-console.log("Francaisss");
-            $("#CheckNone").click(function(){
+            });
+
+            $("#CheckNone").click(function()
+            {
                     $("[name=deleteRequest]").attr('checked', false);
                     return false;
-                });
+            });
 
             $("#illchoicebook").click(function()
             {
@@ -35,7 +33,6 @@ console.log("Francaisss");
                 $("#illbook").hide();
                 $("#illserial").show();
             });
-console.log("Francais");
        });
 </script>
 </head>
@@ -43,9 +40,17 @@ console.log("Francais");
 [% INCLUDE 'masthead.inc' %]
 	<div class="main">
 		<ul class="breadcrumb">
-		<li><a href="">Accueil</a> <span class="divider">&rsaquo;</span></li>
-	        <li><a href="/cgi-bin/koha/opac-user.pl">[% INCLUDE 'patron-title.inc' category_type = BORROWER_INFO.category_type firstname = BORROWER_INFO.firstname surname = BORROWER_INFO.surname othernames = BORROWER_INFO.othernames cardnumber = BORROWER_INFO.cardnumber %]</a> <span class="divider">&rsaquo;</span></li>
-	        <li><a href="#">Demande de prêts entre bibliothèques</a></li>
+		<li>
+			<a href="">Accueil</a> <span class="divider">&rsaquo;</span>
+		</li>
+	    <li>
+	    	<a href="/cgi-bin/koha/opac-user.pl">
+	    	[%- INCLUDE 'patron-title.inc' firstname = patron.firstname surname = patron.surname othernames = patron.othernames cardnumber = patron.cardnumber -%]
+	    	</a> <span class="divider">&rsaquo;</span>
+	   	</li>
+	    <li>
+	    	<a href="#">Demande de prêts entre bibliothèques</a>
+	    </li>
 	</ul>
 		<div class="container-fluid">
 		<div class="row-fluid">
@@ -154,8 +159,8 @@ console.log("Francais");
 	                                                [% IF ( serial.volume ) %]Volume [% serial.volume %][% END %]
 	                                                [% IF ( serial.number ) %]No [% serial.number %][% END %]
 	                                                [% IF ( serial.pages ) %]Pages [% serial.pages %][% END %]
-
-	                                                Article : [% serial.article %]<br/>par [% serial.artauthor %]
+	                                                <br/>
+	                                                Article : [% serial.article %]par [% serial.artauthor %]
 	                                            </td>
 	                                            <td>
 	                                                [% IF ( serial.ASKED ) %]Demande envoyée[% END %]

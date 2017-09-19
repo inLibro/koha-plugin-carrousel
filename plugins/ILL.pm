@@ -91,16 +91,14 @@ $(document).ready( function(){
         my $pref_value_opac = q{
 $(document).ready( function(){
     //Pour l'OPAC
-    var langPref = $('html').attr('lang');
+    var langPref = $('html').attr('lang').substr(0, 2);
     var label;
-    if(langPref != 'en'){
-        langPref = '_' + langPref;
-        label = 'Vos PEB';
+    if(langPref == 'fr'){
+        label = 'Mes PEB';
     }else{
-        langPref = '';
-        label = 'Your ILL';
+        label = 'your ILL';
     }
-    $('#usermenu ul').append("<li><a href=\"/plugin/ILL/opac-ill" + langPref + ".pl\">" + label +"</a></li>");
+    $('#usermenu ul').append("<li><a href=\"/plugin/Koha/Plugin/ILL/opac-ill.pl\">" + label +"</a></li>");
     });
             };
 
@@ -251,7 +249,7 @@ sub intranet_ill{
             if ( $data && ( $newStatus ne $data->{'status'} ) )
             {
                 $sth_changeStatus->execute($newStatus, $requestid);
-                my $message = '<p>Bonjour ' . encode('utf-8', ($data->{'title'} ? $data->{'title'} . ' ' : '' ) . $data->{'firstname'} . ' ' . $data->{'surname'}).'</p>';
+                my $message = '<p>Bonjour ' . ($data->{'title'} ? $data->{'title'} . ' ' : '' ) . $data->{'firstname'} . ' ' . $data->{'surname'}.'</p>';
 
                 my $footer;
                 my $proceedWithEmail = 1;
@@ -278,18 +276,18 @@ sub intranet_ill{
 
                             if ( $data->{'type'} eq 'BOOK' )
                             {
-                                    $message .= '<b>Titre : </b> ' . encode( 'utf-8', $data->{'booktitle'} ) . '<br/>'  if $data->{'booktitle'};
-                                    $message .= '<b>Auteur : </b> ' . encode( 'utf-8', $data->{'author'} ). '<br/>' if $data->{'author'};
+                                    $message .= '<b>Titre : </b> ' . $data->{'booktitle'}  . '<br/>'  if $data->{'booktitle'};
+                                    $message .= '<b>Auteur : </b> ' . $data->{'author'} . '<br/>' if $data->{'author'};
                             }
                             else
                             {
-                                    $message .= '<b>Date : </b>'.  encode('utf-8', $data->{'year'} ). '<br/>' if $data->{'year'};
-                                    $message .= "<b>Titre de l'article : </b>" . encode('utf-8', $data->{'article'} ) . '<br/>' if $data->{'article'};
-                                    $message .= "<b>Auteur de l'article : </b>" . encode('utf-8', $data->{'artauthor'} ) . '<br/>' if $data->{'artauthor'};
+                                    $message .= '<b>Date : </b>'. $data->{'year'} . '<br/>' if $data->{'year'};
+                                    $message .= "<b>Titre de l'article : </b>" . $data->{'article'} . '<br/>' if $data->{'article'};
+                                    $message .= "<b>Auteur de l'article : </b>" . $data->{'artauthor'} . '<br/>' if $data->{'artauthor'};
                             }
 
                 $message .= $footer;
-                            $message .= '<p>Cordialement,</p><p>L\'équipe CorDis</p>';
+                $message .= '<p>Cordialement,</p><p>L\'équipe CorDis</p>';
 
                 if ( $proceedWithEmail )
                 {
@@ -301,9 +299,9 @@ sub intranet_ill{
                                 To      => $toEmail,
                                 CC      => $libraryemail,
                                 From    => $libraryemail,
-                                Subject => "Demande de PEB - mise à jour",
-                                Message => decode('utf-8', $message),
-                                'Content-Type' => 'text/html; charset="iso-8859-1"',
+                                Subject => encode("utf-8","Demand PEB - mise à jour"),
+                                Message => encode('utf-8', $message),
+                                'Content-Type' => 'text/html; charset="utf-8"',
                         );
 
                         if ( sendmail( %mail ) ) {
