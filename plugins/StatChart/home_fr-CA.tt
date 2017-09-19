@@ -24,7 +24,11 @@
 <div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Accueil</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; StatChart</div>
 <div id='doc3' >
 	<div id='content' align='center'>
-		<img width='400px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
+        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+            <p style="text-align: left;">Cette extension a été créée par</p>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
+            <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
+        </div>
 		<div id='form-selection'>
 			<form method='get' name ='form-dataset-select'>
 				<h2>Générer des graphiques</h2>

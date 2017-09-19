@@ -8,7 +8,11 @@
 <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; MergeReports</div>
 <div id="doc3">
     <div id="content">
-
+        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+            <p style="text-align: left;">Cette extension a été créée par</p>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
+            <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
+        </div>
         <h1 class="mainTitle">[% mainTitle %]</h1>
         <h2 class="mainDescription">[% mainDescription %]</h2>
         [% FOREACH key IN finalReport.keys.sort %]

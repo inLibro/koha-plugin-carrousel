@@ -9,7 +9,11 @@
 <div id="doc3">
     <div id="content">
 
-        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+            <p style="text-align: left;">Cette extension a été créée par</p>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
+            <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
+        </div>
         <h2>Generate images of documents from pdf</h2>
 
         <form method="get" name ="myForm" onsubmit="return validateForm()">
@@ -20,7 +24,7 @@
             <!-- end of plugin necessary inputs  -->
 
             <div class="alert">
-                    <h2>Ce plugin ne peut pas être utilisé, car la commande : pdftocairo  n'est pas disponible, veuillez contacter votre administrateur ou installer le package qui permet d'utiliser la commande </h2>
+                    <h2>Ce plugin ne peut pas être utilisé, car la commande : pdftocairo  n'est pas disponible, veuillez contacter votre administrateur ou installer le paquet pour utiliser ce plugin</h2>
             </div>
     </div>
 </div>

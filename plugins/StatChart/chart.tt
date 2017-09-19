@@ -48,7 +48,11 @@
 <div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Home</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; <a href='/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::StatChart&method=tool'>StatChart</a> &rsaquo; Charts</div>
 <div id='doc3'>
 	<div id='content' align='center'>
-		<img width='400px' src='[%PLUGIN_PATH%]/images/inLibro_en.svg'/>
+        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+            <p style="text-align: left;">This plugin created by</p>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_en.svg'/>
+            <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
+        </div>
 		<table>
 			<tr>
 				[%- i = 0 %][% FOREACH graph IN graphs -%]

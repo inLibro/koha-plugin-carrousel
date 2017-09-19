@@ -55,7 +55,6 @@ $(document).ready(function() {
 	<div id="bd">
 		<div id="yui-main">
 			<div class="yui-b">
-                <a href="https://inlibro.com"><img src="http://master-intranet/plugin/Koha/Plugin/ILL/images/logo_inlibro.png" alt="Logo inLibro" width="300px" height="77px"/></a>
 				<form method="post">
 				<h1>ILL request manager</h1>
 				<input type='hidden' name='class' value='[% class %]'>

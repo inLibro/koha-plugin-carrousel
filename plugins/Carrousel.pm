@@ -130,9 +130,8 @@ sub step_1{
             $preferedLanguage = substr $preferedLanguage, 0, 2;
             eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
         }
-    } else {
-        $template = $self->get_template( { file => 'step_1.tt' } );
     }
+    $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
 
     $template->param(shelves => \@shelves, selectedShelf => $self->retrieve_data('selectedShelf'));
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
@@ -369,9 +368,8 @@ sub configure{
                 $preferedLanguage = substr $preferedLanguage, 0, 2;
                 eval {$template = $self->get_template( { file => "configure_$preferedLanguage.tt" } )};
             }
-        } else {
-            $template = $self->get_template( { file => 'configure.tt' } );
         }
+        $template = $self->get_template( { file => 'configure.tt' } ) unless $template;
 
         $template->param(
             shelves       => \@shelves,

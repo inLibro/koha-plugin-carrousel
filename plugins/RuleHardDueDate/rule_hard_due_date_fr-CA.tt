@@ -11,7 +11,11 @@
                           Réglage de la date d'échéance</div>
     <div id="doc3" class="yui-t1">
     <div class="container">
-        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+            <p style="text-align: left;">Cette extension a été créée par</p>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
+            <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
+        </div>
         <h2>Réglage de la date d'échéance</h2>
         <p> Ce plugin vous permet:
             <ul class='classul'>

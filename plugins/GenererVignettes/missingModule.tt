@@ -9,7 +9,12 @@
 <div id="doc3">
     <div id="content">
 
-        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+            <p style="text-align: left;">This plugin created by</p>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_en.svg'/>
+            <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
+        </div>
+
         <h2>Generate images for documents that they are missing one</h2>
 
         <form method="get" name ="myForm" onsubmit="return validateForm()">
@@ -20,7 +25,7 @@
             <!-- end of plugin necessary inputs  -->
 
             <div class="alert">
-                    <h2>This plugin cannot be used, the commande : pdftocairo is not available, please contact your system administrator or install necessary package for use this command</h2>
+                    <h2>This plugin cannot be used, the commande : pdftocairo is not available, please contact your system administrator or install necessary package to use this plugin</h2>
             </div>
     </div>
 </div>

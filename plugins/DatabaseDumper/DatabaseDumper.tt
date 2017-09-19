@@ -9,7 +9,11 @@
 <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Database Dumper</div>
 
 <div id="doc3">
-    <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+    <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+        <p style="text-align: left;">This plugin created by</p>
+        <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_en.svg'/>
+        <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
+    </div>
     <h3>Database Dumper</h3>
 
     <p>This tool allows to dump database and then download the said dump.This can take a while, so don't worry unless it takes more than 5 minutes. If it's too long, contact your koha administrator</p>

@@ -12,7 +12,12 @@
 <div id="doc3">
     <div id="content">
 
-        <img src="[%PLUGIN_PATH%]/images/inLibro_CP.png"/>
+        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+            <p style="text-align: left;">This plugin created by</p>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_en.svg'/>
+            <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
+        </div>
+
         <p>This plugin will create a thumbnail for each biblio record with a 856 field which contains a link to a pdf file. This thumbnail will be keep in Koha like a local cover image.</p>
         <hr>
         <form method="get" id="formTraitement">
@@ -25,7 +30,7 @@
 
             <label class="filterDescription"> <p>Number of records to process: [% pdf %]</p></label>
             <hr>
-            <button id="lunch" class="btn btn-default" onclick="lunchGenerate()">Create thumbnails</button>
+            <button id="launch" class="btn btn-default" onclick="launchGenerate()">Create thumbnails</button>
             <br>
             <br>
             <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
@@ -67,22 +72,22 @@
 
 <script>
 $( function() {
-    document.getElementById('lunch').disabled = false;
+    document.getElementById('launch').disabled = false;
     if ([% exist %] > 1 && [% lock %] > 0 ){
-        document.getElementById('lunch').disabled = true;
+        document.getElementById('launch').disabled = true;
         info = document.getElementById('progression');
         info.setAttribute('class','progress');
         info.firstChild.data = "This job it's progress in background  - please wait";
     }
     if([% wait %] == 1 ){
         document.getElementById('op').value = '';
-        document.getElementById('lunch').disabled = true;
+        document.getElementById('launch').disabled = true;
         info = document.getElementById('progression')
         info.setAttribute('class','finish');
-        info.firstChild.data = "The job is lunched correctly in background, please wait";
+        info.firstChild.data = "The job is launched correctly in background, please wait";
     }
 } );
-function lunchGenerate(){
+function launchGenerate(){
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
     info.setAttribute("class","begin");
