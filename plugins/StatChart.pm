@@ -37,7 +37,7 @@ our $metadata = {
     date_authored   => '2017-09-11',
     date_updated    => '2017-09-11',
     minimum_version => '3.20',
-    maximum_version => '17.05',
+    maximum_version => undef,
     version         => $VERSION,
 };
 
@@ -47,6 +47,7 @@ our $metadata = {
     # yLabels : Data series names. NEEDS to be an array. Single values for 'bar' and 'pie', multiple for 'stacked'
     # query   : SQL Query to fetch data. First row should be the label of the x-axis (or categories in a pie chart), following rows should be data values.
     #           You should have as many columns as yLabels (so 1 for 'bar' or 'pie', multiple for 'stacked')
+# The charts in the both the selection page (home.tt) are ordered in the order they are here. The display page ends up being the same order because of how <form>s work.
 my @graph_presets = (
     {   id      => 'graph-loans-dow',
         type    => "bar",
@@ -130,7 +131,7 @@ my @graph_presets = (
         title   => 'Amount per transaction type',
         ylabels => ['Amount'],
         query =>
-            "SELECT de, SUM(amount) FROM accountlines LEFT JOIN (SELECT 'A' AS ty, 'Account management fee' AS de UNION SELECT 'C', 'Credit' UNION SELECT 'F', 'Overdue fine' UNION SELECT 'FOR', 'Forgiven' UNION SELECT 'FU', 'Overdue, still accruing' UNION SELECT 'L', 'Lost item' UNION SELECT 'LR', 'Lost item returned/refunded' UNION SELECT 'M', 'Sundry' UNION SELECT 'N', 'New card' UNION SELECT 'PAY', 'Payment' UNION SELECT 'W', 'Writeoff') AS descriptors ON accountlines.accounttype=descriptors.ty GROUP BY ty ORDER BY SUM(amount);"
+            "SELECT IFNULL(de, IF(LEFT(accounttype,3)='Pay','Payment',accounttype)) AS label, SUM(amount) FROM accountlines LEFT JOIN (SELECT 'A' AS ty, 'Account management fee' AS de UNION SELECT 'C', 'Credit' UNION SELECT 'F', 'Overdue fine' UNION SELECT 'FOR', 'Forgiven' UNION SELECT 'FU', 'Overdue, still accruing' UNION SELECT 'L', 'Lost item' UNION SELECT 'LR', 'Lost item returned/refunded' UNION SELECT 'M', 'Sundry' UNION SELECT 'N', 'New card' UNION SELECT 'PAY', 'Payment' UNION SELECT 'W', 'Writeoff') AS descriptors ON accountlines.accounttype=descriptors.ty GROUP BY label ORDER BY SUM(amount);"
     }        
 );
 
@@ -250,5 +251,3 @@ sub uninstall() {
 
     return C4::Context->dbh->do("DROP TABLE $table");
 }
-
-1;
