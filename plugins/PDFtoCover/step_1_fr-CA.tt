@@ -1,6 +1,6 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha: GenerateVignettes Plugin</title>
+<title>Koha:PDFtoCover Plugin</title>
 [%  IF exist  > 1 %]
     <meta http-equiv="refresh" content="30">
 [% END %]
@@ -8,16 +8,17 @@
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; GenerateVignettes</div>
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; PDFtoCover</div>
 <div id="doc3">
-    <div id="content">
+    <div id="content" style="width: 450px">
 
         <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
             <p style="text-align: left;">Cette extension a été créée par</p>
             <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
             <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
         </div>
-        <p>Ce plugin génère une vignette pour chaque notice ayant une zone 856 qui contient un lien vers un fichier pdf. Cette vignette sera enregistrée dans Koha sous la forme d'une image locale.</p>
+
+        <p>Ce plugin génère une vignette pour chaque notice ayant une zone 856 qui contient un lien vers un fichier PDF. Cette vignette sera enregistrée dans Koha sous la forme d'une image locale.</p>
         <hr>
         <form method="get" id="formTraitement">
             <!-- Necessary for the plugin to run, do not remove  -->
@@ -26,15 +27,15 @@
             <input type="hidden" id="op" name="op" value=""/>
             <!-- end of plugin necessary inputs  -->
 
-            <label class="filterDescription"> <p>Nombre de notices à traiter: [% pdf %]</p></label>
+            <label class="filterDescription"> <p>Nombre de notices à traiter : [% pdf %]</p></label>
             <hr>
-            <button id="launch" class="btn btn-default" onclick="launchGenerate()">Télécharger les images</button>
+            <button id="launch" class="btn btn-default" onclick="launchGenerate()">Générer les vignettes</button>
             <br>
             <br>
             <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
             <br>
             <br>
-            <label class="filterDescription"> <p>Remarque: Le plugin télécharge chaque document et vérifie dans l'entête du fichier s'il s'agit d'un document pdf. Seul les fichiers pdf généreront une vignette.</p>
+            <label class="filterDescription"> <p>Remarque : le plugin télécharge chaque document et vérifie dans l'entête du fichier s'il s'agit d'un document PDF. Seul les documents PDF généreront une vignette.</p>
         </form>
     </div>
 </div>
@@ -55,11 +56,12 @@
     color : red;
     font-size : 16px;
 }
-.debut {
+
+.begin {
     color : blue;
     font-size : 16px;
     transition: all 0.7s ease-out;
- }
+}
 
 .finish {
     color : green;
@@ -74,21 +76,20 @@ $( function() {
         document.getElementById('launch').disabled = true;
         info = document.getElementById('progression');
         info.setAttribute('class','progress');
-        info.firstChild.data = "Ce processus s'exécute en arrière plan, merci de patienter";
+        info.firstChild.data = "Le processus s'exécute en arrière-plan - veuillez patienter.";
     }
     if([% wait %] == 1 ){
         document.getElementById('op').value = '';
         document.getElementById('launch').disabled = true;
         info = document.getElementById('progression')
         info.setAttribute('class','finish');
-        info.firstChild.data = "Ce traitement est bien lancé en arrière plan, merci de patienter";
+        info.firstChild.data = "Le processus s'est lancé correctement en arrière-plan - veuillez patienter";
     }
-
 } );
 function launchGenerate(){
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
-    info.setAttribute("class","debut");
-    info.firstChild.data = "Progression en cours, veuillez patienter .................";
+    info.setAttribute("class","begin");
+    info.firstChild.data = "Démarrage du processus en cours...";
 }
 </script>

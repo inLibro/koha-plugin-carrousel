@@ -1,13 +1,13 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha: GenerateVignettes Plugin</title>
+<title>Koha:PDFtoCover Plugin</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; GenerateVignettes</div>
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; PDFtoCover</div>
 <div id="doc3">
-    <div id="content">
+    <div id="content" style="width: 450px">
 
         <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
             <p style="text-align: left;">This plugin created by</p>
@@ -25,7 +25,7 @@
             <!-- end of plugin necessary inputs  -->
 
             <div class="alert">
-                    <h2>This plugin cannot be used, the commande : pdftocairo is not available, please contact your system administrator or install necessary package to use this plugin</h2>
+                    <h2>This plugin cannot be used: the package 'pdftocairo' is not available. Please contact your system administrator or install the necessary package to use this plugin</h2>
             </div>
     </div>
 </div>

@@ -1,6 +1,6 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha: GenerateVignettes Plugin</title>
+<title>Koha:PDFtoCover Plugin</title>
 [%  IF exist  > 1 %]
     <meta http-equiv="refresh" content="30">
 [% END %]
@@ -8,9 +8,9 @@
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; GenerateVignettes</div>
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; PDFtoCover</div>
 <div id="doc3">
-    <div id="content">
+    <div id="content" style="width: 450px">
 
         <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
             <p style="text-align: left;">This plugin created by</p>
@@ -18,14 +18,13 @@
             <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
         </div>
 
-        <p>This plugin will create a thumbnail for each biblio record with a 856 field which contains a link to a pdf file. This thumbnail will be keep in Koha like a local cover image.</p>
+        <p>This plugin will create a thumbnail for each biblio record with a 856 field which contains a link to a PDF file. This thumbnail will be kept in Koha as a local cover image.</p>
         <hr>
         <form method="get" id="formTraitement">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" id="op" name="op" value=""/>
-            <input type="hidden" id="dodo" name="dodo" value=""/>
             <!-- end of plugin necessary inputs  -->
 
             <label class="filterDescription"> <p>Number of records to process: [% pdf %]</p></label>
@@ -36,7 +35,7 @@
             <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
             <br>
             <br>
-            <label class="filterDescription"> <p>Note: The plugin download each file and check its header to determine if it's a pdf file or not. Only pdf files will generate thumbnails.</p>
+            <label class="filterDescription"> <p>Note: The plugin downloads each file and check its header to determine if it's a PDF file or not. Only PDF files will generate thumbnails.</p>
         </form>
     </div>
 </div>
@@ -77,20 +76,20 @@ $( function() {
         document.getElementById('launch').disabled = true;
         info = document.getElementById('progression');
         info.setAttribute('class','progress');
-        info.firstChild.data = "This job it's progress in background  - please wait";
+        info.firstChild.data = "Job is running in the background - please wait.";
     }
     if([% wait %] == 1 ){
         document.getElementById('op').value = '';
         document.getElementById('launch').disabled = true;
         info = document.getElementById('progression')
         info.setAttribute('class','finish');
-        info.firstChild.data = "The job is launched correctly in background, please wait";
+        info.firstChild.data = "Job was launched correctly - please wait";
     }
 } );
 function launchGenerate(){
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
     info.setAttribute("class","begin");
-    info.firstChild.data = "Current progress, please wait .................";
+    info.firstChild.data = "Starting job...";
 }
 </script>
