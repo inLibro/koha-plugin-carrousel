@@ -14,22 +14,22 @@
 		[%-  CASE 'bar' -%]
 		add_bar_chart(
 			document.getElementById('graph-dataset-[% i %]'),
-			'[% graph.title %]',
-			[[%- FOREACH label IN graph.xlabels -%]'[% label %]',[%- END -%]],
-			[[%- FOREACH label IN graph.ylabels -%]'[% label %]',[%- END -%]],
+			"[% graph.title %]",
+			[[%- FOREACH label IN graph.xlabels -%]"[% label %]",[%- END -%]],
+			[[%- FOREACH label IN graph.ylabels -%]"[% label %]",[%- END -%]],
 			[[%- FOREACH serie IN graph.series -%][[%- FOREACH value IN serie -%][%- value -%],[%- END -%]],[%-END%]]);
 		[%-  CASE 'stacked' -%]
 		add_stacked_bar_chart(
 			document.getElementById('graph-dataset-[% i %]'),
-			'[% graph.title %]',
-			[[%- FOREACH label IN graph.xlabels -%]'[% label %]',[%- END -%]],
-			[[%- FOREACH label IN graph.ylabels -%]'[% label %]',[%- END -%]],
+			"[% graph.title %]",
+			[[%- FOREACH label IN graph.xlabels -%]"[% label %]",[%- END -%]],
+			[[%- FOREACH label IN graph.ylabels -%]"[% label %]",[%- END -%]],
 			[[%- FOREACH serie IN graph.series -%][[%- FOREACH value IN serie -%][%- value -%],[%- END -%]],[%-END%]]);
 		[%-  CASE 'pie' -%]
 		add_pie_chart(
 			document.getElementById('graph-dataset-[% i %]'),
-			'[% graph.title %]',
-			[[%- FOREACH label IN graph.xlabels -%]'[% label %]',[%- END -%]],
+			"[% graph.title %]",
+			[[%- FOREACH label IN graph.xlabels -%]"[% label %]",[%- END -%]],
 			[[%- FOREACH serie IN graph.series -%][[%- FOREACH value IN serie -%][%- value -%],[%- END -%]],[%-END%]]);
 		[% END %]
 		[%- i = i + 1 %][% END %]
