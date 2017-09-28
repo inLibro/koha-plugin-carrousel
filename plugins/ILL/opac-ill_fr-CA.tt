@@ -109,7 +109,7 @@
 	                            <div>
 	                                <span class="checkall"><a href="#" id="CheckAll">Sélectionner tout</a></span>
 	                                <span class="clearall"><a href="#" id="CheckNone">Désélectionner tout</a></span>
-	                                <a class="new" href="/plugin/ILL/opac-ill.pl?op=add">Nouvelle demande</a>
+	                                <a class="new" href="[% OPAC_URL %]?op=add">Nouvelle demande</a>
 	                            </div>
 	                            [% IF ( books ) %]
 	                                <h2>Livre(s)</h2>

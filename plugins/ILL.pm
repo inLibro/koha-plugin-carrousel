@@ -84,7 +84,7 @@ $(document).ready( function(){
         langPref = '_' + langPref;
         label = 'Vos PEB';
     }
-    $('#bd .yui-u.first dl').append("<dt><a href=\"/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::ILL&method=tool&manage\">" + label +"</a></dt><dd>Monitoring PEB</dd>");
+    $('#bd .yui-u.first dl').append("<dt><a href=\"/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::ILL&method=tool&manage\">" + label +"</a></dt><dd>Monitoring ILL</dd>");
     });
         };
 

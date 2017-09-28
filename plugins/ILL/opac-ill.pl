@@ -54,26 +54,6 @@ my $status          = $input->param('status') || '';
 my $op              = $input->param('op') || '';
 $op = '' unless $op;
 
-warn "-- USING VARIABLES";
-warn "TYPE: $type";
-warn "CHARGEDTO: $chargedto";
-warn "MAXCOST: $maxcost";
-warn "APPROVEDBY: $approvedby";
-warn "BOOKTITLE: $booktitle";
-warn "SERIALTITLE: $serialtitle";
-warn "AUTHOR: $author";
-warn "PUBYEAR: $pubyear";
-warn "ISBN: $isbn";
-warn "PUBLISHER: $publisher";
-warn "ARTAUTHOR: $artauthor";
-warn "YEAR: $year";
-warn "VOLUME: $volume";
-warn "NUMBER: $number";
-warn "PAGES: $pages";
-warn "ARTICLE: $article";
-warn "STATUS: $status";
-warn "OP: $op";
-
 my ( $template, $borrowernumber, $cookie );
 
 my $dbh = C4::Context->dbh;
@@ -199,7 +179,7 @@ if ( $op eq "add_confirm" )
 
         }
 
-               $message .= "Acc&#233;der &#224; la <a href='http://$baseurl/cgi-bin/koha/tools/ill.pl'>liste de PEB</a>";
+               $message .= "Acc&#233;der &#224; la <a href='http://$baseurl/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::ILL&method=tool&manage'>liste de PEB</a>";
                $message .= "</body></html>";
 
     my $lib = Koha::Libraries->find($patron->{'branchcode'});

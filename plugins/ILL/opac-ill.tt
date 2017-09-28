@@ -9,7 +9,6 @@
 [% BLOCK cssinclude %][% END %]
 <script src="[% interface%]/[% theme %]/lib/jquery/jquery.js"></script>
 <script type="text/JavaScript" language="JavaScript">
-
        $(function() {
             $("#CheckAll").click(function()
             {
@@ -110,7 +109,7 @@
 	                            <div>
 	                                <span class="checkall"><a href="#" id="CheckAll">Check all</a></span>
 	                                <span class="clearall"><a href="#" id="CheckNone">Uncheck all</a></span>
-	                                <a class="new" href="/plugin/ILL/opac-ill.pl?op=add">New request</a>
+	                                <a class="new" href="[% OPAC_URL %]?op=add">New request</a>
 	                            </div>
 	                            [% IF ( books ) %]
 	                                <h2>Book(s)</h2>
