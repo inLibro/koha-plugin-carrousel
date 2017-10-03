@@ -190,7 +190,7 @@ sub generateCarroussel{
     $shelfname =~ s/[^a-zA-Z0-9]/_/g;
 
     foreach my $biblionumber ( @items ) {
-        my $record = GetMarcBiblio( $biblionumber );
+        my $record = GetMarcBiblio({ biblionumber => $biblionumber });
         next if ! $record;
         my $title;
         my $marcflavour = C4::Context->preference("marcflavour");
