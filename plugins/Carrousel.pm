@@ -191,6 +191,10 @@ sub generateCarroussel{
 
     foreach my $biblionumber ( @items ) {
         my $record = GetMarcBiblio({ biblionumber => $biblionumber });
+        # Attempt the old call
+        if (! $record) {
+            $record = GetMarcBiblio( $biblionumber );
+        }
         next if ! $record;
         my $title;
         my $marcflavour = C4::Context->preference("marcflavour");
