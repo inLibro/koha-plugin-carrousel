@@ -1,4 +1,4 @@
-package Koha::Plugin::Fusion;
+package Koha::Plugin::MergeUsers;
 # Dominic Pichette, 2017 - Inlibro
 #
 # This plugin allows you to merge multiple reports into one.
@@ -29,11 +29,11 @@ use Data::Dumper;
 
 our $VERSION = 0.1;
 our $metadata = {
-	name            => 'Fusion',
+	name            => 'MergeUsers',
 	author          => 'David Bourgault',
-	description     => 'Fusionner des utilisateurs',
+	description     => 'Merge users',
 	date_authored   => '2017-11-15',
-	date_updated    => '2017-11-15',
+	date_updated    => '2017-11-16',
 	minimum_version => '16.05',
 	maximum_version => undef,
 	version         => $VERSION,
@@ -73,7 +73,7 @@ sub tool {
 			@sources
 		);
 	}
-	elsif ( $cgi->param('action') eq 'fusion' and $cgi->param('confirm') eq 'Yes' ) {
+	elsif ( $cgi->param('action') eq 'mergen' and $cgi->param('confirm') eq 'Yes' ) {
 		$self->fusion(
 			$cgi->param('target'),
 			$cgi->param('sources')

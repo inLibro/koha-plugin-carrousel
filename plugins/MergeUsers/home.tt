@@ -1,19 +1,19 @@
 	[% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha:Fusion Plugin</title>
+<title>Koha:MergeUsers Plugin</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Home</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; StatChart</div>
+<div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Home</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; MergeUsers</div>
 <div id='doc3' >
 	<div id='content' align='center'>
 [% IF ( actions ) %]
 		<div id="confirmed" class="dialog message">
-			<p>The patrons have been fusionned. The following was modified:</p>
+			<p>The patrons have been merged. The following was modified:</p>
 			<ul>
-				<li>Message: [% actions.messages %]</li>
-				<li>Accountlines: [% actions.accountlines %]</li>
+				<li>Messages: [% actions.messages %]</li>
+				<li>Accounts: [% actions.accountlines %]</li>
 				<li>Issues: [% actions.issues %]</li>
 				<li>Old issues: [% actions.old_issues %]</li>
 				<li>Reserves: [% actions.reserves %]</li>
@@ -25,17 +25,17 @@
 [% END %]
 [% IF ( predictions ) %]
 		<div id="needsconfirmation" class="dialog alert">
-			<form>
+			<form method="post">
 				<input type='hidden' name='class' value='[% CLASS %]'/>
 				<input type='hidden' name='method' value='[% METHOD %]'/>
-				<input type='hidden' name='action' value='fusion'/>
+				<input type='hidden' name='action' value='merge'/>
 				<input type='hidden' name='target' value='[% target %]'/>
 				<input type='hidden' name='sources' value='[% sources %]'/>
 
 				<p>To be modified:</p>
 				<ul>
-					<li>Message: [% predictions.messages %]</li>
-					<li>Accountlines: [% predictions.accountlines %]</li>
+					<li>Messages: [% predictions.messages %]</li>
+					<li>Accounts: [% predictions.accountlines %]</li>
 					<li>Issues: [% predictions.issues %]</li>
 					<li>Old issues: [% predictions.old_issues %]</li>
 					<li>Reserves: [% predictions.reserves %]</li>
@@ -43,8 +43,8 @@
 					<li>Lists: [% predictions.virtualshelves %]</li>
 				</ul>
 
-				<input type="submit" class="approve" name="confirm" value="Yes" accesskey="y" />
-        		<input type="submit" class="deny" name="confirm" value="No" accesskey="n" />
+				<input type="submit" class="approve" name="confirm" value="Confirm" accesskey="y" />
+				<input type="submit" class="deny" name="confirm" value="Cancel" accesskey="n" />
 			</form>
 		</div>
 [% END %]
@@ -54,7 +54,7 @@
 			<p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
 		</div>
 		<div id="form" align='left' style='width:450px'>
-			<form action="/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::Fusion&method=tool" method='post'>
+			<form method='post'>
 				<!-- Necessary for the plugin to run, do not remove  -->
 				<input type='hidden' name='class' value='[% CLASS %]'/>
 				<input type='hidden' name='method' value='[% METHOD %]'/>
@@ -62,13 +62,14 @@
 				<!-- end of plugin necessary inputs  -->
 				<fieldset>
 					<legend>Target patron</legend>
-					<input id="target-input" type="text" name="target" />
+					<input autocomplete="off" id="target" name="target" class="card-input ui-autocomplete-input" type="text" />
+					<!--<input id="target-input card-input ui-autocomplete-input" type="text" name="target" />-->
 				</fieldset>
 				<fieldset id="source-select">
 					<legend>Patrons to merge</legend>
 					<input id="source-count" type='hidden' name='count' value='0' />
 					<div class="source-row" id="source-0" >
-						<input class="source-input" id="source-input-0" type="text" name="source-0" disabled />
+						<input class="source-input card-input ui-autocomplete-input" id="source-input-0" type="text" name="source-0" disabled />
 						<a id="del-source-btn" href="#" onclick="del_source_field(this);">-</a>
 						<a id="add-source-btn" href="#" onclick="add_source_field();">+</a>
 					</div>
@@ -87,14 +88,35 @@
 		var s = $("div#source-0").clone(true);
 		s.attr("id", "source-" + (++src_count));
 		$("fieldset#source-select").append(s);
-		console.log($("fieldset#source-select #source-" + src_count + " #source-field-0"));
 		$("fieldset#source-select #source-" + src_count + " #source-input-0").attr("name", "source-" + src_count);
 		$("fieldset#source-select #source-" + src_count + " #source-input-0").removeAttr("disabled");
 		$("fieldset#source-select #source-" + src_count + " #source-input-0").attr("id", "source-input-" + src_count);
 		$("fieldset#source-select #source-count").attr("value", src_count);
+		add_autocomplete($("fieldset#source-select #source-" + src_count + " #source-input-" + src_count));
+	}
+	function add_autocomplete(el) {
+		var obj = el.autocomplete({
+				source: "/cgi-bin/koha/circ/ysearch.pl",
+				minLength: 3,
+				select: function( event, ui ) {
+					$(this).val(ui.item.cardnumber );
+					return false;
+				}
+			}).data( "ui-autocomplete" );
+		if( obj ) {
+			obj._renderItem = function( ul, item ) {
+				return $( "<li></li>" )
+				.data( "ui-autocomplete-item", item )
+				.append( "<a>" + item.surname + ", " + item.firstname + " (" + item.cardnumber + ") <small>" + item.dateofbirth + " " + item.address + " " + item.city + " " + item.zipcode + " " + item.country + "</small></a>" )
+				.appendTo( ul );
+			};
+		}
 	}
 	function del_source_field(caller) { $(caller).parent().remove(); }
-	$(function() { add_source_field(); });
+	$(function() { 
+		add_autocomplete($("#target"));
+		add_source_field(); 
+	});
 </script>
 <style>
 	#source-0 { display: none; }
@@ -104,7 +126,7 @@
 	#add-source-btn, #del-source-btn { font-family: mono; }
 	#source-select div:nth-of-type(2) a#del-source-btn { display: none; }
 	#source-select div:last-of-type   a#add-source-btn { display: inline-block; }
-
+	li { display: block; }
 	input[type='text'] { width: 90%; }
 	div.dialog { width: 450px; }
 </style>
