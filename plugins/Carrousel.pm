@@ -269,17 +269,10 @@ sub getThumbnailUrl
 
     # We look for image localy, if available we return relative path and exit function.
     if ( C4::Context->preference("OPACLocalCoverImages") ) {
-        my $opac_URL = C4::Context->preference("OPACBaseURL");
-        my $image_relative_URL = "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
-        my $URL = $opac_URL . $image_relative_URL;
-        #warn "\n Url is $URL \n";
-        my $request = HTTP::Request->new(GET => $URL);
-        my $ua = LWP::UserAgent->new;
-        my $response = $ua->request($request);
-
-        if ( $response->is_success && $response->header("content-length" ) != 43)
-        {
-            return $image_relative_URL;
+        my $stm = $dbh->prepare("SELECT COUNT(*) AS count FROM biblioimages WHERE biblionumber=$biblionumber;");
+        $stm->execute();
+        if ( $stm->fetchrow_hashref()->{count} > 0 ) {
+            return "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
         }
     }
 
