@@ -40,7 +40,7 @@ our $VERSION = 1.4;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',
-    description     => 'Allows to generate a carrousel from available lists',
+    description     => 'Generates a carrousel from available lists',
     date_authored   => '2016-05-27',
     date_updated    => '2017-07-25',
     minimum_version => '3.20',
@@ -258,6 +258,80 @@ sub insertIntoPref{
     C4::Context->set_preference( 'OpacMainUserBlock' , $value );
 }
 
+sub retrieveUrlFromGoogleJson {
+    my $res = shift;
+    my $json = decode_json($res->decoded_content);
+    return unless exists $json->{items};
+    return unless $json->{items}->[0];
+    return unless exists $json->{items}->[0]->{volumeInfo};
+    return unless exists $json->{items}->[0]->{volumeInfo}->{imageLinks};
+    return unless exists $json->{items}->[0]->{volumeInfo}->{imageLinks}->{thumbnail};
+    # TODO implémenter l'extraction d'un URL à partir d'un JSON GB
+    return $json->{items}->[0]->{volumeInfo}->{imageLinks}->{thumbnail};
+}
+
+sub retrieveUrlFromCoceJson {
+    my $res = shift;
+    my $json = decode_json($res->decoded_content);
+
+    # TODO implémenter l'extraction d'un URL à partir d'un JSON Coce
+    return;
+}
+
+sub getUrlFromExternalSources {
+    my $isbn = shift;
+
+    #
+    # les clefs sont des _systempreferences_ activant un fournisseur externe d'imagettes
+    # FIXME les priorités devraient venir d'une configuration
+    #
+    my $es = {
+        'Coce' => {
+            'priority' => 1,
+            'retrieval' => \&getThumbnailUrlFromCoce,
+            'url' => C4::Context->preference('CoceHost').'/cover'
+                    ."?id=$isbn"
+                    .'&provider='.join(',', C4::Context->preference('CoceProviders')),
+        },
+        'OPACAmazonCoverImages' => {
+            'priority' => 2,
+            'url' => "https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg",
+            'content_length' => 500, # FIXME pourquoi seuil minimal de 500?
+        },
+        'GoogleJackets' => {
+            'priority' => 3,
+            'retrieval' => \&getThumbnailUrlFromGoogle,
+            'url' => "https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA",
+        },
+        'OpenLibraryCovers' => {
+            'priority' => 4,
+            'url' => "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg?default=false",
+        },
+    };
+
+    my $ua = LWP::UserAgent->new;
+
+    for my $provider ( sort { $es->{$a}->{priority} <=> $es->{$b}->{priority} } keys %$es ) {
+
+        if ( C4::Context->preference($provider) ) {
+            my $url = $es->{$provider}->{url};
+            my $req = HTTP::Request->new( GET => $url );
+            my $res = $ua->request( $req );
+
+            next if !$res->is_success;
+            if ( exists $es->{$provider}->{content_length} ) {
+                next if $res->header('content_length') <= $es->{$provider}->{content_length};
+            }
+
+            my $cleanupNecessary = exists $es->{$provider}->{retrieval};
+            return $cleanupNecessary ? $es->{$provider}->{retrieval}->($res) : $url;
+
+        } # if source enabled by systempreference
+    } # foreach providers
+
+    return;
+}
+
 sub getThumbnailUrl
 {
     my $biblionumber = shift;
@@ -286,56 +360,12 @@ sub getThumbnailUrl
         my $isbn = GetNormalizedISBN( $field->subfield('a') );
         next if ! $isbn;
 
-        if ( C4::Context->preference("OPACAmazonCoverImages") ) {
-            my $URL = "https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg";
-            #warn "\n Url is $URL \n";
-            my $request = HTTP::Request->new(GET => $URL);
-            my $ua = LWP::UserAgent->new;
-            my $response = $ua->request($request);
-            if ($response->is_success && $response->header( 'content_length' ) > 500 )
-            {
-                return $URL;
-            }
-        }
-
-        if ( C4::Context->preference("GoogleJackets") ) {
-            my $URL = getThumbnailOnJsonPage ("https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA");
-            #warn "\n Url is $URL \n";
-            if ($URL ne 0) {
-                return $URL;
-            }
-        }
-
-        if ( C4::Context->preference("OpenLibraryCovers") ) {
-            my $URL = "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg";
-            #warn "\n Url is $URL \n";
-            my $request = HTTP::Request->new(GET => $URL."?default=false");
-            my $ua = LWP::UserAgent->new;
-            my $response = $ua->request($request);
-
-            if ($response->is_success)
-            {
-                return $URL;
-            }
-        }
+        return getUrlFromExternalSources($isbn);
     }
 
     return;
 }
 
-sub getThumbnailOnJsonPage {
-    my ($json_url) = @_;
-    my $string = 0;
-    my $json = get( $json_url );
-    my $decoded_json = decode_json( $json );
-
-    # json options to relax restrictions
-    #my $json_text = $decoded_json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($content);
-
-    $string = $decoded_json->{items}->[0]->{volumeInfo}->{imageLinks}->{thumbnail} if ($decoded_json->{items}->[0]->{volumeInfo}->{imageLinks}->{thumbnail});
-
-    return $string;
-}
 sub configure{
     my ( $self, $args) = @_;
     my $cgi = $self->{'cgi'};
