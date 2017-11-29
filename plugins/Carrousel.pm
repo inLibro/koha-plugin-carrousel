@@ -204,6 +204,7 @@ sub generateCarroussel{
             $title = $record->subfield('200', 'a');
         }
         $title =~ s/[,:\/\s]+$//;
+
         my $url = getThumbnailUrl( $biblionumber, $record );
         if ( $url ){
             my %image = ( url => $url, title => $title, biblionumber => $biblionumber );
@@ -261,12 +262,13 @@ sub insertIntoPref{
 sub retrieveUrlFromGoogleJson {
     my $res = shift;
     my $json = decode_json($res->decoded_content);
+
     return unless exists $json->{items};
-    return unless $json->{items}->[0];
+    return unless        $json->{items}->[0];
     return unless exists $json->{items}->[0]->{volumeInfo};
     return unless exists $json->{items}->[0]->{volumeInfo}->{imageLinks};
     return unless exists $json->{items}->[0]->{volumeInfo}->{imageLinks}->{thumbnail};
-    # TODO implémenter l'extraction d'un URL à partir d'un JSON GB
+
     return $json->{items}->[0]->{volumeInfo}->{imageLinks}->{thumbnail};
 }
 
@@ -274,21 +276,19 @@ sub retrieveUrlFromCoceJson {
     my $res = shift;
     my $json = decode_json($res->decoded_content);
 
-    # TODO implémenter l'extraction d'un URL à partir d'un JSON Coce
-    return;
+    return unless keys %$json;
+    return $json->{$_} for keys %$json;
 }
 
 sub getUrlFromExternalSources {
     my $isbn = shift;
 
-    #
-    # les clefs sont des _systempreferences_ activant un fournisseur externe d'imagettes
-    # FIXME les priorités devraient venir d'une configuration
-    #
+    # es := configuration des external_sources
+    # les clefs sont des systempreferences activant un fournisseur externe d'imagettes
     my $es = {
         'Coce' => {
             'priority' => 1,
-            'retrieval' => \&getThumbnailUrlFromCoce,
+            'retrieval' => \&retrieveUrlFromCoceJson,
             'url' => C4::Context->preference('CoceHost').'/cover'
                     ."?id=$isbn"
                     .'&provider='.join(',', C4::Context->preference('CoceProviders')),
@@ -300,7 +300,7 @@ sub getUrlFromExternalSources {
         },
         'GoogleJackets' => {
             'priority' => 3,
-            'retrieval' => \&getThumbnailUrlFromGoogle,
+            'retrieval' => \&retrieveUrlFromGoogleJson,
             'url' => "https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA",
         },
         'OpenLibraryCovers' => {
@@ -310,21 +310,28 @@ sub getUrlFromExternalSources {
     };
 
     my $ua = LWP::UserAgent->new;
+    my @orderedProvidersByPriority = sort { $es->{$a}->{priority} <=> $es->{$b}->{priority} } keys %$es;
 
-    for my $provider ( sort { $es->{$a}->{priority} <=> $es->{$b}->{priority} } keys %$es ) {
+    for my $provider ( @orderedProvidersByPriority ) {
 
         if ( C4::Context->preference($provider) ) {
+
             my $url = $es->{$provider}->{url};
             my $req = HTTP::Request->new( GET => $url );
             my $res = $ua->request( $req );
 
             next if !$res->is_success;
+
             if ( exists $es->{$provider}->{content_length} ) {
                 next if $res->header('content_length') <= $es->{$provider}->{content_length};
             }
 
-            my $cleanupNecessary = exists $es->{$provider}->{retrieval};
-            return $cleanupNecessary ? $es->{$provider}->{retrieval}->($res) : $url;
+            if ( exists $es->{$provider}->{retrieval} ) {
+                $url = $es->{$provider}->{retrieval}->($res);
+                next unless $url;
+            }
+
+            return $url;
 
         } # if source enabled by systempreference
     } # foreach providers
