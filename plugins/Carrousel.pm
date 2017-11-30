@@ -36,7 +36,7 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.4;
+our $VERSION = 1.5;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',
@@ -210,8 +210,13 @@ sub generateCarroussel{
             my %image = ( url => $url, title => $title, biblionumber => $biblionumber );
             push @images, \%image;
         }else{
-            warn "There was no image found for biblionumber $biblionumber : \" $title \"\n";
+            warn "[Koha::Plugin::Carrousel] There was no image found for biblionumber $biblionumber : \" $title \"\n";
         }
+    }
+
+    unless ( @images ) {
+        warn "[Koha::Plugin::Carrousel] No images were found for virtualshelf '$shelfname' (id: $selectedShelf). OpacMainUserBlock kept unchanged.\n";
+        return;
     }
 
     my $pluginDirectory = C4::Context->config("pluginsdir");
