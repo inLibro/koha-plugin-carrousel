@@ -43,8 +43,8 @@
 					<li>Listes&nbsp;: [% predictions.virtualshelves %]</li>
 				</ul>
 
-				<input type="submit" class="approve" name="confirm" value="Confirm" accesskey="y" />
-				<input type="submit" class="deny" name="confirm" value="Cancel" accesskey="n" />
+				<button type="submit" class="approve" name="confirm" value="confirm" accesskey="y">Confirmer</button>
+				<button type="submit" class="deny" name="confirm" value="cancel" accesskey="n">Annuler</button>
 			</form>
 		</div>
 [% END %]

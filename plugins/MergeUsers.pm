@@ -1,5 +1,5 @@
 package Koha::Plugin::MergeUsers;
-# Dominic Pichette, 2017 - Inlibro
+# David Bourgault, 2017 - Inlibro
 #
 # This plugin allows you to merge multiple reports into one.
 #
@@ -27,7 +27,7 @@ use C4::Auth;
 use C4::Context;
 use Data::Dumper;
 
-our $VERSION = 0.1;
+our $VERSION = 0.2;
 our $metadata = {
 	name            => 'MergeUsers',
 	author          => 'David Bourgault',
@@ -73,7 +73,7 @@ sub tool {
 			@sources
 		);
 	}
-	elsif ( $cgi->param('action') eq 'mergen' and $cgi->param('confirm') eq 'Yes' ) {
+	elsif ( $cgi->param('action') eq 'merge' and $cgi->param('confirm') eq 'confirm' ) {
 		$self->fusion(
 			$cgi->param('target'),
 			$cgi->param('sources')
@@ -120,22 +120,23 @@ sub calculate {
 	my $template = $self->tmpl;
 
 	# Get target borrowernumber from cardnumber
-	my @row = $dbh->selectrow_array("SELECT borrowernumber FROM borrowers WHERE cardnumber = $target;");
+	my $statement = $dbh->prepare("SELECT borrowernumber FROM borrowers WHERE cardnumber = ? ");
+	$statement->execute($target);
+	my @row = $statement->fetchrow_array;
 	$target = $row[0];
 
 	# Get source borrowernumbers from cardnumbers, keep as a comma-seperated string
 	my $sourceNumberList = '';
-	my $sourceCardList = join ',', @sources;
 
-	my $statement = $dbh->prepare("SELECT borrowernumber FROM borrowers WHERE cardnumber IN ($sourceCardList);");
-	$statement->execute();
+	$statement = $dbh->prepare("SELECT borrowernumber FROM borrowers WHERE cardnumber IN (" . ( "?," x (scalar @sources - 1)) . "?)");
+	$statement->execute(@sources);
 
-	my @source_number;
+	@sources = ( );
 	while ( my @row = $statement->fetchrow_array ) {
-		push @source_number, $row[0];
+		push @sources, $row[0];
 	}
 
-	$sourceNumberList = join ',', @source_number;
+	$sourceNumberList = join ',', @sources;
 
 	# Calculate number of changes to database
 	my %predictions = ( );
@@ -175,7 +176,7 @@ sub fusion {
 	$actions{old_reserves} = $dbh->do("UPDATE old_reserves SET borrowernumber=$target WHERE borrowernumber IN ($sources);");
 	$actions{virtualshelves} = $dbh->do("UPDATE virtualshelves SET owner=$target WHERE owner IN ($sources);");
 
-	foreach my $k (%actions) {
+	foreach my $k (keys %actions) {
 		if ($actions{$k} eq '0E0') {
 			$actions{$k} = 0;
 		}
