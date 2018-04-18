@@ -34,7 +34,7 @@
             </div>
 
             <div class="infos">
-                Backgraound color : <input name="bgColor" onchange="update(this.jscolor, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]">
+                Background color : <input name="bgColor" onchange="update(this.jscolor, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]">
             </div>
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
