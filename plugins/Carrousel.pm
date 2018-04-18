@@ -36,13 +36,13 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.5;
+our $VERSION = 1.6;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',
     description     => 'Generates a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2017-07-25',
+    date_updated    => '2018-04-18',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -288,36 +288,40 @@ sub retrieveUrlFromCoceJson {
 sub getUrlFromExternalSources {
     my $isbn = shift;
 
-    # es := configuration des external_sources
-    # les clefs sont des systempreferences activant un fournisseur externe d'imagettes
-    my $es = {
-        'Coce' => {
-            'priority' => 1,
-            'retrieval' => \&retrieveUrlFromCoceJson,
-            'url' => C4::Context->preference('CoceHost').'/cover'
-                    ."?id=$isbn"
-                    .'&provider='.join(',', C4::Context->preference('CoceProviders')),
-        },
-        'OPACAmazonCoverImages' => {
-            'priority' => 2,
-            'url' => "https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg",
-            'content_length' => 500, # FIXME pourquoi seuil minimal de 500?
-        },
-        'GoogleJackets' => {
-            'priority' => 3,
-            'retrieval' => \&retrieveUrlFromGoogleJson,
-            'url' => "https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA",
-        },
-        'OpenLibraryCovers' => {
-            'priority' => 4,
-            'url' => "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg?default=false",
-        },
+    # les clefs sont les systempreferences du même nom
+    my $es = {};
+
+    $es->{OpacCoce} = {
+        'priority' => 1,
+        'retrieval' => \&retrieveUrlFromCoceJson,
+        'url' => C4::Context->preference('CoceHost').'/cover'
+                ."?id=$isbn"
+                .'&provider='.join(',', C4::Context->preference('CoceProviders')),
+    };
+
+    $es->{OPACAmazonCoverImages} = {
+        'priority' => 2,
+        'url' => "https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg",
+        'content_length' => 500, # FIXME pourquoi seuil minimal de 500?
+    };
+
+    $es->{GoogleJackets} = {
+        'priority' => 3,
+        'retrieval' => \&retrieveUrlFromGoogleJson,
+        'url' => "https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA",
+    };
+
+    $es->{OpenLibraryCovers} = {
+        'priority' => 4,
+        'url' => "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg?default=false",
     };
 
     my $ua = LWP::UserAgent->new;
     my @orderedProvidersByPriority = sort { $es->{$a}->{priority} <=> $es->{$b}->{priority} } keys %$es;
 
     for my $provider ( @orderedProvidersByPriority ) {
+
+        next if ( $provider eq 'OpacCoce' );
 
         if ( C4::Context->preference($provider) ) {
 
@@ -341,7 +345,13 @@ sub getUrlFromExternalSources {
         } # if source enabled by systempreference
     } # foreach providers
 
-    return;
+    # FIXME: hardcoded fallback to Amazon.com, to be continued... cam#6918
+    my $url = $es->{OPACAmazonCoverImages}->{url};
+    my $req = HTTP::Request->new( GET => $url );
+    my $res = $ua->request( $req );
+    return if !$res->is_success;
+    return if $res->header('content_length') <= $es->{OPACAmazonCoverImages}->{content_length};
+    return $url;
 }
 
 sub getThumbnailUrl
