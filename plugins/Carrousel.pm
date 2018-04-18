@@ -345,7 +345,7 @@ sub getUrlFromExternalSources {
         } # if source enabled by systempreference
     } # foreach providers
 
-    # FIXME: hardcoded fallback to Amazon.com, to be continued... cam#6918
+    # FIXME: hardcoded fallback to Amazon.com, cam#6918
     my $url = $es->{OPACAmazonCoverImages}->{url};
     my $req = HTTP::Request->new( GET => $url );
     my $res = $ua->request( $req );
