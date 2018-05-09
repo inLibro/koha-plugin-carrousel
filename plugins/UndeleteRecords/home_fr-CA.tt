@@ -1,29 +1,15 @@
-	[% INCLUDE 'doc-head-open.inc' %]
+[% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha:MergeUsers Plugin</title>
+<title>Koha:UndeleteRecords Plugin</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
-<div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Accueil</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; MergeUsers</div>
+
+<div id='breadcrumbs'><a href='/cgi-bin/koha/mainpage.pl'>Accueil</a> &rsaquo; <a href='/cgi-bin/koha/plugins/plugins-home.pl'>Plugins</a> &rsaquo; UndeleteRecords</div>
 <div id='doc3' >
 	<div id='content' align='center'>
-[% IF ( actions ) %]
-		<div id="confirmed" class="dialog message">
-			<p>Les usagers ont été fusionnés. Les items suivant ont été modifiés&nbsp;:</p>
-			<ul>
-				<li>Messages&nbsp;: [% actions.messages %]</li>
-				<li>Comptes&nbsp;: [% actions.accountlines %]</li>
-				<li>Prêts&nbsp;: [% actions.issues %]</li>
-				<li>Ancien prêts&nbsp;: [% actions.old_issues %]</li>
-				<li>Réservations&nbsp;: [% actions.reserves %]</li>
-				<li>Anciennes réservations&nbsp;: [% actions.old_reserves %]</li>
-				<li>Listes&nbsp;: [% actions.virtualshelves %]</li>
-			</ul>
-			<a onclick="$(this).parent().hide();" href="#">Ok</a>
-		</div>
-[% END %]
-[% IF ( predictions ) %]
+[% IF ( all_titles ) %]
 		<div id="needsconfirmation" class="dialog alert">
 			<form method="post">
 				<input type='hidden' name='class' value='[% CLASS %]'/>
@@ -32,16 +18,32 @@
 				<input type='hidden' name='target' value='[% target %]'/>
 				<input type='hidden' name='sources' value='[% sources %]'/>
 
-				<p>Sera modifié&nbsp;:</p>
-				<ul>
-					<li>Messages&nbsp;: [% predictions.messages %]</li>
-					<li>Comptes&nbsp;: [% predictions.accountlines %]</li>
-					<li>Prêts&nbsp;: [% predictions.issues %]</li>
-					<li>Anciens prêts&nbsp;: [% predictions.old_issues %]</li>
-					<li>Réservations&nbsp;: [% predictions.reserves %]</li>
-					<li>Anciennes réservations&nbsp;: [% predictions.old_reserves %]</li>
-					<li>Listes&nbsp;: [% predictions.virtualshelves %]</li>
-				</ul>
+				<p>À être restauré:</p>
+				<table>
+                    <tr>
+                        <th style="text-align: center">Numéro d'exemplaire</th>
+                        <th style="text-align: center">Code-barre</th>
+                        <th style="text-align: center">Titre</th>  
+                        <th style="text-align: center">Auteur</th>
+                        <th style="text-align: center">ISBN</th>
+                        <th style="text-align: center">Numéro de la notice</th>
+                        <th style="text-align: center">Date et heure de suppression</th>
+                    </tr>
+                    [% counter = 0 %]
+                    [% WHILE counter < all_titles.size() %]
+                        <tr>
+                            <td style="text-align: center"><input name='selected_itemnumbers[]' id="chk[% counter %]" type="checkbox" value="[% all_itemnumbers.$counter %]">[% all_itemnumbers.$counter %]</td>
+                            <td style="text-align: center">[% all_barcodes.$counter %] <font color="red"> [% all_issimilarbarcode.$counter %]</font></td>
+                            <td style="text-align: center"> [% all_titles.$counter %]</td>
+                            <td style="text-align: center">[% all_authors.$counter %]</td>
+                            <td style="text-align: center">[% all_isbn.$counter %]</td>
+                            <td style="text-align: center">[% all_biblionumbers.$counter %]</td>
+                            <td style="text-align: center">[% all_timestamps.$counter %]</td>
+                        </tr>
+                        [% counter = counter + 1 %]
+                    [% END %]
+                </table>
+                <p id="barcodeMessage"; style="color: red"></p>
 
 				<button type="submit" class="approve" name="confirm" value="confirm" accesskey="y">Confirmer</button>
 				<button type="submit" class="deny" name="confirm" value="cancel" accesskey="n">Annuler</button>
@@ -49,10 +51,10 @@
 		</div>
 [% END %]
 		<div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
-            <p style="text-align: left;">Cette extension a été créée par</p>
-            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
-            <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
-        </div>
+			<p style="text-align: left;">Cette extension a été créée par</p>
+			<img width='450px' src='[% PLUGIN_PATH %]/images/inLibro_fr.svg'/>
+			<p style="text-align: right;">Visitez notre <a href="https://inlibro.com/en/">site web</a> pour d'autres extension Koha</p>
+		</div>
 		<div id="form" align='left' style='width:450px'>
 			<form method='post'>
 				<!-- Necessary for the plugin to run, do not remove  -->
@@ -61,21 +63,14 @@
 				<input type='hidden' name='action' value='calculate'/>
 				<!-- end of plugin necessary inputs  -->
 				<fieldset>
-					<legend>Usager cible</legend>
-					<input autocomplete="off" id="target" name="target" class="card-input ui-autocomplete-input" type="text" />
-					<!--<input id="target-input card-input ui-autocomplete-input" type="text" name="target" />-->
-				</fieldset>
-				<fieldset id="source-select">
-					<legend>Usagers à fusionner</legend>
-					<input id="source-count" type='hidden' name='count' value='0' />
-					<div class="source-row" id="source-0" >
-						<input class="source-input card-input ui-autocomplete-input" id="source-input-0" type="text" name="source-0" disabled />
-						<a id="del-source-btn" href="#" onclick="del_source_field(this);">-</a>
-						<a id="add-source-btn" href="#" onclick="add_source_field();">+</a>
-					</div>
+					<input autocomplete="off" id="target" name="target" class="card-input ui-autocomplete-input" type="hidden" />
+                   
+                    Exemplaires supprimés entre ces dates:
+                    <input type="text" name="FromDate" id="FromDate" class="datepicker card-input ui-autocomplete-input" onchange="checkValue()" placeholder="De"/>
+                    <input type="text" name="ToDate" id="ToDate" class="datepicker card-input ui-autocomplete-input" placeholder="À"/>
 				</fieldset>
 				<fieldset>
-					<input id="submit" type="submit" value="Calculate" />
+					<input id="submit" type="submit" value="Calculer" />
 				</fieldset>
 			</form>
 		</div>
@@ -83,6 +78,39 @@
 </div>
 <!-- Footer-->
 <script>
+    $(function() {
+        $.datepicker.regional['fr'] = {
+            nextText: 'Suivant',
+            prevText: 'Précédent',
+            monthNames: ['Janvier', 'Février', 'Mars','Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'],
+            dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+            dayNamesMin: ['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa']
+        }
+        $.datepicker.setDefaults($.datepicker.regional['fr']);
+        $( "#FromDate" ).datepicker();
+        $( "#ToDate" ).datepicker(); 
+        $( ".datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
+    });
+    
+    function checkValue(){
+        var FromDate = document.getElementById('FromDate').value;     
+        if(FromDate ==''){
+             document.getElementById('ToDate').disabled = true;
+         } else{
+             document.getElementById('ToDate').disabled = false;
+         } 
+    }
+
+    function countSimilarBarcodes() {
+        sameBarcodes = '[% all_issimilarbarcode.join("") %]';
+        if (sameBarcodes.length > 0) {
+            document.getElementById('barcodeMessage').innerHTML = "* Ces code-barres existent déjà. Si ces exemplaires sont restaurés, les code-barres seront changés pour <i>Code-barreOriginal</i>_1.";
+        }
+    }
+
+    checkValue();
+    countSimilarBarcodes();
+ 
 	var src_count = 0;
 	function add_source_field() {
 		var s = $("div#source-0").clone(true);
@@ -94,7 +122,7 @@
 		$("fieldset#source-select #source-count").attr("value", src_count);
 		add_autocomplete($("fieldset#source-select #source-" + src_count + " #source-input-" + src_count));
 	}
-	function add_autocomplete(el) {
+/*	function add_autocomplete(el) {
 		var obj = el.autocomplete({
 				source: "/cgi-bin/koha/circ/ysearch.pl",
 				minLength: 3,
@@ -111,10 +139,10 @@
 				.appendTo( ul );
 			};
 		}
-	}
+	} */
 	function del_source_field(caller) { $(caller).parent().remove(); }
 	$(function() { 
-		add_autocomplete($("#target"));
+	//	add_autocomplete($("#target"));
 		add_source_field(); 
 	});
 </script>
@@ -122,12 +150,12 @@
 	#source-0 { display: none; }
 	.source-row { padding-bottom: 4px; }
 
-	a#add-source-btn { display: none; }
+	#add-source-btn { display: none; }
 	#add-source-btn, #del-source-btn { font-family: mono; }
 	#source-select div:nth-of-type(2) a#del-source-btn { display: none; }
 	#source-select div:last-of-type   a#add-source-btn { display: inline-block; }
 	li { display: block; }
 	input[type='text'] { width: 90%; }
-	div.dialog { width: 450px; }
+	div.dialog { width: initial; }
 </style>
 [% INCLUDE 'intranet-bottom.inc' %]
