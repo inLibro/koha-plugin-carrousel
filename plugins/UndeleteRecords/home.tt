@@ -17,7 +17,6 @@
 				<input type='hidden' name='action' value='merge'/>
 				<input type='hidden' name='target' value='[% target %]'/>
 				<input type='hidden' name='sources' value='[% sources %]'/>
-
 				<p>To be undeleted:</p>
 				<table>
                     <tr>
@@ -114,27 +113,8 @@
 		$("fieldset#source-select #source-count").attr("value", src_count);
 		add_autocomplete($("fieldset#source-select #source-" + src_count + " #source-input-" + src_count));
 	}
-/*	function add_autocomplete(el) {
-		var obj = el.autocomplete({
-				source: "/cgi-bin/koha/circ/ysearch.pl",
-				minLength: 3,
-				select: function( event, ui ) {
-					$(this).val(ui.item.cardnumber );
-					return false;
-				}
-			}).data( "ui-autocomplete" );
-		if( obj ) {
-			obj._renderItem = function( ul, item ) {
-				return $( "<li></li>" )
-				.data( "ui-autocomplete-item", item )
-				.append( "<a>" + item.surname + ", " + item.firstname + " (" + item.cardnumber + ") <small>" + item.dateofbirth + " " + item.address + " " + item.city + " " + item.zipcode + " " + item.country + "</small></a>" )
-				.appendTo( ul );
-			};
-		}
-	} */
 	function del_source_field(caller) { $(caller).parent().remove(); }
 	$(function() { 
-	//	add_autocomplete($("#target"));
 		add_source_field(); 
 	});
 </script>
