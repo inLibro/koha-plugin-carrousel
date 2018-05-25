@@ -6,7 +6,7 @@
         <a id="left-but" class='left carousel-control'>&lsaquo;</a>
         <a id="right-but" class='right carousel-control'>&rsaquo;</a>
         [% FOREACH item IN documents %]
-        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]"><img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]"/></a>
+        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]"><img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/></a>
         [% END %]
         <div class="carousel-caption">
             <p id="title-text"></p>
