@@ -1,7 +1,7 @@
 package Koha::Plugin::UndeleteRecords;
 # David Bourgault, 2017 - Inlibro
 #
-# This plugin allows you to merge multiple reports into one.
+# This plugin allows you to undelete records and their items that you have deleted by mistake.
 #
 #
 # This file is part of Koha.
@@ -27,14 +27,14 @@ use C4::Auth;
 use C4::Context;
 use Data::Dumper;
 
-our $VERSION = 0.3;
+our $VERSION = 0.4;
 our $metadata = {
 	name            => 'UndeleteRecords',
 	author          => 'David Bourgault',
 	description     => 'Undelete records',
 	date_authored   => '2017-11-15',
-	date_updated    => '2018-05-10',
-	minimum_version => '16.05',
+	date_updated    => '2018-07-26',
+	minimum_version => '17.05',
 	maximum_version => undef,
 	version         => $VERSION,
 };
@@ -43,12 +43,8 @@ our $dbh = C4::Context->dbh();
 
 sub new {
 	my ( $class, $args ) = @_;
-	## We need to add our metadata here so our base class can access it
 	$args->{metadata} = $metadata;
 	$args->{metadata}->{class} = $class;
-	## Here, we call the 'new' method for our base class
-	## This runs some additional magic and checking
-	## and returns our actual $self
 	my $self = $class->SUPER::new($args);
 
 	return $self;
@@ -82,7 +78,6 @@ sub tmpl {
 	my $cgi = $self->{cgi};
 	my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
 
-	# Get language-appropriate template, default on english
 	my $template = undef;
 	eval {$template = $self->get_template( { file => "home_" . $preferedLanguage . ".tt" } )};
 	if( !$template ){
@@ -115,14 +110,14 @@ sub calculate {
             IN (
                 SELECT items.barcode 
                 FROM items
-                ), '*', '') 
+                ), '*', '')
         FROM deleteditems
         LEFT JOIN deletedbiblioitems ON deleteditems.biblionumber = deletedbiblioitems.biblionumber 
         LEFT JOIN deletedbiblio ON deleteditems.biblionumber = deletedbiblio.biblionumber
         LEFT JOIN biblio ON deleteditems.biblionumber = biblio.biblionumber
         LEFT JOIN biblioitems ON deleteditems.biblionumber = biblioitems.biblionumber
         WHERE deleteditems.timestamp >= '$FromDate' 
-            AND deleteditems.timestamp <= IF('$ToDate' LIKE '' AND '$FromDate' NOT LIKE '', NOW(), '$ToDate');";
+            AND deleteditems.timestamp <= IF('$ToDate' LIKE '' AND '$FromDate' NOT LIKE '', NOW(), DATE_ADD('$ToDate', INTERVAL 1 DAY));";
     my $sth = $dbh->prepare($all_deleted_sql);
     $sth->execute();
     my @all_itemnumber = ( );
@@ -172,12 +167,25 @@ sub fusion {
 	my $cgi = $self->{cgi};
 	my $template = $self->tmpl;
     my $itemnumbers_sql = join ',', @selected_itemnumbers;
+    my @selected_biblionumbers = ( );
+    my @selected_count = ( );
+    my $undeleted_biblionumbers_sql = "SELECT biblionumber, count(*) FROM deleteditems WHERE itemnumber IN(";
+    $undeleted_biblionumbers_sql .= join ',', @selected_itemnumbers;
+    $undeleted_biblionumbers_sql .= ") GROUP BY biblionumber;";
+    my $sth = $dbh->prepare($undeleted_biblionumbers_sql);
+    $sth->execute();
+    while(my @retreived_items = $sth->fetchrow_array()){
+        push(@selected_biblionumbers, $retreived_items[0]);
+        push(@selected_count, $retreived_items[1]);
+    }
+    $template->param(
+        selected_biblionumbers => \@selected_biblionumbers,
+        selected_count => \@selected_count
+    );
 
     #INSERT
-    $dbh->do("INSERT INTO biblio(biblionumber, frameworkcode, author, title, unititle, notes, serial, 
-            seriestitle, copyrightdate, timestamp, datecreated, abstract)
-        SELECT biblionumber, frameworkcode, author, title, unititle, notes, serial, seriestitle, 
-            copyrightdate, timestamp, datecreated, abstract
+    $dbh->do("INSERT INTO biblio
+        SELECT *
         FROM deletedbiblio
         WHERE deletedbiblio.biblionumber IN (SELECT biblionumber FROM deleteditems 
         WHERE itemnumber IN ($itemnumbers_sql))
@@ -187,15 +195,8 @@ sub fusion {
                         FROM biblio)
     ;");
      
-    $dbh->do("INSERT INTO biblioitems(biblioitemnumber, biblionumber, volume, number, itemtype, isbn, issn, ean,
-            publicationyear, publishercode, volumedate, volumedesc, collectiontitle, collectionissn,
-            collectionvolume, editionstatement, editionresponsibility, timestamp, illus, pages, notes, size,
-            place, lccn, url, cn_source, cn_class, cn_item, cn_suffix, cn_sort, agerestriction, totalissues) 
-        SELECT biblioitemnumber, biblionumber, volume, number, itemtype, isbn, issn, ean, publicationyear,
-            publishercode, volumedate, volumedesc, 
-            collectiontitle, collectionissn, collectionvolume, editionstatement, editionresponsibility, timestamp,
-            illus, pages, notes, size, place, lccn, url, cn_source, cn_class, cn_item, cn_suffix, cn_sort,
-            agerestriction, totalissues 
+    $dbh->do("INSERT INTO biblioitems
+        SELECT *
         FROM deletedbiblioitems 
         WHERE deletedbiblioitems.biblionumber
             IN (
@@ -210,8 +211,8 @@ sub fusion {
                     )
     ;");
     
-    $dbh->do("INSERT INTO biblio_metadata(id, biblionumber, format, marcflavour, metadata, timestamp) 
-        SELECT id, biblionumber, format, marcflavour, metadata, timestamp 
+    $dbh->do("INSERT INTO biblio_metadata
+        SELECT *
         FROM deletedbiblio_metadata 
         WHERE deletedbiblio_metadata.biblionumber
             IN (
@@ -226,24 +227,17 @@ sub fusion {
                     )
     ;");
     
-    $dbh->do("INSERT INTO items(itemnumber, biblionumber, biblioitemnumber, barcode, dateaccessioned,
-            booksellerid, homebranch, price, replacementprice,replacementpricedate, datelastborrowed,
-            datelastseen, stack, notforloan, damaged, damaged_on, itemlost, itemlost_on, withdrawn, withdrawn_on,
-            itemcallnumber, coded_location_qualifier, issues, renewals, reserves, restricted, itemnotes,
-            itemnotes_nonpublic, holdingbranch, paidfor, timestamp, location, permanent_location, onloan,
-            cn_source, cn_sort, ccode, materials, uri, itype, more_subfields_xml, enumchron, copynumber,
-            stocknumber, new_status) 
-        SELECT itemnumber, biblionumber, biblioitemnumber, IF(barcode 
+    $dbh->do("UPDATE deleteditems
+        SET barcode = IF(barcode
             IN (
-                SELECT barcode 
+                SELECT barcode
                 FROM items
                 ),
-            CONCAT(barcode, '_1'), barcode), dateaccessioned, booksellerid, homebranch, price, replacementprice,
-            replacementpricedate, datelastborrowed, datelastseen, stack, notforloan, damaged, damaged_on,
-            itemlost, itemlost_on, withdrawn, withdrawn_on, itemcallnumber, coded_location_qualifier, issues,
-            renewals, reserves, restricted, itemnotes, itemnotes_nonpublic, holdingbranch, paidfor, timestamp,
-            location, permanent_location, onloan, cn_source, cn_sort, ccode, materials, uri, itype,
-            more_subfields_xml, enumchron, copynumber, stocknumber, new_status 
+            CONCAT(barcode, '_1'), barcode)
+        WHERE deleteditems.itemnumber IN ($itemnumbers_sql)
+    ;");
+    $dbh->do("INSERT INTO items 
+        SELECT *
         FROM deleteditems 
         WHERE deleteditems.itemnumber IN ($itemnumbers_sql)
     ;");
@@ -294,6 +288,14 @@ sub fusion {
 
 	print $cgi->header(-type => 'text/html',-charset => 'utf-8');
 	print $template->output();
+}
+
+#Supprimer le plugin avec toutes ses données
+sub uninstall() {
+    my ( $self, $args ) = @_;
+    my $table = $self->get_qualified_table_name('mytable');
+
+    return C4::Context->dbh->do("DROP TABLE $table");
 }
 
 1;

@@ -50,10 +50,23 @@
 			</form>
 		</div>
 [% END %]
+[% IF selected_biblionumbers %]
+	<div id="undeleted" class="dialog alert">
+	[% counter = 0 %]
+	[% WHILE counter < selected_biblionumbers.size() %]
+		[% IF  selected_count.$counter > 1 %]
+			<p>[% selected_count.$counter %] exemplaires restaurés pour la notice <a href="../catalogue/detail.pl?biblionumber=[% selected_biblionumbers.$counter %]" target="_blank">[% selected_biblionumbers.$counter %].</a></p>
+		[% ELSE %]
+			<p>[% selected_count.$counter %] exemplaire restauré pour la notice <a href="../catalogue/detail.pl?biblionumber=[% selected_biblionumbers.$counter %]" target="_blank">[% selected_biblionumbers.$counter %].</a></p>
+		[% END %]
+		[% counter = counter + 1 %]
+	[% END %]
+	</div>
+[% END %]
 		<div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
 			<p style="text-align: left;">Cette extension a été créée par</p>
 			<img width='450px' src='[% PLUGIN_PATH %]/images/inLibro_fr.svg'/>
-			<p style="text-align: right;">Visitez notre <a href="https://inlibro.com/en/">site web</a> pour d'autres extension Koha</p>
+			<p style="text-align: right;">Visitez notre <a href="https://inlibro.com/">site web</a> pour d'autres extensions Koha</p>
 		</div>
 		<div id="form" align='left' style='width:450px'>
 			<form method='post'>
@@ -66,8 +79,8 @@
 					<input autocomplete="off" id="target" name="target" class="card-input ui-autocomplete-input" type="hidden" />
                    
                     Exemplaires supprimés entre ces dates:
-                    <input type="text" name="FromDate" id="FromDate" class="datepicker card-input ui-autocomplete-input" onchange="checkValue()" placeholder="De"/>
-                    <input type="text" name="ToDate" id="ToDate" class="datepicker card-input ui-autocomplete-input" placeholder="À"/>
+                    <input type="text" name="FromDate" id="FromDate" class="datepicker card-input ui-autocomplete-input" onchange="checkValue()" placeholder="De" style="width: 90%;"/>
+                    <input type="text" name="ToDate" id="ToDate" class="datepicker card-input ui-autocomplete-input" placeholder="À" style="width: 90%;"/>
 				</fieldset>
 				<fieldset>
 					<input id="submit" type="submit" value="Calculer" />
@@ -131,13 +144,11 @@
 <style>
 	#source-0 { display: none; }
 	.source-row { padding-bottom: 4px; }
-
 	#add-source-btn { display: none; }
 	#add-source-btn, #del-source-btn { font-family: mono; }
 	#source-select div:nth-of-type(2) a#del-source-btn { display: none; }
 	#source-select div:last-of-type   a#add-source-btn { display: inline-block; }
 	li { display: block; }
-	input[type='text'] { width: 90%; }
 	div.dialog { width: initial; }
 </style>
 [% INCLUDE 'intranet-bottom.inc' %]
