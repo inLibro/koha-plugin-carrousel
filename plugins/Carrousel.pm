@@ -36,13 +36,13 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.6;
+our $VERSION = 1.7;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',
     description     => 'Generates a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2018-04-18',
+    date_updated    => '2018-10-16',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -317,6 +317,7 @@ sub getUrlFromExternalSources {
     };
 
     my $ua = LWP::UserAgent->new;
+    $ua->timeout(2);
     my @orderedProvidersByPriority = sort { $es->{$a}->{priority} <=> $es->{$b}->{priority} } keys %$es;
 
     for my $provider ( @orderedProvidersByPriority ) {
