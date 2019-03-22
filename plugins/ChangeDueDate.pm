@@ -27,7 +27,7 @@ use base qw(Koha::Plugins::Base);
 use C4::Auth;
 use C4::Context;
 
-our $VERSION = 1.01;
+our $VERSION = 1.11;
 our $metadata = {
     name            => 'ChangeDueDate',
     author          => 'Mehdi Hamidi',

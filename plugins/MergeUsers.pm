@@ -27,7 +27,7 @@ use C4::Auth;
 use C4::Context;
 use Data::Dumper;
 
-our $VERSION = 0.2;
+our $VERSION = 0.3;
 our $metadata = {
 	name            => 'MergeUsers',
 	author          => 'David Bourgault',

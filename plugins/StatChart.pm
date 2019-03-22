@@ -29,7 +29,7 @@ use base qw(Koha::Plugins::Base);
 use C4::Auth;
 use C4::Context;
 
-our $VERSION  = 1.0;
+our $VERSION  = 1.1;
 our $metadata = {
     name            => 'StatChart',
     author          => 'David Bourgault',

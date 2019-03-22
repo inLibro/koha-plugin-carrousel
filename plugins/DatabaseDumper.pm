@@ -37,7 +37,7 @@ use Digest::MD5 qw(md5_hex);
 
 
 ## Here we set our plugin version
-our $VERSION = 1.02;
+our $VERSION = 1.12;
 
 ## Here is our metadata, some keys are required, some are optional
 our $metadata = {

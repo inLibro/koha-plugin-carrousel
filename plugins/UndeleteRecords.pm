@@ -27,7 +27,7 @@ use C4::Auth;
 use C4::Context;
 use Data::Dumper;
 
-our $VERSION = 0.4;
+our $VERSION = 0.5;
 our $metadata = {
 	name            => 'UndeleteRecords',
 	author          => 'David Bourgault',

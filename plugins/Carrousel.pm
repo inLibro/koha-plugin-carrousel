@@ -36,7 +36,7 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.7;
+our $VERSION = 1.8;
 our $metadata = {
     name            => 'Carrousel',
     author          => 'Mehdi Hamidi',

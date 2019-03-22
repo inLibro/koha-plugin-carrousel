@@ -29,7 +29,7 @@ use Koha::DateUtils;
 use C4::Members;
 use C4::Koha;
 
-our $VERSION = 1.2;
+our $VERSION = 1.3;
 
 our $metadata = {
     name   => 'Rules hard due dates',

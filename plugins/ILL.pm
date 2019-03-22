@@ -37,7 +37,7 @@ use Mail::Sendmail;
 use C4::Languages qw(getlanguage);
 
 
-our $VERSION = 1.0;
+our $VERSION = 1.1;
 our $metadata = {
     name            => 'ILL',
     author          => 'Charles Farmer',

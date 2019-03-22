@@ -34,7 +34,7 @@ use C4::Images;
 use File::Spec;
 
 our $dbh      = C4::Context->dbh();
-our $VERSION  = 1.1;
+our $VERSION  = 1.2;
 our $metadata = {
     name            => 'PDFtoCover',
     author          => 'Mehdi Hamidi, Bouzid Fergani',
