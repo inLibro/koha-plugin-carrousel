@@ -59,7 +59,7 @@ my ( $template, $borrowernumber, $cookie );
 my $dbh = C4::Context->dbh;
 
 my $lang = getlanguage($input);
-if($lang eq "fr-CA"){
+if($lang eq "fr-CA" || $lang eq "fr-FR"){
     $lang = '_fr-CA';
 }
 else{

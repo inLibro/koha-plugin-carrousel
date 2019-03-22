@@ -76,13 +76,12 @@ sub tool {
         my $pref_value_intranet = q{
 $(document).ready( function(){
     //Pour l'Intranet
-    var langPref = $('html').attr('lang');
+    var langPref = $('html').attr('lang').substr(0, 2);
     var label;
-    if(langPref != 'fr-CA'){
-        label = 'Your ILL';
-    }else{
-        langPref = '_' + langPref;
+    if(langPref = 'fr'){
         label = 'Vos PEB';
+    }else{
+        label = 'Your ILL';
     }
     $('#bd .yui-u.first dl').append("<dt><a href=\"/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::ILL&method=tool&manage\">" + label +"</a></dt><dd>Monitoring ILL</dd>");
     });
@@ -195,7 +194,7 @@ sub intranet_ill{
     my $new_detail = get_opac_new($id);
 
     my $lang = getlanguage($input);
-    if($lang eq "fr-CA"){
+    if($lang eq "fr-CA" or $lang eq "fr-FR"){
         $lang = '_fr-CA';
     }
     else{

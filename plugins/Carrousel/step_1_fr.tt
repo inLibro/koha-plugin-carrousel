@@ -1,0 +1,89 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<!-- Head-->
+<title>Koha:Carrousel Plugin: Configuration</title>
+[% INCLUDE 'doc-head-close.inc' %]
+<!-- Body-->
+[% INCLUDE 'header.inc' %]
+[% INCLUDE 'cat-search.inc' %]
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Carrousel</div>
+<div id="doc3">
+    <div id="content">
+
+        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+            <p style="text-align: left;">Cette extension a été créée par</p>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
+            <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
+        </div>
+
+        <h2>Générer le carrousel</h2>
+        <form method="get">
+            <!-- Necessary for the plugin to run, do not remove  -->
+            <input type="hidden" name="class" value="[% CLASS %]"/>
+            <input type="hidden" name="method" value="[% METHOD %]"/>
+            <input type="hidden" name="action" value="configure"/>
+            <!-- end of plugin necessary inputs  -->
+            <div class="infos">
+                <label> Sélectionnez votre liste : </label>
+                <select name="selectedShelf" id ="shelves" class="alignment">
+                    [% FOREACH shelf IN shelves %]
+                    <option id ="" value="[% shelf.shelfnumber %]"> [% shelf.shelfname %]</option>
+                    [% END %]
+                </select>
+            </div>
+            [% IF shelves %]
+            <input id="submit" type="submit" value="Générer">
+            [% ELSE %]
+            <div class="alert alert-danger">
+                <strong>Vous n'avez pas de liste!</strong> Créez une liste pour pouvoir générer un carrousel.
+            </div>
+            [% END %]
+        </form>
+
+    </div>
+</div>
+
+<!-- Footer-->
+[% INCLUDE 'intranet-bottom.inc' %]
+<style>
+.infos{
+    margin: 10px 0;
+}
+.alignment{
+    float: right;
+}
+#content{
+    width : 380px;
+    margin:2% 1%;
+    font-size:20px;
+}
+#submit{
+    margin-top:2%;
+}
+#shelves{
+    font-size: 100%;
+    width : 40%;
+}
+</style>
+
+<script>
+// setting the dropdown menu to the correct selected item
+var MyIndex =0;
+var selectedShelf = 0;
+[%IF selectedShelf !='' %]selectedShelf = [% selectedShelf %] [%END%]
+
+$('#shelves option').each(function(index,element){
+    if(element.value == selectedShelf){
+        MyIndex= index;
+    }
+});
+$("#shelves").get(0).selectedIndex = MyIndex;
+function update(jscolor, object) {
+    // 'jscolor' instance can be used as a string
+    if(object == "background"){
+        document.getElementById('background').style.backgroundColor = '#' + jscolor;
+    }else{
+        document.getElementById('text').style.color = '#' + jscolor;
+    }
+}
+
+</script>
