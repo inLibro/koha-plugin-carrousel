@@ -16,17 +16,52 @@
             <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_en.svg'/>
             <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
         </div>
-        
-        <h3>Configuration of carrousel </h3>
+
+        <h3>Configuration of carousels</h3>
         <form method="get">
+            <input type="hidden" name="enabledShelves" />
+            <input type="hidden" name="shelvesOrder" />
 
             <div class="infos">
-                <label> Select the default list : </label>
-                <select name="selectedShelf" id ="shelves" class="alignment">
+                <label>Choose and order carousels : </label>
+                <br>
+                [% IF shelves %]
+                <table>
+                    <tr>
+                        <th>List</th>
+                        <th>Generate</th>
+                        <th>Order</th>
+                    </tr>
                     [% FOREACH shelf IN shelves %]
-                    <option id ="" value="[% shelf.shelfnumber %]"> [% shelf.shelfname %]</option>
+                    <tr id="shelf-[% shelf.shelfnumber %]">
+                        <td>[% shelf.shelfname %]</td>
+                        <td><input type="checkbox" name="enabledShelf-[% shelf.shelfnumber %]" value="[% shelf.shelfnumber %]" /></td>
+                        <td>
+                            <i class="fa fa-angle-up"></i>
+                            <i class="fa fa-angle-down"></i>
+                            <i class="fa fa-angle-double-up"></i>
+                            <i class="fa fa-angle-double-down"></i>
+                        </td>
+                    </tr>
                     [% END %]
-                </select>
+                </table>
+                [% ELSE %]
+                <p id="nolist">You have no lists. Click <a href="/cgi-bin/koha/virtualshelves/shelves.pl">here</a> to create one.</p>
+                [% END %]
+            </div>
+
+            <div id="type" class="infos">
+                <label>Type :</label>
+                <span class="alignment">
+                    <div>
+                        <label for="carrousel">Carousel</label>
+                        <input id="carrousel" type="radio" name="type" value="carrousel" [% IF !type OR type == "carrousel" %]checked="checked"[% END %]>
+                    </div>
+                    <div>
+                        <label for="scrolling">Scrolling</label>
+                        <input id="scrolling" type="radio" name="type" value="scrolling" [% IF type == "scrolling" %]checked="checked"[% END %]>
+                    </div>
+                </span>
             </div>
 
             <div class="infos">
@@ -71,7 +106,9 @@ form{
     float:right;
 }
 .infos{
+    clear: both;
     margin: 20px 0;
+    overflow: auto;
 }
 #content{
     width : 450px;
@@ -88,26 +125,80 @@ h1{
 #shelves{
     font-size: 100%;
 }
+#type div{
+    text-align: right;
+}
 #background{
     width:100%;
     height:80px;
     background-color : #[% bgColor %];
     border :0;
 }
+.infos table{
+    font-size: 0.8em;
+}
+.fa{
+    cursor: pointer;
+    display: inherit;
+    font-size: 24px;
+    padding: 0 5px;
+}
+.fa:hover{
+    color: grey;
+}
+#nolist{
+    font-size: 0.75em;
+    color: grey;
+}
 </style>
 
 <script>
-// setting the dropdown menu to the correct selected item
-var MyIndex =0;
-var selectedShelf = 0;
-[%IF selectedShelf !='' %]selectedShelf = [% selectedShelf %] [%END%]
-
-$('#shelves option').each(function(index,element){
-    if(element.value == selectedShelf){
-        MyIndex= index;
+// Set configs
+$(function() {
+    var json = '[% enabledShelves %]';
+    if (json != "") {
+        var enablings = JSON.parse(json);
+        for (var i=0; i < enablings.length; i++) {
+            $("input[name='enabledShelf-"+enablings[i]+"']").prop("checked", true);
+        }
     }
+
+    $("form tr[id*='shelf']").each(function (){
+        var tr = this;
+        $(this).find(".fa-angle-up").click(function (){
+            if ($(tr).index() > 1) $(tr).insertBefore($(tr).prev());
+        });
+        $(this).find(".fa-angle-down").click(function (){
+            $(tr).insertAfter($(tr).next());
+        });
+        $(this).find(".fa-angle-double-up").click(function (){
+            if ($(tr).index() > 1) $(tr).insertAfter($(tr).parent().children().first());
+        });
+        $(this).find(".fa-angle-double-down").click(function (){
+            $(tr).insertAfter($(tr).parent().children().last());
+        });
+    });
 });
-$("#shelves").get(0).selectedIndex = MyIndex;
+
+$("#doc3 form").submit(function (){
+    var form = $("form").serializeArray();
+
+    var orders = [];
+    var enablings = [];
+
+    for (var i=0; i < form.length; i++) {
+        var components = form[i].name.split("-");
+        if (components[0] == "enabledShelf") enablings.push(components[1]);
+    }
+
+    $("form tr[id*='shelf']").each(function (){
+        orders.push($(this).attr("id").split("-")[1]);
+    });
+
+    $("input[name='shelvesOrder']").attr("value", JSON.stringify(orders));
+    $("input[name='enabledShelves']").attr("value", JSON.stringify(enablings));
+});
+
 function update(jscolor, object) {
     // 'jscolor' instance can be used as a string
     if(object == "background"){

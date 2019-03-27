@@ -42,7 +42,7 @@ our $metadata = {
     author          => 'Mehdi Hamidi',
     description     => 'Generates a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2018-10-16',
+    date_updated    => '2019-04-02',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -76,9 +76,10 @@ sub tool {
         });
     }
 
+    $self->orderShelves();
+
     if ($cgi->param('action')){
-        my $selectedShelf = $cgi->param('selectedShelf');
-        $self->generateCarroussel($selectedShelf);
+        $self->generateCarrousels();
         $self->go_home();
     }else{
         $self->step_1();
@@ -90,7 +91,7 @@ sub tool {
 sub loadShelves{
     my ( $self, $args) = @_;
     my $dbh = $dbh;
-    my $stmt = $dbh->prepare("SELECT * FROM virtualshelves ORDER BY shelfname");
+    my $stmt = $dbh->prepare("SELECT * FROM virtualshelves WHERE category = 2 ORDER BY shelfname");
     $stmt->execute();
 
     my $i =0;
@@ -132,13 +133,33 @@ sub step_1{
         }
     }
     $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
-
-    $template->param(shelves => \@shelves, selectedShelf => $self->retrieve_data('selectedShelf'));
+    my @enabledShelves = $self->getEnabledShelves();
+    $template->param(enabledShelves => \@enabledShelves);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
 
-sub generateCarroussel{
+sub generateCarrousels{
+    my ( $self ) = @_;
+    my @enabledShelves = $self->getEnabledShelves();
+    my $tt = Template->new(INCLUDE_PATH => C4::Context->config("pluginsdir"));
+    my $data = "";
+
+    $tt->process('Koha/Plugin/Carrousel/opac-carrousel.tt',
+                {   shelves => \@enabledShelves,
+                    type => $self->retrieve_data('type'),
+                    bgColor => $self->retrieve_data('bgColor'),
+                    txtColor => $self->retrieve_data('txtColor')
+                },
+                \$data,
+                { binmode => ':utf8' }
+                ) || warn "Unable to generate Carrousel, ". $tt->error();
+
+
+    $self->insertIntoPref($data);
+}
+
+sub getCarrousel{
     my ( $self, $selectedShelf) = @_;
     my $shelf;
     my $sqllist;
@@ -219,22 +240,22 @@ sub generateCarroussel{
         return;
     }
 
-    my $pluginDirectory = C4::Context->config("pluginsdir");
-    my $tt = Template->new(INCLUDE_PATH => $pluginDirectory);
-    my $data = "";
+    return ('name', $shelfname, 'documents', \@images);
+}
 
-    $tt->process('Koha/Plugin/Carrousel/opac-carrousel.tt',
-                {   shelfname => $shelfname,
-                    documents => \@images,
-                    bgColor => $self->retrieve_data('bgColor'),
-                    txtColor => $self->retrieve_data('txtColor')
-                },
-                \$data,
-                { binmode => ':utf8' }
-                ) || warn "Unable to generate Carrousel, ". $tt->error();
-
-
-    $self->insertIntoPref($data);
+sub getEnabledShelves{
+    my ( $self ) = @_;
+    my @enabledShelves = ();
+    return @enabledShelves if (!defined $self->retrieve_data('enabledShelves'));
+    my @enabledShelvesId =@{decode_json($self->retrieve_data('enabledShelves'))};
+    foreach my $list (@shelves){
+        my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
+        if (grep(/^$id$/, @enabledShelvesId)) {
+            my %carrousel = $self->getCarrousel($id);
+            push(@enabledShelves, \%carrousel);
+        }
+    }
+    return @enabledShelves;
 }
 
 sub insertIntoPref{
@@ -396,15 +417,18 @@ sub configure{
     if($useSql){
         $self->loadShelves();
     }else{
-        @shelves =  Koha::Virtualshelves->search();
+        @shelves = Koha::Virtualshelves->get_public_shelves();
     }
+    $self->orderShelves();
     if($cgi->param("action")){
         $self->store_data(
         {
             shelves             => \@shelves,
+            enabledShelves      => $cgi->param('enabledShelves'),
+            shelvesOrder        => $cgi->param('shelvesOrder'),
+            type                => $cgi->param('type'),
             bgColor             => $cgi->param('bgColor'),
             txtColor            => $cgi->param('txtColor'),
-            selectedShelf        => $cgi->param('selectedShelf'),
             last_configured_by => C4::Context->userenv->{'number'},
         }
         );
@@ -423,13 +447,44 @@ sub configure{
 
         $template->param(
             shelves       => \@shelves,
+            enabledShelves => $self->retrieve_data('enabledShelves'),
+            type          => $self->retrieve_data('type'),
             bgColor       => $self->retrieve_data('bgColor'),
             txtColor      => $self->retrieve_data('txtColor'),
-            selectedShelf => $self->retrieve_data('selectedShelf')
         );
         print $cgi->header(-type => 'text/html',-charset => 'utf-8');
         print $template->output();
     }
+}
+
+sub orderShelves{
+    my ( $self, $args) = @_;
+    return if (!defined $self->retrieve_data('shelvesOrder'));
+    my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))};
+    my $shelvesOrderCount = @shelvesOrder;
+    my @orderedShelves;
+    my @otherShelves;
+    foreach my $list (@shelves) {
+        my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
+        my $found = 0;
+        for (my $i = 0; $i < $shelvesOrderCount; $i++){
+            if ($id == $shelvesOrder[$i]) {
+                $orderedShelves[$i] = $list;
+                $found = 1;
+                last;
+            }
+        }
+        push(@otherShelves,$list) unless ($found);
+    }
+
+    my @temp = @orderedShelves;
+    @orderedShelves = ();
+    for my $list (@temp) {
+        push(@orderedShelves,$list) if ($list != undef);
+    }
+
+    @shelves = @orderedShelves;
+    push(@shelves,@otherShelves);
 }
 
 #Supprimer le plugin avec toutes ses données

@@ -1,17 +1,32 @@
 
+[% IF type == "carrousel" %]
+[% FOREACH carrousel IN shelves %]
 <div class='carrouselFrame'>
     <div class="loadingDiv"></div>
-    <div id="[% shelfname %]" class='carrousel'>
-        <a id="left-but" class='left carousel-control'>&lsaquo;</a>
-        <a id="right-but" class='right carousel-control'>&rsaquo;</a>
-        [% FOREACH item IN documents %]
+    <div class='carrousel'>
+        <a class='left carousel-control'>&lsaquo;</a>
+        <a class='right carousel-control'>&rsaquo;</a>
+        [% FOREACH item IN carrousel.documents %]
         <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]"><img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/></a>
         [% END %]
         <div class="carousel-caption">
-            <p id="title-text"></p>
+            <p class="title-text"></p>
         </div>
     </div>
 </div>
+[% END %]
+[% ELSE %]
+<div id="sliders">
+    [% FOREACH carrousel IN shelves %]
+        [% IF (carrousel.documents.size() > 0) %]
+        <div class="slider">
+            <div class="images">
+            [% FOREACH item IN carrousel.documents %]<a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]"><img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/></a>[% END %]</div>
+        </div>
+        [% END %]
+    [% END %]
+</div>
+[% END %]
 
 <style>
 [% UNLESS txtColor %]
@@ -44,7 +59,7 @@
     z-index : 2000;
     top : 0;
 }
-#title-text{
+.carousel-caption .title-text{
     color : #[%txtColor%];
 }
 .carousel-control,
@@ -58,6 +73,9 @@
 .carousel-caption
 {
     font-weight : bold;
+    position: absolute;
+    left: 0;
+    right: 0;
 }
 
 usel-control,
@@ -104,24 +122,64 @@ document.addEventListener('DOMContentLoaded', function() {
     this.autoRotate=function(){if(options.autoRotate!=='no'){var dir=(options.autoRotate==='right')?1:-1;this.autoRotateTimer=setInterval(function(){ctx.rotate(dir)},options.autoRotateDelay)}};this.updateAll=function(){var minScale=options.minScale;var smallRange=(1-minScale)*0.5;var w,h,x,y,scale,item,sinVal;var change=(this.destRotation-this.rotation);var absChange=Math.abs(change);this.rotation+=change*options.speed;if(absChange<0.001){this.rotation=this.destRotation}var itemsLen=items.length;var spacing=(Math.PI/itemsLen)*2;var radians=this.rotation;var isMSIE=$.browser.msie;this.innerWrapper.style.display='none';var style;var px='px',reflHeight;var context=this;for(var i=0;i<itemsLen;i++){item=items[i];sinVal=funcSin(radians);scale=((sinVal+1)*smallRange)+minScale;x=this.xCentre+(((funcCos(radians)*this.xRadius)-(item.orgWidth*0.5))*scale);y=this.yCentre+(((sinVal*this.yRadius))*scale);if(item.imageOK){var img=item.image;w=img.width=item.orgWidth*scale;h=img.height=item.orgHeight*scale;img.style.left=x+px;img.style.top=y+px;img.style.zIndex=""+(scale*100)>>0;if(item.reflection!==null){reflHeight=options.reflHeight*scale;style=item.reflection.element.style;style.left=x+px;style.top=y+h+options.reflGap*scale+px;style.width=w+px;if(isMSIE){style.filter.finishy=(reflHeight/h*100)}else{style.height=reflHeight+px}}}radians+=spacing}this.innerWrapper.style.display='block';if(absChange>=0.001){this.controlTimer=setTimeout(function(){context.updateAll()},this.timeDelay)}else{this.stop()}};this.checkImagesLoaded=function(){var i;for(i=0;i<images.length;i++){if((images[i].width===undefined)||((images[i].complete!==undefined)&&(!images[i].complete))){return}}for(i=0;i<images.length;i++){items.push(new Item(images[i],options));$(images[i]).data('itemIndex',i)}clearInterval(this.tt);this.showFrontText();this.autoRotate();this.updateAll()};this.tt=setInterval(function(){ctx.checkImagesLoaded()},50)};$.fn.CloudCarousel=function(options){this.each(function(){options=$.extend({},{reflHeight:0,reflOpacity:0.5,reflGap:0,minScale:0.5,xPos:0,yPos:0,xRadius:0,yRadius:0,altBox:null,titleBox:null,FPS:30,autoRotate:'no',autoRotateDelay:1500,speed:0.2,mouseWheel:false,bringToFront:false},options);$(this).data('cloudcarousel',new Controller(this,$('.cloudcarousel',$(this)),options))});return this}})(jQuery);
 
     //This initialises carousels on the container elements specified.
-    var formCarousel=$("#[% shelfname %]").parent();
-    $("#[% shelfname %]").CloudCarousel(
+    $(".carrousel").each(function (){
+        var controls = $(this).find(".carousel-control");
+        $(this).CloudCarousel(
         {
-            xPos : formCarousel.width() * 0.5,
+            xPos : $(this).parent().width() * 0.5,
             yPos : 10,
-            xRadius : formCarousel.width() / 2,
-            yRadius : formCarousel.height() / 7,
-            buttonLeft: $("#left-but"),
-            buttonRight: $("#right-but"),
-            altBox: $("#alt-text"),
-            titleBox: $("#title-text"),
+            xRadius : $(this).parent().width() / 2,
+            yRadius : $(this).parent().height() / 7,
+            buttonLeft: $(controls).filter(".left"),
+            buttonRight: $(controls).filter(".right"),
+            titleBox: $(this).find(".title-text"),
             minScale: 0.25,
             reflHeight : 40,
             reflGap : 4,
             reflOpacity : 0.75
         }
-    );
+        );
+    });
     $(".loadingDiv").delay(1000);
     $(".loadingDiv").fadeOut(1000);
+});
+</script>
+
+<style>
+#sliders {
+    overflow: hidden;
+}
+#sliders img {
+    height: 175px;
+}
+.images {
+    left: 0px;
+    margin-bottom: 50px;
+    position: relative;
+    white-space: nowrap;
+}
+.images a {
+    display: inline-block;
+    margin-right: 5px;
+}
+</style>
+<script>
+var scrolling_duration = 1000;
+var time_between_scrolling = 5000;
+
+window.addEventListener('load', function() {
+    function setPosition() {
+        $(".images").each(function(i) {
+            var last = $(this).find("a img").last();
+            if ($(last).position().left + $(last)[0].clientWidth < $("#sliders")[0].clientWidth) return;
+            $(this).animate({
+                left: $(this).find("a img").eq(1).position().left * -1,
+            }, scrolling_duration, function() {
+                $(this).css("left", "0");
+                $(this).append($(this).find("a").first());
+            });
+        });
+    }
+    setInterval(setPosition, time_between_scrolling);
 });
 </script>

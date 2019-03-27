@@ -15,26 +15,18 @@
             <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
         </div>
 
-        <h2>Generate carrousel </h2>
+        <h2>Generate carousel </h2>
         <form method="get">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
-            <div class="infos">
-                <label> Select your list : </label>
-                <select name="selectedShelf" id ="shelves" class="alignment">
-                    [% FOREACH shelf IN shelves %]
-                    <option id ="" value="[% shelf.shelfnumber %]"> [% shelf.shelfname %]</option>
-                    [% END %]
-                </select>
-            </div>
-            [% IF shelves %]
+            [% IF (enabledShelves.size() > 0) %]
             <input id="submit" type="submit" value="Generate">
             [% ELSE %]
             <div class="alert alert-danger">
-                <strong>You have no lists!</strong> Create lists so you can generate a carrousel.
+                <strong>You have no lists or none are set to be generated!</strong> Create lists and set them so you can generate carousels.
             </div>
             [% END %]
         </form>
@@ -46,9 +38,6 @@
 [% INCLUDE 'intranet-bottom.inc' %]
 
 <style>
-.infos{
-    margin: 10px 0;
-}
 .alignment{
     float: right;
 }
@@ -65,25 +54,3 @@
     width : 50%;
 }
 </style>
-
-<script>
-// setting the dropdown menu to the correct selected item
-var MyIndex =0;
-var selectedShelf = 0;
-[%IF selectedShelf !='' %]selectedShelf = [% selectedShelf %] [%END%]
-
-$('#shelves option').each(function(index,element){
-    if(element.value == selectedShelf){
-        MyIndex= index;
-    }
-});
-$("#shelves").get(0).selectedIndex = MyIndex;
-function update(jscolor, object) {
-    // 'jscolor' instance can be used as a string
-    if(object == "background"){
-        document.getElementById('background').style.backgroundColor = '#' + jscolor;
-    }else{
-        document.getElementById('text').style.color = '#' + jscolor;
-    }
-}
-</script>
