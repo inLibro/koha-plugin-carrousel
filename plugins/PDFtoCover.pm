@@ -34,10 +34,10 @@ use C4::Images;
 use File::Spec;
 
 our $dbh      = C4::Context->dbh();
-our $VERSION  = 1.2;
+our $VERSION  = 1.3;
 our $metadata = {
     name            => 'PDFtoCover',
-    author          => 'Mehdi Hamidi, Bouzid Fergani',
+    author          => 'Mehdi Hamidi, Bouzid Fergani, Arthur Bousquet',
     description     => 'Creates cover images for documents missing one',
     date_authored   => '2016-06-08',
     date_updated    => '2017-09-20',
@@ -59,6 +59,7 @@ sub tool {
     my ( $self, $args ) = @_;
     my $cgi      = $self->{'cgi'};
     my $op       = $cgi->param('op');
+    `touch /tmp/.Koha.PDFtoCover.lock`;
     my @sortie   = `ps -eo user,bsdstart,command --sort bsdstart`;
     my @lockfile = `ls -s /tmp/.Koha.PDFtoCover.lock`;
     my @process;
