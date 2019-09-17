@@ -6,7 +6,6 @@ use Modern::Perl;
 use base qw(Koha::Plugins::Base);
 
 use C4::Context;
-use C4::Branch;
 use C4::Members;
 use C4::Auth;
 use C4::Members::Messaging;
@@ -40,7 +39,7 @@ sub new {
 sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
-    my $op = $cgi->param('op');
+    my $op = $cgi->param('op') || '';
     my @sortie = `ps -eo user,bsdstart,command --sort bsdstart`;
     my @lockfile = `ls -s /tmp/.PluginMessaging.lock`;
     my @process;
@@ -53,11 +52,13 @@ sub tool {
     my $since = $cgi->param('since');
     if ($op eq 'valide'){
         $since = '0000-00-00' if (!$since);
-        warn $since;
+        warn "[Koha::Plugin::MessagingPreferenceWizard::tool][DEBUG] Truncate is ON, DELETE'ing borrower_message_preferences\n"
+            if $truncate;
+        warn "[Koha::Plugin::MessagingPreferenceWizard::tool][DEBUG] Only updating accounts where dateenrolled >= $since\n";
         my $dbh = C4::Context->dbh;
         $dbh->{AutoCommit} = 0;
         if ( $truncate ) {
-            my $sth = $dbh->prepare("TRUNCATE borrower_message_preferences");
+            my $sth = $dbh->prepare("DELETE FROM borrower_message_preferences");
             $sth->execute();
         }
 
@@ -71,7 +72,7 @@ sub tool {
         if ( $pid ){
             my $template = undef;
             eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
-            if(!$template){
+            if(!$template && $preferedLanguage){
                 $preferedLanguage = substr $preferedLanguage, 0, 2;
                 eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
             }
@@ -80,7 +81,7 @@ sub tool {
             $template->param( exist => 0);
             $template->param( lock => 0);
             $template->param(decompte => $number);
-            print $cgi->header();
+            print $cgi->header(-type => 'text/html',-charset => 'utf-8');
             print $template->output();
             exit 0;
         }else{
@@ -118,7 +119,7 @@ sub show_config_pages {
     $template->param( lock => $lock);
     $template->param( number => 0);
     $template->param( decompte => 0);
-    print $cgi->header();
+    print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
 
