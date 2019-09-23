@@ -252,7 +252,7 @@ sub getEnabledShelves{
         my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
         if (grep(/^$id$/, @enabledShelvesId)) {
             my %carrousel = $self->getCarrousel($id);
-            push(@enabledShelves, \%carrousel);
+            push(@enabledShelves, \%carrousel) if %carrousel;
         }
     }
     return @enabledShelves;
@@ -317,7 +317,8 @@ sub getUrlFromExternalSources {
         'retrieval' => \&retrieveUrlFromCoceJson,
         'url' => C4::Context->preference('CoceHost').'/cover'
                 ."?id=$isbn"
-                .'&provider='.join(',', C4::Context->preference('CoceProviders')),
+                .'&provider='.join(',', C4::Context->preference('CoceProviders'))
+                .'&thumbnail=1',
     };
 
     $es->{OPACAmazonCoverImages} = {
@@ -339,32 +340,30 @@ sub getUrlFromExternalSources {
 
     my $ua = LWP::UserAgent->new;
     $ua->timeout(2);
+    $ua->ssl_opts(verify_hostname => 0);
     my @orderedProvidersByPriority = sort { $es->{$a}->{priority} <=> $es->{$b}->{priority} } keys %$es;
 
     for my $provider ( @orderedProvidersByPriority ) {
+        my $url = $es->{$provider}->{url};
+        my $req = HTTP::Request->new( GET => $url );
+        my $res = $ua->request( $req );
 
-        next if ( $provider eq 'OpacCoce' );
+        next if !$res->is_success;
 
-        if ( C4::Context->preference($provider) ) {
+        if ( exists $es->{$provider}->{content_length} ) {
+            next if $res->header('content_length') <= $es->{$provider}->{content_length};
+        }
 
-            my $url = $es->{$provider}->{url};
-            my $req = HTTP::Request->new( GET => $url );
-            my $res = $ua->request( $req );
+        if ( exists $es->{$provider}->{retrieval} ) {
+            $url = $es->{$provider}->{retrieval}->($res);
+            next unless $url;
+        }
 
-            next if !$res->is_success;
+        if ( $url =~ m!^/9j/! ) {
+            $url = 'data:image/jpg;base64, ' . $url;
+        }
 
-            if ( exists $es->{$provider}->{content_length} ) {
-                next if $res->header('content_length') <= $es->{$provider}->{content_length};
-            }
-
-            if ( exists $es->{$provider}->{retrieval} ) {
-                $url = $es->{$provider}->{retrieval}->($res);
-                next unless $url;
-            }
-
-            return $url;
-
-        } # if source enabled by systempreference
+        return $url;
     } # foreach providers
 
     # FIXME: hardcoded fallback to Amazon.com, cam#6918
