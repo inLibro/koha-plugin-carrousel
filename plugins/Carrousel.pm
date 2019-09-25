@@ -345,6 +345,7 @@ sub getUrlFromExternalSources {
 
     for my $provider ( @orderedProvidersByPriority ) {
         my $url = $es->{$provider}->{url};
+        warn "[Koha::Plugin::Carrousel] Querying provider '$provider', $url\n";
         my $req = HTTP::Request->new( GET => $url );
         my $res = $ua->request( $req );
 
@@ -389,12 +390,10 @@ sub getThumbnailUrl
     }
 
     # We look for image localy, if available we return relative path and exit function.
-    if ( C4::Context->preference("OPACLocalCoverImages") ) {
-        my $stm = $dbh->prepare("SELECT COUNT(*) AS count FROM biblioimages WHERE biblionumber=$biblionumber;");
-        $stm->execute();
-        if ( $stm->fetchrow_hashref()->{count} > 0 ) {
-            return "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
-        }
+    my $stm = $dbh->prepare("SELECT COUNT(*) AS count FROM biblioimages WHERE biblionumber=$biblionumber;");
+    $stm->execute();
+    if ( $stm->fetchrow_hashref()->{count} > 0 ) {
+        return "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
     }
 
     #If there is not local thumbnail, we look for one on Amazon, Google and Openlibrary in this order and we will exit when a thumbnail is found.
