@@ -20,16 +20,16 @@
 <div class="container">
     <h2>Enhanced messaging preferences wizard</h2>
     <p>Ce plugin utilise le script "borrowers-force-messaging-defaults". Ce script installe ou reinitialise tous les comptes utilisateurs avec les valeurs par défaut des Préférences des notifications. La configuration par défaut vient de la page d'administration des catégories des utilisateurs.</p>
-    <h4>Two options are available.</h4>
+    <h4>Deux options s'offrent &agrave; vous.</h4>
     <form method='get'>    
         <input type='hidden' id='class' name='class' value='[% CLASS %]'/>
         <input type="hidden" name="method" value="tool"/>
         <input type='hidden' id='op' name="op" value=''/>
         <div class="form-group">
-  <p>Since: <input type="text" name='since' id="since">  Quand une date est entrée dans "since" , seuls les utilisateurs crées après cette date seront traités.</p>
+  <p>Depuis: <input type="text" name='since' id="since">  Quand une date est entrée dans "Depuis" , seuls les utilisateurs crées après cette date seront traités.</p>
         </div>
         <div class="form-group">
-            <p>Truncate: <input type="checkbox" class="form-control" name="trunc" id="trunc">  Quand coché, toutes les anciennes configurations de tous les comptes utilisateurs seront remis à zéro avec les valeurs par défaut.</p>
+            <p>Tronquer: <input type="checkbox" class="form-control" name="trunc" id="trunc">  Quand coché, toutes les anciennes configurations de tous les comptes utilisateurs seront remis à zéro avec les valeurs par défaut.</p>
         </div>
         <p><button id="lunch" class="btn btn-default" onclick="lancerRecherche()">Lancer</button></p>
         <div><span id="number">&nbsp;</span></div>

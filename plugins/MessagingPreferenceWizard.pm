@@ -41,7 +41,7 @@ sub tool {
     my $cgi = $self->{'cgi'};
     my $op = $cgi->param('op') || '';
     my @sortie = `ps -eo user,bsdstart,command --sort bsdstart`;
-    my @lockfile = `ls -s /tmp/.PluginMessaging.lock`;
+    my @lockfile = `ls -s /tmp/.PluginMessaging.lock 2>/dev/null`;
     my @process;
     foreach my $val (@sortie){
         push @process, $val if ($val =~ '/plugins/run.pl');
@@ -64,7 +64,7 @@ sub tool {
 
         my $sth = $dbh->prepare("SELECT borrowernumber, categorycode FROM borrowers WHERE dateenrolled >= ?");
         $sth->execute($since);
-        my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+        my $preferedLanguage = $cgi->cookie('KohaOpacLanguage') || '';
         my $result = $sth->fetchall_arrayref();
         my $number = scalar @$result;
         $sth->execute($since);
@@ -95,7 +95,7 @@ sub tool {
             } );
         }
         $dbh->commit();
-        `rm /tmp/.PluginMessaging.lock`;
+        `rm /tmp/.PluginMessaging.lock 2>/dev/null`;
         exit 0;
     }else{
         $self->show_config_pages($nombre,$lock);
@@ -106,7 +106,7 @@ sub tool {
 sub show_config_pages {
     my ( $self, $nombre, $lock) = @_;
     my $cgi = $self->{'cgi'};
-    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage') || '';
     my $template = undef;
     eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.tt" } )};
     if(!$template){
