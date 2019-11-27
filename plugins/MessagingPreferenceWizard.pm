@@ -15,14 +15,14 @@ use Getopt::Long;
 use Data::Dumper;
 use File::Spec;
 
-our $VERSION = 1.1;
+our $VERSION = 1.2;
 
 our $metadata = {
     name   => 'Enhanced messaging preferences wizard',
     author => 'Bouzid Fergani',
     description => 'Setup or reset the enhanced messaging preferences to default values',
     date_authored   => '2016-07-13',
-    date_updated    => '2015-07-13',
+    date_updated    => '2019-11-22',
     minimum_version => '3.1406000',
     maximum_version => undef,
     version         => $VERSION,

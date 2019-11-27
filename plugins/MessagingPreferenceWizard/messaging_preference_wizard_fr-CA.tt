@@ -1,6 +1,6 @@
 [% USE KohaDates %]
  [% INCLUDE 'doc-head-open.inc' %]
- <title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Modify notifications</title>
+ <title>Koha &rsaquo; Outils &rsaquo; Extensions &rsaquo; Modifier les pr&eacute;f&eacute;rences de messagerie</title>
  [%  IF exist  > 1 %]
    <meta http-equiv="refresh" content="30">
    [% END %]
@@ -14,22 +14,27 @@
  
  <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo;
                        <a href="/cgi-bin/koha/tools/tools-home.pl">Outils</a> &rsaquo;
-                       <a href="/cgi-bin/koha/plugins/plugins-home.pl?method=tool">Plugins</a> &rsaquo;
-                       Assistant des préférences des notifications </div>
+                       <a href="/cgi-bin/koha/plugins/plugins-home.pl?method=tool">Extensions</a> &rsaquo;
+                       Modifier les pr&eacute;f&eacute;rences de messagerie</div>
 <div id="doc3" class="yui-t1">
 <div class="container">
-    <h2>Enhanced messaging preferences wizard</h2>
-    <p>Ce plugin utilise le script "borrowers-force-messaging-defaults". Ce script installe ou reinitialise tous les comptes utilisateurs avec les valeurs par défaut des Préférences des notifications. La configuration par défaut vient de la page d'administration des catégories des utilisateurs.</p>
-    <h4>Deux options s'offrent &agrave; vous.</h4>
-    <form method='get'>    
+    <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+        <p style="text-align: left;">Cette extension a été créée par</p>
+        <img width='450px' src='[% PLUGIN_PATH %]/images/inLibro_fr.svg'/>
+        <p style="text-align: right;">Visitez notre <a href="https://inlibro.com/">site web</a> pour d'autres extensions Koha</p>
+    </div>
+    <h2>Assistant de configuration des pr&eacute;f&eacute;rences de messagerie</h2>
+    <p>Cette extension permet d'appliquer aux utilisateurs de Koha les préférences de messagerie pour toutes les catégories d'utilisateurs. Préférences de messages pour cette catégorie d'utilisateur, définies dans le module Administration dans la page Catégories utilisateur sous la section Utilisateurs et circulation.</p>
+    <br/><h4>Deux options s'offrent à vous.</h4>
+    <form method='get'>
         <input type='hidden' id='class' name='class' value='[% CLASS %]'/>
         <input type="hidden" name="method" value="tool"/>
         <input type='hidden' id='op' name="op" value=''/>
         <div class="form-group">
-  <p>Depuis: <input type="text" name='since' id="since">  Quand une date est entrée dans "Depuis" , seuls les utilisateurs crées après cette date seront traités.</p>
+  <p>Traiter seulement les utilisateurs créés depuis: <input type="text" name='since' id="since"><br/>Si une date est fournie, seuls les utilisateurs crées après cette date seront touchés.</p>
         </div>
         <div class="form-group">
-            <p>Tronquer: <input type="checkbox" class="form-control" name="trunc" id="trunc">  Quand coché, toutes les anciennes configurations de tous les comptes utilisateurs seront remis à zéro avec les valeurs par défaut.</p>
+            <p class="warn">Réinitialiser: <input type="checkbox" name="trunc" id="trunc"> <br/>Si choisie, toutes les préférences de messagerie de tous les comptes utilisateurs seront réinitialisés, y compris les valeurs définies dans le module Administration.</p>
         </div>
         <p><button id="lunch" class="btn btn-default" onclick="lancerRecherche()">Lancer</button></p>
         <div><span id="number">&nbsp;</span></div>
@@ -39,6 +44,9 @@
 </div>
 [% INCLUDE 'intranet-bottom.inc' %]
 <style>
+ .container {
+     max-width: 500px;
+ }
  .finish {
       color : green;
       font-size : 16px;
@@ -55,6 +63,10 @@
   .texte {
       font-size : 16px;
   }
+  .warn {
+      font-weight: bold;
+      color: red;
+  }
 </style>
  <script type="text/javascript">
  $( function() {
@@ -63,7 +75,7 @@
          document.getElementById('lunch').disabled = true;
          info = document.getElementById('progression');
          info.setAttribute('class','progress');
-         info.firstChild.data = "Cette tâche s'exécute en arrière plan, veuillez patienter";
+         info.firstChild.data = "Cette tâche a été lancée en arrière plan, vos changements s'appliqueront sous peu.";
      }
      if([% attente %] == 1 ){
          document.getElementById('op').value = '';
@@ -73,7 +85,7 @@
          info.setAttribute('class','finish');
          decompte.setAttribute('class','texte');
          decompte.firstChild.data = " Nombre d'utilisateurs à traiter: " + [% decompte %];
-         info.firstChild.data = "Cette tâche est lancée correctement en arrière plan, veuillez patienter";
+         info.firstChild.data = "Cette tâche a été lancée en arrière plan, vos changements s'appliqueront sous peu.";
      }
  } );
  function lancerRecherche(){

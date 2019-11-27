@@ -1,6 +1,6 @@
 [% USE KohaDates %]
  [% INCLUDE 'doc-head-open.inc' %]
- <title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Modify notifications</title>
+ <title>Koha &rsaquo; Tools &rsaquo; Plugins &rsaquo; Modify messaging preferences</title>
   [%  IF exist  > 1 %]
   <meta http-equiv="refresh" content="30">
   [% END %]
@@ -15,21 +15,26 @@
  <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo;
                        <a href="/cgi-bin/koha/tools/tools-home.pl">Tools</a> &rsaquo;
                        <a href="/cgi-bin/koha/plugins/plugins-home.pl?method=tool">Plugins</a> &rsaquo;
-                       Enhanced messaging preferences wizard</div>
+                       Modify messaging preferences</div>
 <div id="doc3" class="yui-t1">
 <div class="container">
-    <h2>Enhanced messaging preferences wizard</h2>
-    <p>The plugin uses the "borrowers-force-messaging-defaults" script. This script setups or resets all borrower accounts with the default enhanced messaging preferences values. The default configuration comes from the patron category administration page.</p>
-    <h4>Two options are available.</h4>
+    <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
+        <p style="text-align: left;">This plugin was created by</p>
+        <img width='450px' src='[% PLUGIN_PATH %]/images/inLibro_en.svg'/>
+        <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
+    </div>
+    <h2>Messaging preference wizard</h2>
+    <p>This plugin applies to all Koha users the default messaging preferences defined in the Administration module in the Patron categories page under the Patrons and circulation section.</p>
+    <br/><h4>Two options are available.</h4>
     <form method='get' id="formTraitement">
         <input type='hidden' id='class' name='class' value='[% CLASS %]'/>
         <input type="hidden" name="method" value="tool"/>
         <input type='hidden' id='op' name="op" value=''/>
         <div class="form-group">
-  <p>Since: <input type="text" name='since' id="since">  when a date is entered in the "since" option, only patrons created after this date will be updated.</p>
+  <p>Only update patrons created since: <input type="text" name='since' id="since"> <br/>If a date is provided, only patrons created after this date will be affected.</p>
         </div>
         <div class="form-group">
-            <p>Truncate: <input type="checkbox" class="form-control" name="trunc" id="trunc">  when checked, all previous configuration from all patron accounts will be cleared before the default values are set.</p>
+            <p class="warn">Reset: <input type="checkbox" name="trunc" id="trunc"> <br/>If checked, all previous notification settings from all patrons will be cleared, including the values defined in the Administration module.</p>
         </div>
         <p><button id="lunch" class="btn btn-default" onclick="lancerRecherche()">Launch</button></p>
         <div><span id="number">&nbsp;</span></div>
@@ -39,6 +44,9 @@
 </div>
 [% INCLUDE 'intranet-bottom.inc' %]
 <style>
+ .container {
+     max-width: 500px;
+ }
  .finish {
       color : green;
       font-size : 16px;
@@ -55,6 +63,10 @@
   .texte {
       font-size : 16px;
   }
+  .warn {
+      font-weight: bold;
+      color: red;
+  }
 </style>
  <script type="text/javascript">
  $( function() {
@@ -64,7 +76,7 @@
          document.getElementById('lunch').disabled = true;
          info = document.getElementById('progression');
          info.setAttribute('class','progress');
-         info.firstChild.data = "This job progresses in background  - please wait";
+         info.firstChild.data = "This job was started in the background, your changes will be applied soon.";
      }
      if([% attente %] == 1 ){
          document.getElementById('lunch').disabled = true;
@@ -73,7 +85,7 @@
          decompte = document.getElementById('number');
          decompte.setAttribute('class','texte');
          decompte.firstChild.data = " Number of borrowers to process: " + [% decompte %];
-         info.firstChild.data = "The job is lunched correctly in background, please wait";
+         info.firstChild.data = "This job was started in the background, your changes will be applied soon.";
      }
 } );
  function lancerRecherche(){
@@ -84,7 +96,7 @@
          document.getElementById('trunc').value = truncate;
          info = document.getElementById('progression');
          info.setAttribute("class","debut");
-         info.firstChild.data = "Current progress, please wait ............";
+         info.firstChild.data = "Currently in progress, please wait ............";
 
      }else{
          document.getElementById('op').value = 'no';
