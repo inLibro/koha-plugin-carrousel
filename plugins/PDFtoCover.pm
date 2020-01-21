@@ -134,7 +134,7 @@ sub step_1 {
 sub missingModule {
     my ( $self, $args ) = @_;
     my $cgi              = $self->{'cgi'};
-    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage') || '';
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $template         = undef;
 
     eval { $template = $self->get_template( { file => "missingModule_" . $preferedLanguage . ".tt" } ) };
@@ -181,7 +181,7 @@ sub genererVignette {
         my @uris = split / /, $urifield;
         foreach my $url (@uris) {
             my $response = $ua->get($url);
-            if ( $response->is_success && $response->header('content-type') =~ /application\/pdf/ ) {
+            if ( $response->is_success && $response->header('content-type') eq "application/pdf" ) {
                 my $lastmodified = $response->header('last-modified');
 
                 # On vérifie que le fichier à l'URL spécifié est bel et bien un pdf
