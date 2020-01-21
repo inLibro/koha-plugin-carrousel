@@ -70,10 +70,9 @@ sub tool {
 
     my $nombre           = scalar(@process);
     my $lock             = scalar(@lockfile);
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
     my $warning          = eval {`dpkg -s libcairo2-dev`};
     my $pdftocairo       = "/usr/bin/pdftocairo";
-
-    my $template = $self->retrieve_template('step_1');
 
     unless ( -e $pdftocairo ) {
         $self->missingModule();
@@ -81,25 +80,28 @@ sub tool {
     elsif ( $op && $op eq 'valide' ) {
         my $pid = fork();
         if ($pid) {
-            $template->param( done    => 0 );
+            my $template = undef;
+            eval { $template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } ) };
+            if ( !$template ) {
+                $preferedLanguage = substr $preferedLanguage, 0, 2;
+                eval { $template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } ) };
+            }
+            $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
+            my $pdf = $self->displayAffected();
+            $template->param( pdf     => $pdf );
+            $template->param( 'wait'  => 1 );
+            $template->param( 'exist' => 0 );
+            $template->param( lock    => 0 );
             print $cgi->header( -type => 'text/html', -charset => 'utf-8' );
+            print $template->output();
             exit 0;
         }
+        else {
+            close STDOUT;
+        }
         open my $fh, ">", File::Spec->catdir( "/tmp/", ".Koha.PDFtoCover.lock" );
-
         &genererVignette();
-
-        my $pdf = $self->displayAffected();
-        $template->param( pdf     => $pdf );
-        $template->param( 'wait'  => 1 );
-        $template->param( 'exist' => 0 );
-        $template->param( lock    => 0 );
-        $template->param( done   => 1 );
-
-        print $template->output();
-
         `rm /tmp/.Koha.PDFtoCover.lock`;
-        close STDOUT;
         exit 0;
     }
     else {
@@ -110,54 +112,45 @@ sub tool {
 sub step_1 {
     my ( $self, $nombre, $lock ) = @_;
     my $cgi              = $self->{'cgi'};
-    my $template         = $self->retrieve_template('step_1');
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+    my $template         = undef;
     my $pdf              = $self->displayAffected();
+
+    eval { $template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } ) };
+    if ( !$template ) {
+        $preferedLanguage = substr $preferedLanguage, 0, 2;
+        eval { $template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } ) };
+    }
+    $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
+
     $template->param( 'wait' => 0 );
     $template->param( exist  => $nombre );
     $template->param( lock   => $lock );
     $template->param( pdf    => $pdf );
-    $template->param( done   => 0 );
     print $cgi->header( -type => 'text/html', -charset => 'utf-8' );
     print $template->output();
 }
 
 sub missingModule {
     my ( $self, $args ) = @_;
-    my $cgi             = $self->{'cgi'};
-    my $template        = $self->retrieve_template('missingModule');
+    my $cgi              = $self->{'cgi'};
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+    my $template         = undef;
+
+    eval { $template = $self->get_template( { file => "missingModule_" . $preferedLanguage . ".tt" } ) };
+    if ( !$template ) {
+        $preferedLanguage = substr $preferedLanguage, 0, 2;
+        eval { $template = $self->get_template( { file => "missingModule_$preferedLanguage.tt" } ) };
+    }
+    $template = $self->get_template( { file => 'missingModule.tt' } ) unless $template;
 
     print $cgi->header( -type => 'text/html', -charset => 'utf-8' );
     print $template->output();
 }
 
-# retrieve the template that includes the prefix passed
-# 'step_1'
-# 'missingModule'
-sub retrieve_template {
-    my ( $self, $template_prefix ) = @_;
-    my $cgi = $self->{'cgi'};
-    return undef unless $template_prefix eq 'step_1' || $template_prefix eq 'missingModule';
-
-    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
-    my $template = undef;
-    eval {
-        $template  = $self->get_template({ file => $template_prefix . '_' . $preferedLanguage . ".tt" })
-    };
-
-    if ( !$template ) {
-        $preferedLanguage = substr $preferedLanguage, 0, 2;
-        eval {
-            $template = $self->get_template( { file => $template_prefix . '_' . $preferedLanguage .  ".tt" })
-        };
-    }
-    return $self->get_template( { file => $template_prefix . '.tt' } ) unless $template;
-    return $template;
-}
-
 sub displayAffected {
     my ( $self, $args ) = @_;
     my $pdf = 0;
-    my $dbh = C4::Context->dbh;
     my $query
         = "SELECT a.biblionumber, EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") AS url  FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <>'' and a.biblionumber not in (select biblionumber from biblioimages);";
 
@@ -184,12 +177,11 @@ sub genererVignette {
     # Retourne 856$u, qui est le(s) URI(s) d'une ressource numérique
     my $sthSelectPdfUri = $dbh->prepare($query);
     $sthSelectPdfUri->execute();
-
     while ( my ( $biblionumber, $urifield ) = $sthSelectPdfUri->fetchrow_array() ) {
         my @uris = split / /, $urifield;
         foreach my $url (@uris) {
             my $response = $ua->get($url);
-            if ( $response->is_success && $response->header('content-type') =~ /application\/pdf/ ) {
+            if ( $response->is_success && $response->header('content-type') eq "application/pdf" ) {
                 my $lastmodified = $response->header('last-modified');
 
                 # On vérifie que le fichier à l'URL spécifié est bel et bien un pdf
@@ -215,15 +207,15 @@ sub genererVignette {
                 }
             }
         }
-        last;
     }
 }
 
 #Supprimer le plugin avec toutes ses données
 sub uninstall() {
     my ( $self, $args ) = @_;
-    return 1;
+    my $table = $self->get_qualified_table_name('mytable');
+
+    return C4::Context->dbh->do("DROP TABLE $table");
 }
 
 1;
-
