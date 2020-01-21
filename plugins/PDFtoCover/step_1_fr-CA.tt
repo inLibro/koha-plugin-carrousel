@@ -29,7 +29,8 @@
 
             <label class="filterDescription"> <p>Nombre de notices à traiter : [% pdf %]</p></label>
             <hr>
-            <button id="launch" class="btn btn-default" onclick="launchGenerate()">Générer les vignettes</button>
+            <button id="launch" type="submit" class="btn btn-default" onclick="launchGenerate()">Générer les vignettes</button>
+            <a id="go-back" href="./plugins-home.pl">Retour aux extensions</a>
             <br>
             <br>
             <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
@@ -52,6 +53,10 @@
     background: #AFBD22;
     margin:3px 0;
 }
+#go-back{
+    display: none;
+    font-size : 16px;
+}
 .progress {
     color : red;
     font-size : 16px;
@@ -72,12 +77,6 @@
 <script>
 $( function() {
     document.getElementById('launch').disabled = false;
-    if ([% exist %] > 1 && [% lock %] > 0 ){
-        document.getElementById('launch').disabled = true;
-        info = document.getElementById('progression');
-        info.setAttribute('class','progress');
-        info.firstChild.data = "Le processus s'exécute en arrière-plan - veuillez patienter.";
-    }
     if([% wait %] == 1 ){
         document.getElementById('op').value = '';
         document.getElementById('launch').disabled = true;
@@ -85,11 +84,18 @@ $( function() {
         info.setAttribute('class','finish');
         info.firstChild.data = "Le processus s'est lancé correctement en arrière-plan - veuillez patienter";
     }
+    if([% done %] == 1) {
+        info = document.getElementById('progression');
+        info.setAttribute('class','finish');
+        info.firstChild.data = "Job done!";
+        document.getElementById('go-back').style.display = "inline-block";
+    }
 } );
 function launchGenerate(){
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
     info.setAttribute("class","begin");
-    info.firstChild.data = "Démarrage du processus en cours...";
+    info.firstChild.data = "Le processus s'est lancé correctement en arrière-plan -          veuillez patienter";
 }
 </script>
+
