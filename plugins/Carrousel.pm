@@ -1,6 +1,7 @@
 package Koha::Plugin::Carrousel;
 # Mehdi Hamidi, 2016 - InLibro
 # Modified by Bouzid Fergani, 2016 - InLibro
+# Modified by William Frazilien, 2020 - InLibro
 #
 # This plugin allows you to generate a Carrousel of books from available lists
 # and insert the template into the table system preferences;OpacMainUserBlock
@@ -36,13 +37,13 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 1.8;
+our $VERSION = 2.0;
 our $metadata = {
-    name            => 'Carrousel',
+    name            => 'Carrousel 2.0',
     author          => 'Mehdi Hamidi',
     description     => 'Generates a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2019-04-02',
+    date_updated    => '2020-03-19',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -142,14 +143,18 @@ sub step_1{
 sub generateCarrousels{
     my ( $self ) = @_;
     my @enabledShelves = $self->getEnabledShelves();
-    my $tt = Template->new(INCLUDE_PATH => C4::Context->config("pluginsdir"));
+    my $tt = Template->new(
+        INCLUDE_PATH => C4::Context->config("pluginsdir"),
+        ENCODING     => 'utf8',
+    );
     my $data = "";
-
+    binmode( STDOUT, ":utf8" );
     $tt->process('Koha/Plugin/Carrousel/opac-carrousel.tt',
-                {   shelves => \@enabledShelves,
-                    type => $self->retrieve_data('type'),
-                    bgColor => $self->retrieve_data('bgColor'),
-                    txtColor => $self->retrieve_data('txtColor')
+                {   shelves  => \@enabledShelves,
+                    type     => $self->retrieve_data('type'),
+                    bgColor  => $self->retrieve_data('bgColor'),
+                    txtColor => $self->retrieve_data('txtColor'),
+                    ENCODING => 'utf8',
                 },
                 \$data,
                 { binmode => ':utf8' }
@@ -208,7 +213,7 @@ sub getCarrousel{
     }else{
         $shelfname = $shelf->shelfname;
     }
-    $shelfname =~ s/[^a-zA-Z0-9]/_/g;
+    #$shelfname =~ s/[^a-zA-Z0-9]/_/g;
 
     foreach my $biblionumber ( @items ) {
         my $record = GetMarcBiblio({ biblionumber => $biblionumber });
@@ -444,11 +449,12 @@ sub configure{
         $template = $self->get_template( { file => 'configure.tt' } ) unless $template;
 
         $template->param(
-            shelves       => \@shelves,
+            shelves        => \@shelves,
             enabledShelves => $self->retrieve_data('enabledShelves'),
-            type          => $self->retrieve_data('type'),
-            bgColor       => $self->retrieve_data('bgColor'),
-            txtColor      => $self->retrieve_data('txtColor'),
+            type           => $self->retrieve_data('type'),
+            bgColor        => $self->retrieve_data('bgColor'),
+            txtColor       => $self->retrieve_data('txtColor'),
+            ENCODING       => 'utf8',
         );
         print $cgi->header(-type => 'text/html',-charset => 'utf-8');
         print $template->output();

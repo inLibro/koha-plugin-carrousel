@@ -28,11 +28,11 @@
             </div>
 
             <div class="infos">
-                Couleur du texte : <input name="txtColor" onchange="update(this.jscolor, 'text')" id="colors" class="jscolor alignment " value="[% txtColor %]">
+                Couleur du texte : <input name="txtColor" onchange="update(this.value, 'text')" id="colors" class="jscolor alignment " value="[% txtColor %]">
             </div>
 
             <div class="infos">
-                Couleur de l'arrière-plan : <input name="bgColor" onchange="update(this.jscolor, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]">
+                Couleur de l'arrière-plan : <input name="bgColor" onchange="update(this.value, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]">
             </div>
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
@@ -40,7 +40,7 @@
             <br>
 
             <div id="background">
-                <p id="text" style="font-size: 30px; color:#[% txtColor %]; padding : 4.75% 2%"> Ceci est un exemple </p>
+                <p id="text" style="font-size: 30px; color:#FFFFFF; padding : 4.75% 2%"> This is just an example </p>
             </div>
 
             <input id="submit" type="submit" value="Appliquer la configuration">
