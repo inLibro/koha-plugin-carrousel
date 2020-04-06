@@ -33,7 +33,7 @@ our $metadata = {
     author          => 'Mehdi Hamidi',
     description     => 'Change the return date of items using filters',
     date_authored   => '2016-06-08',
-    date_updated    => '2020-03-31',
+    date_updated    => '2016-06-08',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -74,7 +74,6 @@ sub step_1{
     my @categories = $self->loadCategories();
     my @borrowers = $self->loadBorrowers();
     my @itemTypes = $self->itemTypes();
-    my @branches = $self->loadBranches();
     my $template = undef;
     eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
     if(!$template){
@@ -83,7 +82,7 @@ sub step_1{
     }
     $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
     
-    $template->param( categories => \@categories, borrowers => \@borrowers, itemTypes => \@itemTypes, branches => \@branches);
+    $template->param( categories => \@categories, borrowers => \@borrowers, itemTypes => \@itemTypes);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
@@ -131,21 +130,6 @@ sub loadCategories{
     return @categories;
 }
 
-sub loadBranches{
-    my ( $self, $args) = @_;
-    my @branches;
-    my $stmt = $dbh->prepare("select * from branches");
-    $stmt->execute();
-
-    my $i =0;
-    while (my $row = $stmt->fetchrow_hashref()) {
-        $branches[$i] = $row;
-        $i++;
-    }
-
-    return sort { $a->{branchname} cmp $b->{branchname} } @branches;
-}
-
 sub itemTypes{
     my ( $self, $args) = @_;
     my @itemTypes;
@@ -164,7 +148,6 @@ sub changeDate{
     my ( $self, $args) = @_;
     my $cgi = $self->{'cgi'};
     my $category = $cgi->param('categories');
-    my $branch = $cgi->param('branches');
     my $itemType = $cgi->param('itemTypes');
 
     my $borrowerFrom = $cgi->param('borrowerFrom');
@@ -181,7 +164,7 @@ sub changeDate{
     my @params;
     my $query = "update issues a INNER JOIN items b ON (a.itemnumber = b.itemnumber) inner join borrowers c on (a.borrowernumber = c.borrowernumber)  set a.date_due='$newTime', b.onloan ='$newDate'";
 
-    if ( $ExpecCheckoutFromDate || $ExpecReturnFromDate || $category ne 'none' || $borrowerFrom || $itemType ne 'none' || $branch ne 'all'){
+    if ( $ExpecCheckoutFromDate || $ExpecReturnFromDate || $category ne 'none' || $borrowerFrom || $itemType ne 'none'){
 
     }
     else{
@@ -220,9 +203,6 @@ sub changeDate{
 
     $query = $query." and b.itype=?" unless $itemType eq 'none';
     push @params, $itemType unless $itemType eq 'none';
-
-    $query = $query." and a.branchcode=?" unless $branch eq 'all';
-    push @params, $branch unless $branch eq 'all';
 
     #changer le premier and à un where 
     $query =~s/and/where/;

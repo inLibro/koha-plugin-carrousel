@@ -46,16 +46,6 @@
                 </div>
 
                 <div class="filter">
-                    <label class="filterDescription"> Branches : </label>
-                    <select name="branches" id ="branches" class="alignment">
-                        <option  value="all" selected> All</option>
-                        [% FOREACH branch IN branches %]
-                        <option  value="[% branch.branchcode %]"> [% branch.branchname %]</option>
-                        [% END %]
-                    </select>
-                </div>
-
-                <div class="filter">
                     <label class="filterDescription">Borrower number :</label>
                     <div name="borrowers" id ="borrowers" class="alignment">
                         <input type="number" name="borrowerFrom" id="borrowerFrom" onchange="checkValue()" placeholder="From"/>
@@ -98,7 +88,7 @@
 <style>
 
 #content{
-    width: 520px;
+    width: 500px;
 }
 
 select{
@@ -165,7 +155,6 @@ function checkValue(){
 checkValue();
 function validateForm(){
     var borrower = document.forms["myForm"]["borrowerFrom"].value;
-    var branch = document.forms["myForm"]["branches"].value;
     var itemTypes = document.forms["myForm"]["itemTypes"].value;
     var categories = document.forms["myForm"]["categories"].value;
     var ExpecReturnFromDate = document.getElementById('ExpecReturnFromDate').value;
@@ -179,7 +168,7 @@ function validateForm(){
         check=false;
     }
 
-    if(borrower == "" && itemTypes == "none" && categories == "none" && ExpecReturnFromDate =='' && ExpecCheckoutFromDate=='' && branch === 'all'){
+    if(borrower == "" && itemTypes == "none" && categories == "none" && ExpecReturnFromDate =='' && ExpecCheckoutFromDate==''){
         message ="You have to use atleast one filter";
         check= false;
 
