@@ -30,7 +30,7 @@ use LWP::Simple;
 use Template;
 use utf8;
 use base qw(Koha::Plugins::Base);
-use C4::Auth;
+#use C4::Auth;
 use C4::Biblio;
 use C4::Context;
 use C4::Koha qw(GetNormalizedISBN);
