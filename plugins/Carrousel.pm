@@ -313,6 +313,7 @@ sub retrieveUrlFromCoceJson {
 
 sub getUrlFromExternalSources {
     my $isbn = shift;
+    my $biblionumber = shift;
 
     # les clefs sont les systempreferences du même nom
     my $es = {};
@@ -322,6 +323,7 @@ sub getUrlFromExternalSources {
         'retrieval' => \&retrieveUrlFromCoceJson,
         'url' => C4::Context->preference('CoceHost').'/cover'
                 ."?id=$isbn"
+                ."&bn=$biblionumber"
                 .'&provider='.join(',', C4::Context->preference('CoceProviders'))
                 .'&thumbnail=1',
     };
@@ -407,7 +409,7 @@ sub getThumbnailUrl
         my $isbn = GetNormalizedISBN( $field->subfield('a') );
         next if ! $isbn;
 
-        return getUrlFromExternalSources($isbn);
+        return getUrlFromExternalSources($isbn, $biblionumber);
     }
 
     return;
