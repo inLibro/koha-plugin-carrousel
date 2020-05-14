@@ -190,7 +190,7 @@ sub changeDate{
     }
 
     if($ExpecCheckoutFromDate && $ExpecCheckoutToDate){
-        $query = $query." and CAST(a.issuedate as Date) between ? and '$ExpecCheckoutToDate'";
+        $query = $query." and CAST(a.issuedate as Date) between ? and ?";
         push @params, $ExpecCheckoutFromDate, $ExpecCheckoutToDate;
     }
     elsif($ExpecCheckoutFromDate){
