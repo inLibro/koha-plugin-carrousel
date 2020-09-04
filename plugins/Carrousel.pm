@@ -43,7 +43,7 @@ our $metadata = {
     author          => 'Mehdi Hamidi',
     description     => 'Generates a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2020-03-19',
+    date_updated    => '2020-09-03',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -308,7 +308,11 @@ sub retrieveUrlFromCoceJson {
     my $json = decode_json($res->decoded_content);
 
     return unless keys %$json;
-    return $json->{$_} for keys %$json;
+    for my $k (keys %$json) {
+        # le lien de la btlf est à usage unique, ce qui doit être évité pour le carrousel
+        next if ($json->{$k} =~ m/restapi.mementolivres.com/);
+        return $json->{$k};
+    }
 }
 
 sub getUrlFromExternalSources {
