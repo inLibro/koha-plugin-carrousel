@@ -1,6 +1,6 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha:PDFtoCover Plugin</title>
+<title>Koha &rsaquo; Plugins &rsaquo; PDFtoCover</title>
 [%  IF exist  > 1 %]
     <meta http-equiv="refresh" content="30">
 [% END %]
@@ -20,23 +20,21 @@
 
         <p>Ce plugin génère une vignette pour chaque notice ayant une zone 856 qui contient un lien vers un fichier PDF. Cette vignette sera enregistrée dans Koha sous la forme d'une image locale.</p>
         <hr>
+        <label class="filterDescription"><p>Nombre de notices à traiter : <span id="to_process">[% pdf %]</span></p></label>
+        <hr>
+
         <form method="get" id="formTraitement">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
-            <input type="hidden" id="op" name="op" value=""/>
             <!-- end of plugin necessary inputs  -->
+            <input type="hidden" id="op" name="op" value=""/>
 
-            <label class="filterDescription"> <p>Nombre de notices à traiter : [% pdf %]</p></label>
-            <hr>
             <button id="launch" class="btn btn-default" onclick="launchGenerate()">Générer les vignettes</button>
-            <br>
-            <br>
-            <div id="jobstat"><span id="pourcentprogress"></span></div><span id="progression">&nbsp;</span>
-            <br>
-            <br>
-            <label class="filterDescription"> <p>Remarque : le plugin télécharge chaque document et vérifie dans l'entête du fichier s'il s'agit d'un document PDF. Seul les documents PDF généreront une vignette.</p>
         </form>
+
+        <p id="progression">&nbsp;</p>
+        <label class="filterDescription"><p>Remarque : le plugin télécharge chaque document et vérifie dans l'entête du fichier s'il s'agit d'un document PDF. Seul les documents PDF généreront une vignette.</p></label>
     </div>
 </div>
 
@@ -44,7 +42,6 @@
 [% INCLUDE 'intranet-bottom.inc' %]
 
 <style>
-
 #submit{
     font-size: 100%;
     font-weight: bold;
@@ -52,41 +49,35 @@
     background: #AFBD22;
     margin:3px 0;
 }
-.progress {
-    color : red;
+
+#progression {
+    margin: 15px;
     font-size : 16px;
 }
 
 .begin {
     color : blue;
-    font-size : 16px;
     transition: all 0.7s ease-out;
 }
 
 .finish {
     color : green;
-    font-size : 16px;
 }
 </style>
 
 <script>
 $( function() {
     document.getElementById('launch').disabled = false;
-    if ([% exist %] > 1 && [% lock %] > 0 ){
-        document.getElementById('launch').disabled = true;
-        info = document.getElementById('progression');
-        info.setAttribute('class','progress');
-        info.firstChild.data = "Le processus s'exécute en arrière-plan - veuillez patienter.";
-    }
-    if([% wait %] == 1 ){
+    [% IF wait == 1 %]
         document.getElementById('op').value = '';
         document.getElementById('launch').disabled = true;
         info = document.getElementById('progression')
         info.setAttribute('class','finish');
-        info.firstChild.data = "Le processus s'est lancé correctement en arrière-plan - veuillez patienter";
-    }
+        info.firstChild.data = "Le processus s'exécute en arrière-plan - veuillez patienter.";
+    [% END %]
 } );
-function launchGenerate(){
+
+function launchGenerate() {
     document.getElementById('op').value = 'valide';
     info = document.getElementById('progression');
     info.setAttribute("class","begin");
