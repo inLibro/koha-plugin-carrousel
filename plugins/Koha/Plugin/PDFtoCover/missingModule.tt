@@ -1,6 +1,6 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
-<title>Koha:PDFtoCover Plugin</title>
+<title>Koha &rsaquo; Plugins &rsaquo; PDFtoCover</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
@@ -15,28 +15,21 @@
             <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
         </div>
 
-        <h2>Generate images for documents that they are missing one</h2>
+        <h2>Generate images for documents by using a pdf</h2>
 
         <form method="get" name ="myForm" onsubmit="return validateForm()">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
-            <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
+            <input type="hidden" name="action" value="configure"/>
+        </form>
 
-            <div class="alert">
-                    <h2>This plugin cannot be used: the package 'pdftocairo' is not available. Please contact your system administrator or install the necessary package to use this plugin</h2>
-            </div>
+        <div class="alert">
+            <h2>This plugin cannot be used: the package 'pdftocairo' is not available. Please contact your system administrator or install the necessary package to use this plugin.</h2>
+        </div>
     </div>
 </div>
 
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
-
-<style>
-
-</style>
-
-<script>
-
-</script>
