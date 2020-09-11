@@ -32,17 +32,17 @@ use C4::Auth;
 use C4::Context;
 use C4::Images;
 use File::Spec;
+use JSON qw( encode_json );
 
 our $dbh      = C4::Context->dbh();
-our $VERSION  = 1.3;
+our $VERSION  = 1.4;
 our $metadata = {
     name            => 'PDFtoCover',
     author          => 'Mehdi Hamidi, Bouzid Fergani, Arthur Bousquet',
     description     => 'Creates cover images for documents missing one',
     date_authored   => '2016-06-08',
-    date_updated    => '2017-09-20',
+    date_updated    => '2020-09-10',
     minimum_version => '17.05',
-    maximum_version => undef,
     version         => $VERSION,
 };
 
@@ -59,32 +59,34 @@ sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
     my $op  = $cgi->param('op');
-    `touch /tmp/.Koha.PDFtoCover.lock`;
-    my @lockfile = `ls -s /tmp/.Koha.PDFtoCover.lock`;
-    my $lock = scalar(@lockfile);
+
+    my $lock_path = File::Spec->catdir( File::Spec->rootdir(), "tmp", ".Koha.PDFtoCover.lock" );
+    my $lock = (-e $lock_path) ? 1 : 0;
 
     my $pdftocairo = "/usr/bin/pdftocairo";
     unless ( -e $pdftocairo ) {
         $self->missingModule();
     }
-
     elsif ( $op && $op eq 'valide' ) {
+        my $pdf = $self->displayAffected();
+        $self->store_data({ to_process => $pdf });
+
         my $pid = fork();
         if ($pid) {
-            my $pdf = $self->displayAffected();
             my $template = $self->retrieve_template('step_1');
             $template->param( pdf  => $pdf );
             $template->param( wait => 1 );
+            $template->param( done => 0 );
             print $cgi->header( -type => 'text/html', -charset => 'utf-8' );
             print $template->output();
             exit 0;
         }
-        else {
-            close STDOUT;
-        }
-        open my $fh, ">", File::Spec->catdir( "/tmp/", ".Koha.PDFtoCover.lock" );
-        &genererVignette();
-        `rm /tmp/.Koha.PDFtoCover.lock`;
+
+        open my $fh, ">", $lock_path;
+        close $fh;
+        $self->genererVignette();
+        unlink($lock_path);
+
         exit 0;
     }
     else {
@@ -100,6 +102,7 @@ sub step_1 {
     my $template = $self->retrieve_template('step_1');
     $template->param( pdf  => $pdf );
     $template->param( wait => $lock );
+    $template->param( done => $cgi->param('done') || 0 );
     print $cgi->header( -type => 'text/html', -charset => 'utf-8' );
     print $template->output();
 }
@@ -116,18 +119,15 @@ sub displayAffected {
     my ( $self, $args ) = @_;
     my $pdf = 0;
     my $query
-        = "SELECT a.biblionumber, EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") AS url  FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <>'' and a.biblionumber not in (select biblionumber from biblioimages);";
+        = "SELECT count(*) as count FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in (select biblionumber from biblioimages);";
 
     my $stmt = $dbh->prepare($query);
     $stmt->execute();
-    while ( my $row = $stmt->fetchrow_hashref() ) {
-        my @uris = split / /, $row->{url};
-        foreach my $url (@uris) {
-            if ( substr( $url, -3 ) eq 'pdf' ) {
-                $pdf++;
-            }
-        }
+
+    if ( my $row = $stmt->fetchrow_hashref() ) {
+        $pdf = $row->{count};
     }
+
     return $pdf;
 }
 
@@ -173,7 +173,16 @@ sub genererVignette {
                 }
             }
         }
+
+        $self->store_data({ to_process => $self->retrieve_data('to_process') - 1 });
     }
+}
+
+sub progress {
+    my ($self) = @_;
+    print $self->{'cgi'}->header( -type => 'application/json', -charset => 'utf-8' );
+    print encode_json({ to_process => $self->retrieve_data('to_process') });
+    exit 0;
 }
 
 # retrieve the template that includes the prefix passed
