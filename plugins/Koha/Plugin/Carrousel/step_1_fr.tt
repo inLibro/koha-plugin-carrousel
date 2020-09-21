@@ -22,19 +22,11 @@
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
-            <div class="infos">
-                <label> Sélectionnez votre liste : </label>
-                <select name="selectedShelf" id ="shelves" class="alignment">
-                    [% FOREACH shelf IN shelves %]
-                    <option id ="" value="[% shelf.shelfnumber %]"> [% shelf.shelfname %]</option>
-                    [% END %]
-                </select>
-            </div>
-            [% IF shelves %]
+            [% IF (enabledShelves.size() > 0) %]
             <input id="submit" type="submit" value="Générer">
             [% ELSE %]
             <div class="alert alert-danger">
-                <strong>Vous n'avez pas de liste!</strong> Créez une liste pour pouvoir générer un carrousel.
+                <strong>Vous n'avez aucune liste ou aucune n'est réglée pour être générée!</strong> Créez des listes ou réglez-les pour pouvoir générer un carrousel.
             </div>
             [% END %]
         </form>
@@ -44,15 +36,13 @@
 
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
+
 <style>
-.infos{
-    margin: 10px 0;
-}
 .alignment{
     float: right;
 }
 #content{
-    width : 380px;
+    width : 360px;
     margin:2% 1%;
     font-size:20px;
 }
@@ -61,29 +51,6 @@
 }
 #shelves{
     font-size: 100%;
-    width : 40%;
+    width : 50%;
 }
 </style>
-
-<script>
-// setting the dropdown menu to the correct selected item
-var MyIndex =0;
-var selectedShelf = 0;
-[%IF selectedShelf !='' %]selectedShelf = [% selectedShelf %] [%END%]
-
-$('#shelves option').each(function(index,element){
-    if(element.value == selectedShelf){
-        MyIndex= index;
-    }
-});
-$("#shelves").get(0).selectedIndex = MyIndex;
-function update(jscolor, object) {
-    // 'jscolor' instance can be used as a string
-    if(object == "background"){
-        document.getElementById('background').style.backgroundColor = '#' + jscolor;
-    }else{
-        document.getElementById('text').style.color = '#' + jscolor;
-    }
-}
-
-</script>
