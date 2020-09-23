@@ -356,7 +356,6 @@ sub getUrlFromExternalSources {
 
     for my $provider ( @orderedProvidersByPriority ) {
         my $url = $es->{$provider}->{url};
-        warn "[Koha::Plugin::Carrousel] Querying provider '$provider', $url\n";
         my $req = HTTP::Request->new( GET => $url );
         my $res = $ua->request( $req );
 
