@@ -91,7 +91,7 @@
     right: 0;
 }
 
-usel-control,
+.carousel-control,
 .carousel-caption{
     background-color : #[%bgColor%];
     z-index:1000;
