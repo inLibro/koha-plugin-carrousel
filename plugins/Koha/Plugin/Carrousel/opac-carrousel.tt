@@ -2,7 +2,7 @@
 <meta charset="utf-8"/>
 
 [% IF type == "carrousel" %]
-[% FOREACH carrousel IN shelves %]
+[% FOREACH carrousel IN carrousels %]
 <div class='carrouselFrame'>
     <p class="special-title">[% carrousel.name %]</p>
     <div class="loadingDiv"></div>
@@ -20,7 +20,7 @@
 [% END %]
 [% ELSE %]
 <div id="sliders">
-    [% FOREACH carrousel IN shelves %]
+    [% FOREACH carrousel IN carrousels %]
     <H2>[% carrousel.name %]</H2>
     <hr>
         [% IF (carrousel.documents.size() > 0) %]

@@ -53,7 +53,6 @@ our $useSql = 0;
 if (!(eval("use Koha::Virtualshelves") || !(eval("use Koha::Virtualshelfcontents")))) {
     $useSql =1;
 }
-our @shelves;
 our $dbh = C4::Context->dbh();
 
 sub new {
@@ -69,153 +68,149 @@ sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
 
-    if($useSql){
-        $self->loadShelves();
-    }else{
-        @shelves =  Koha::Virtualshelves->search(undef,
-            { order_by => { -asc => 'shelfname' }
-        });
-    }
-
-    $self->orderShelves();
-
     if ($cgi->param('action')){
         $self->generateCarrousels();
         $self->go_home();
     }else{
         $self->step_1();
     }
-
 }
 
-#Charger les listes en utilisant sql si le module virtualShelves n'est pas disponible
-sub loadShelves{
-    my ( $self, $args) = @_;
-    my $dbh = $dbh;
-    my $stmt = $dbh->prepare("SELECT * FROM virtualshelves WHERE category = 2 ORDER BY shelfname");
-    $stmt->execute();
-
-    my $i =0;
-    while (my $row = $stmt->fetchrow_hashref()) {
-        $shelves[$i] = $row;
-        $i++;
-    }
-}
-
-#Charger le contenus des listes en utilisant sql si le module virtualshelfcontents n'est pas disponible
-sub loadContent{
-    my ( $self, $virtualshelf) = @_;
-    my $dbh =  $dbh;
-    my $stmt = $dbh->prepare("select * from virtualshelfcontents where shelfnumber =?");
-    $stmt ->bind_param(1,$virtualshelf);
-    $stmt->execute();
-
-    my $i =0;
-    my @content;
-    while (my $row = $stmt->fetchrow_hashref()) {
-        $content[$i] = $row;
-        $i++;
-    }
-    return @content;
-}
-
-sub step_1{
-    my ( $self, $args) = @_;
+sub step_1 {
+    my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
-    #chercher la langue de l'utilisateur
-    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
-    #La template par défault est en anglais et tout depend du cookie, il va charger la template en français
-    my $template = undef;
-    if ($preferedLanguage) {
-        eval {$template = $self->get_template( { file => "step_1_" . $preferedLanguage . ".tt" } )};
-        if(!$template){
-            $preferedLanguage = substr $preferedLanguage, 0, 2;
-            eval {$template = $self->get_template( { file => "step_1_$preferedLanguage.tt" } )};
-        }
-    }
-    $template = $self->get_template( { file => 'step_1.tt' } ) unless $template;
-    my @enabledShelves = $self->getEnabledShelves();
+    my $template = $self->retrieve_template("step_1");
+    my @enabledShelves = (!defined $self->retrieve_data('enabledShelves')) ? () : @{decode_json($self->retrieve_data('enabledShelves'))};
     $template->param(enabledShelves => \@enabledShelves);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
 
+sub getOrderedShelves {
+    my ( $self, $args ) = @_;
+    my @shelves;
+
+    if ($useSql) {
+        my $dbh = $dbh;
+        my $stmt = $dbh->prepare("SELECT * FROM virtualshelves WHERE category = 2 ORDER BY shelfname");
+        $stmt->execute();
+
+        while (my $row = $stmt->fetchrow_hashref()) {
+            push @shelves, $row;
+        }
+    } else {
+        @shelves = Koha::Virtualshelves->get_public_shelves();
+    }
+
+    # ordering
+    if (defined $self->retrieve_data('shelvesOrder')) {
+        my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))};
+        my $shelvesOrderCount = @shelvesOrder;
+        my @orderedShelves;
+        my @otherShelves;
+        foreach my $list (@shelves) {
+            my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
+            my $found = 0;
+            for (my $i = 0; $i < $shelvesOrderCount; $i++) {
+                if ($id == $shelvesOrder[$i]) {
+                    $orderedShelves[$i] = $list;
+                    $found = 1;
+                    last;
+                }
+            }
+            push(@otherShelves, $list) unless ($found);
+        }
+
+        my @temp = @orderedShelves;
+        @orderedShelves = ();
+        for my $list (@temp) {
+            push(@orderedShelves, $list) if ($list != undef);
+        }
+
+        @shelves = @orderedShelves;
+        push(@shelves, @otherShelves);
+    }
+
+    return @shelves;
+}
+
+#Charger le contenus des listes en utilisant sql si le module virtualshelfcontents n'est pas disponible
+sub loadContent {
+    my ( $self, $virtualshelf ) = @_;
+    my @content;
+
+    if ($useSql) {
+        my $id = $virtualshelf->{'shelfnumber'};
+        my $stmt = $dbh->prepare("select * from virtualshelfcontents where shelfnumber =?");
+        $stmt->execute($id);
+
+        my $i = 0;
+        while (my $row = $stmt->fetchrow_hashref()) {
+            $content[$i] = $row;
+            $i++;
+        }
+    } else {
+        @content = Koha::Virtualshelfcontents->search({shelfnumber => $virtualshelf->shelfnumber});
+    }
+
+    return @content;
+}
+
 sub generateCarrousels{
     my ( $self ) = @_;
-    my @enabledShelves = $self->getEnabledShelves();
+    my @carrousels = $self->getCarrousels();
     my $tt = Template->new(
         INCLUDE_PATH => C4::Context->config("pluginsdir"),
         ENCODING     => 'utf8',
     );
     my $data = "";
     binmode( STDOUT, ":utf8" );
-    $tt->process('Koha/Plugin/Carrousel/opac-carrousel.tt',
-                {   shelves  => \@enabledShelves,
-                    type     => $self->retrieve_data('type'),
-                    bgColor  => $self->retrieve_data('bgColor'),
-                    txtColor => $self->retrieve_data('txtColor'),
-                    ENCODING => 'utf8',
-                },
-                \$data,
-                { binmode => ':utf8' }
-                ) || warn "Unable to generate Carrousel, ". $tt->error();
-
+    $tt->process(
+        'Koha/Plugin/Carrousel/opac-carrousel.tt',
+        {
+            carrousels  => \@carrousels,
+            type     => $self->retrieve_data('type'),
+            bgColor  => $self->retrieve_data('bgColor'),
+            txtColor => $self->retrieve_data('txtColor'),
+            ENCODING => 'utf8',
+        },
+        \$data,
+        { binmode => ':utf8' }
+    ) || warn "Unable to generate Carrousel, " . $tt->error();
 
     $self->insertIntoPref($data);
 }
 
+sub getCarrousels {
+    my ( $self ) = @_;
+    my @shelves = $self->getOrderedShelves();
+    my @carrousels = ();
+
+    return @carrousels if (!defined $self->retrieve_data('enabledShelves'));
+    my @enabledShelvesId = @{decode_json($self->retrieve_data('enabledShelves'))};
+
+    foreach my $list (@shelves) {
+        my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
+        if (grep(/^$id$/, @enabledShelvesId)) {
+            my %carrousel = $self->getCarrousel($list);
+            push(@carrousels, \%carrousel) if %carrousel;
+        }
+    }
+
+    return @carrousels;
+}
+
 sub getCarrousel{
-    my ( $self, $selectedShelf) = @_;
-    my $shelf;
-    my $sqllist;
+    my ( $self, $shelf ) = @_;
 
-    if($useSql){
-        foreach $sqllist (@shelves){
-            $shelf = $sqllist if($sqllist->{'shelfnumber'} == $selectedShelf);
-        }
-
-    } else{
-        foreach my $list (@shelves){
-            $shelf = $list if($list->shelfnumber == $selectedShelf);
-        }
-    }
-
-    my $shelfid;
-    if($useSql){
-        $shelfid = $shelf->{'shelfnumber'};
-    }else{
-        $shelfid = $shelf->shelfnumber;
-    }
-
+    my $shelfname = ($useSql) ? $shelf->{'shelfname'} : $shelf->shelfname;
+    #$shelfname =~ s/[^a-zA-Z0-9]/_/g;
     #content : shelfnumber,biblionumber,flags,dateadded, borrowernumber
-    my @contents;
-    if($useSql){
-        @contents = $self->loadContent($shelfid);
-    }else {
-        @contents = Koha::Virtualshelfcontents->search({shelfnumber => $shelf->shelfnumber});
-    }
-
-    my @items;
-    if($useSql){
-        foreach my $content (@contents){
-            push @items,$content->{'biblionumber'};
-        }
-    }else{
-        foreach my $content (@contents){
-            push @items,$content->biblionumber;
-        }
-    }
+    my @contents = $self->loadContent($shelf);
 
     my @images;
-    my $shelfname;
-    if($useSql){
-        $shelfname = $shelf->{'shelfname'};
-    }else{
-        $shelfname = $shelf->shelfname;
-    }
-    #$shelfname =~ s/[^a-zA-Z0-9]/_/g;
-
-    foreach my $biblionumber ( @items ) {
+    foreach my $content ( @contents ) {
+        my $biblionumber = ($useSql) ? $content->{'biblionumber'} : $content->biblionumber;
         my $record = GetMarcBiblio({ biblionumber => $biblionumber });
         # Attempt the old call
         if (! $record) {
@@ -241,26 +236,12 @@ sub getCarrousel{
     }
 
     unless ( @images ) {
-        warn "[Koha::Plugin::Carrousel] No images were found for virtualshelf '$shelfname' (id: $selectedShelf). OpacMainUserBlock kept unchanged.\n";
+        my $shelfid = ($useSql) ? $shelf->{'shelfnumber'} : $shelf->shelfnumber;
+        warn "[Koha::Plugin::Carrousel] No images were found for virtualshelf '$shelfname' (id: $shelfid). OpacMainUserBlock kept unchanged.\n";
         return;
     }
 
     return ('name', $shelfname, 'documents', \@images);
-}
-
-sub getEnabledShelves{
-    my ( $self ) = @_;
-    my @enabledShelves = ();
-    return @enabledShelves if (!defined $self->retrieve_data('enabledShelves'));
-    my @enabledShelvesId =@{decode_json($self->retrieve_data('enabledShelves'))};
-    foreach my $list (@shelves){
-        my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
-        if (grep(/^$id$/, @enabledShelvesId)) {
-            my %carrousel = $self->getCarrousel($id);
-            push(@enabledShelves, \%carrousel) if %carrousel;
-        }
-    }
-    return @enabledShelves;
 }
 
 sub insertIntoPref{
@@ -289,6 +270,8 @@ sub insertIntoPref{
     #Update system preference
     C4::Context->set_preference( 'OpacMainUserBlock' , $value );
 }
+
+# routines pour récupérer les images
 
 sub retrieveUrlFromGoogleJson {
     my $res = shift;
@@ -418,41 +401,34 @@ sub getThumbnailUrl
     return;
 }
 
-sub configure{
+sub configure {
     my ( $self, $args) = @_;
     my $cgi = $self->{'cgi'};
-    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
-    if($useSql){
-        $self->loadShelves();
-    }else{
-        @shelves = Koha::Virtualshelves->get_public_shelves();
-    }
-    $self->orderShelves();
-    if($cgi->param("action")){
-        $self->store_data(
-        {
-            shelves             => \@shelves,
-            enabledShelves      => $cgi->param('enabledShelves'),
-            shelvesOrder        => $cgi->param('shelvesOrder'),
-            type                => $cgi->param('type'),
-            bgColor             => $cgi->param('bgColor'),
-            txtColor            => $cgi->param('txtColor'),
-            last_configured_by => C4::Context->userenv->{'number'},
-        }
-        );
-        $self->go_home();
-    }else{
-        #La template par défault est en anglais et tout depend du cookie, il va charger la template en français
-        my $template = undef;
-        if ($preferedLanguage){
-            eval {$template = $self->get_template( { file => "configure_" . $preferedLanguage . ".tt" } )};
-            if(!$template){
-                $preferedLanguage = substr $preferedLanguage, 0, 2;
-                eval {$template = $self->get_template( { file => "configure_$preferedLanguage.tt" } )};
-            }
-        }
-        $template = $self->get_template( { file => 'configure.tt' } ) unless $template;
 
+    if ($cgi->param("action")) {
+        my $enabledShelves     = $cgi->param('enabledShelves');
+        my $shelvesOrder       = $cgi->param('shelvesOrder');
+        my $type               = $cgi->param('type');
+        my $bgColor            = $cgi->param('bgColor');
+        my $txtColor           = $cgi->param('txtColor');
+        my $last_configured_by = C4::Context->userenv->{'number'};
+
+        $self->store_data(
+            {
+                enabledShelves     => $enabledShelves,
+                shelvesOrder       => $shelvesOrder,
+                type               => $type,
+                bgColor            => $bgColor,
+                txtColor           => $txtColor,
+                last_configured_by => $last_configured_by,
+            }
+        );
+
+        $self->go_home();
+    } else {
+        my @shelves = $self->getOrderedShelves();
+
+        my $template = $self->retrieve_template("configure");
         $template->param(
             shelves        => \@shelves,
             enabledShelves => $self->retrieve_data('enabledShelves'),
@@ -464,36 +440,6 @@ sub configure{
         print $cgi->header(-type => 'text/html',-charset => 'utf-8');
         print $template->output();
     }
-}
-
-sub orderShelves{
-    my ( $self, $args) = @_;
-    return if (!defined $self->retrieve_data('shelvesOrder'));
-    my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))};
-    my $shelvesOrderCount = @shelvesOrder;
-    my @orderedShelves;
-    my @otherShelves;
-    foreach my $list (@shelves) {
-        my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
-        my $found = 0;
-        for (my $i = 0; $i < $shelvesOrderCount; $i++){
-            if ($id == $shelvesOrder[$i]) {
-                $orderedShelves[$i] = $list;
-                $found = 1;
-                last;
-            }
-        }
-        push(@otherShelves,$list) unless ($found);
-    }
-
-    my @temp = @orderedShelves;
-    @orderedShelves = ();
-    for my $list (@temp) {
-        push(@orderedShelves,$list) if ($list != undef);
-    }
-
-    @shelves = @orderedShelves;
-    push(@shelves,@otherShelves);
 }
 
 #Supprimer le plugin avec toutes ses données
@@ -524,6 +470,32 @@ sub uninstall() {
     $stmt->finish();
 
     return C4::Context->dbh->do("DROP TABLE $table");
+}
+
+# retrieve the template that includes the prefix passed
+# 'step_1'
+# 'configure'
+sub retrieve_template {
+    my ( $self, $template_prefix ) = @_;
+    my $cgi = $self->{'cgi'};
+
+    return undef unless $template_prefix eq 'step_1' || $template_prefix eq 'configure';
+
+    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+    my $template = undef;
+    eval {
+        $template = $self->get_template({ file => $template_prefix . '_' . $preferedLanguage . ".tt" })
+    };
+
+    if ( !$template ) {
+        $preferedLanguage = substr $preferedLanguage, 0, 2;
+        eval {
+            $template = $self->get_template( { file => $template_prefix . '_' . $preferedLanguage .  ".tt" })
+        };
+    }
+
+    $template = $self->get_template( { file => $template_prefix . '.tt' } ) unless $template;
+    return $template;
 }
 
 1;
