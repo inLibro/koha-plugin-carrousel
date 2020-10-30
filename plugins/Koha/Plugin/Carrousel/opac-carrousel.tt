@@ -1,45 +1,43 @@
 
 <meta charset="utf-8"/>
 
-[% IF type == "carrousel" %]
 [% FOREACH carrousel IN carrousels %]
-<div class='carrouselFrame'>
-    <p class="special-title">[% carrousel.name %]</p>
-    <div class="loadingDiv"></div>
-    <div class='carrousel'>
-        <a class='left carousel-control'>&lsaquo;</a>
-        <a class='right carousel-control'>&rsaquo;</a>
-        [% FOREACH item IN carrousel.documents %]
-        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]"><img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/></a>
-        [% END %]
-        <div class="carousel-caption">
-            <p class="title-text"></p>
-        </div>
-    </div>
-</div>
-[% END %]
-[% ELSE %]
-<div id="sliders">
-    [% FOREACH carrousel IN carrousels %]
-    <H2>[% carrousel.name %]</H2>
-    <hr>
-        [% IF (carrousel.documents.size() > 0) %]
-            <div id="[% carrousel.name %]" class="slider">
-                <div class="images">
-                    [% FOREACH item IN carrousel.documents %]
-                        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]">
-                            <img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/>
-                        </a>
-                    [% END %]
+    [% IF carrousel.type == "carrousel" %]
+        <div class='carrouselFrame'>
+            <p class="special-title">[% carrousel.title || carrousel.name %]</p>
+            <div class="loadingDiv"></div>
+            <div id="carrousel-[% loop.index %]" class='carrousel'>
+                <a class='left carousel-control'>&lsaquo;</a>
+                <a class='right carousel-control'>&rsaquo;</a>
+                [% FOREACH item IN carrousel.documents %]
+                    <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]"><img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/></a>
+                [% END %]
+                <div class="carousel-caption">
+                    <p class="title-text"></p>
                 </div>
             </div>
-            <div class="controls">
-                <button class="[% carrousel.name %]" style="float:left" onclick="Right(this)" type="button">Précédent</button>
-                <button class="[% carrousel.name %]" style="float:right" onclick="Left(this)" type="button">Suivant</button>  
-            </div>
-        [% END %]
+        </div>
+    [% ELSE %]
+        <div id="carrousel-[% loop.index %]" class="slider">
+            <H2>[% carrousel.title || carrousel.name %]</H2>
+            <hr>
+            [% IF (carrousel.documents.size() > 0) %]
+                <div id="[% carrousel.title || carrousel.name %]">
+                    <div class="images">
+                        [% FOREACH item IN carrousel.documents %]
+                            <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]">
+                                <img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/>
+                            </a>
+                        [% END %]
+                    </div>
+                </div>
+                <div class="controls">
+                    <button class="[% carrousel.title || carrousel.name %]" style="float:left" onclick="Right(this)" type="button">Précédent</button>
+                    <button class="[% carrousel.title || carrousel.name %]" style="float:right" onclick="Left(this)" type="button">Suivant</button>
+                </div>
+            [% END %]
+        </div>
     [% END %]
-</div>
 [% END %]
 
 <style>
@@ -105,15 +103,15 @@ a.locked{
     width:100px;
 }
 
-#sliders {
+.slider {
     overflow: hidden;
 }
 
-#sliders img {
+.slider img {
     height: 175px;
 }
 
-.slider{
+.slider hr + div {
     background-color: #d5e1df;
 }
 
@@ -252,7 +250,7 @@ function Left (button){
     let livres = container.children;
 
     var last = $(container).find("a img").last();
-    if ($(last).position().left + $(last)[0].clientWidth < $("#sliders")[0].clientWidth) return;
+    if ($(last).position().left + $(last)[0].clientWidth < $(".slider")[0].clientWidth) return;
     $(container).animate({
         left: $(container).find("a img").eq(1).position().left * -1,
     }, scrolling_duration, function() {
@@ -265,7 +263,7 @@ function Right (button){
     let livres = container.children;
 
     var last = $(container).find("a img").last();
-    if ($(last).position().left + $(last)[0].clientWidth < $("#sliders")[0].clientWidth) return;
+    if ($(last).position().left + $(last)[0].clientWidth < $(".slider")[0].clientWidth) return;
     $(container).animate({
         left: $(container).find("a img").eq(1).position().left,
     }, scrolling_duration, function() {

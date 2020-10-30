@@ -18,100 +18,123 @@
         </div>
 
         <h3>Configuration of carousels</h3>
-        <form method="get">
+        <form method="get" id="inlibro-carrousel">
+            <input type="hidden" name="class" value="[% CLASS %]"/>
+            <input type="hidden" name="method" value="[% METHOD %]"/>
+            <input type="hidden" name="action" value="configure"/>
+
             <input type="hidden" name="enabledShelves" />
             <input type="hidden" name="shelvesOrder" />
 
-            <div class="infos">
+            <div>
                 <label>Choose and order carousels : </label>
                 <br>
-                [% IF shelves %]
+                [% IF carrousels %]
                 <table>
-                    <tr>
-                        <th>List</th>
-                        <th>Generate</th>
-                        <th>Order</th>
-                    </tr>
-                    [% FOREACH shelf IN shelves %]
-                    <tr id="shelf-[% shelf.shelfnumber %]">
-                        <td>[% shelf.shelfname %]</td>
-                        <td><input type="checkbox" name="enabledShelf-[% shelf.shelfnumber %]" value="[% shelf.shelfnumber %]" /></td>
-                        <td>
-                            <i class="fa fa-angle-up"></i>
-                            <i class="fa fa-angle-down"></i>
-                            <i class="fa fa-angle-double-up"></i>
-                            <i class="fa fa-angle-double-down"></i>
-                        </td>
-                    </tr>
-                    [% END %]
+                    <thead>
+                        <tr>
+                            <th>Generate</th>
+                            <th>List</th>
+                            <th>Custom title</th>
+                            <th>Type</th>
+                            <th>Order</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        [% FOREACH carrousel IN carrousels %]
+                            <tr id="shelf-[% carrousel.shelf.shelfnumber %]">
+                                <td class="center"><input type="checkbox" name="enabledShelf-[% carrousel.shelf.shelfnumber %]" value="[% carrousel.shelf.shelfnumber %]" [% IF carrousel.enabled %]checked="checked"[% END %] /></td>
+                                <td><a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.shelf.shelfnumber %]">[% carrousel.shelf.shelfname %]</a></td>
+                                <td><input type="text" name="title-[% carrousel.shelf.shelfnumber %]" value="[% carrousel.title %]" [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] /></td>
+                                <td class="radio-group">
+                                    <div>
+                                        <label for="carrousel">Carrousel</label>
+                                        <input id="carrousel" type="radio" name="type-[% carrousel.shelf.shelfnumber %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] />
+                                    <div>
+                                    </div>
+                                        <label for="scrolling">Scrolling</label>
+                                        <input id="scrolling" type="radio" name="type-[% carrousel.shelf.shelfnumber %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] />
+                                    </div>
+                                </td>
+                                <td>
+                                    <i class="fa fa-angle-up"></i>
+                                    <i class="fa fa-angle-down"></i>
+                                    <i class="fa fa-angle-double-up"></i>
+                                    <i class="fa fa-angle-double-down"></i>
+                                </td>
+                            </tr>
+                        [% END %]
+                    </tbody>
                 </table>
                 [% ELSE %]
                 <p id="nolist">You have no lists. Click <a href="/cgi-bin/koha/virtualshelves/shelves.pl">here</a> to create one.</p>
                 [% END %]
             </div>
 
-            <div id="type" class="infos">
-                <label>Type :</label>
-                <span class="alignment">
-                    <div>
-                        <label for="carrousel">Carousel</label>
-                        <input id="carrousel" type="radio" name="type" value="carrousel" [% IF !type OR type == "carrousel" %]checked="checked"[% END %]>
-                    </div>
-                    <div>
-                        <label for="scrolling">Scrolling</label>
-                        <input id="scrolling" type="radio" name="type" value="scrolling" [% IF type == "scrolling" %]checked="checked"[% END %]>
-                    </div>
-                </span>
+            <div class="infos">
+                Text color: <input name="txtColor" onchange="update(this.value, 'text')" id="colors" class="jscolor alignment" value="[% txtColor || '000000' %]" />
             </div>
 
             <div class="infos">
-                Text color : <input name="txtColor" onchange="update(this.value, 'text')" id="colors" class="jscolor alignment " value="[% txtColor %]">
+                Background color: <input name="bgColor" onchange="update(this.value, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]" />
             </div>
 
-            <div class="infos">
-                Background color : <input name="bgColor" onchange="update(this.value, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]">
-            </div>
-            <input type="hidden" name="class" value="[% CLASS %]"/>
-            <input type="hidden" name="method" value="[% METHOD %]"/>
-            <input type="hidden" name="action" value="configure"/>
-            <br>
-
-            <div id="background">
-                <p id="text" style="font-size: 30px; color:#FFFFFF; padding : 4.75% 2%"> This is just an example </p>
+            <div id="background" class="infos">
+                <p id="text"> This is just an example </p>
             </div>
 
             <input id="submit" type="submit" value="Apply configuration">
 
         </form>
-
-
-
     </div>
 </div>
 
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
 <style>
+#inlibro-carrousel table {
+    font-size: 0.8em;
+}
+
+#inlibro-carrousel td {
+    vertical-align: middle;
+}
+
+#inlibro-carrousel td.center {
+    text-align: center;
+}
+
+.radio-group {
+    text-align: right;
+}
+
+input[type="number"] {
+    width: 30%;
+}
+
 #colors{
     height :25px;
     width : 30%;
 }
-#shelves{
-    width : 32.5%;
-}
-form{
-    width:500px;
-}
+
 .alignment{
     float:right;
 }
 .infos{
     clear: both;
+    width: 500px;
     margin: 20px 0;
     overflow: auto;
 }
+
+.infos small {
+    display: block;
+    margin-top: 15px;
+    font-size: 80%;
+    text-align: right;
+}
+
 #content{
-    width : 450px;
     margin:2% 1%;
     font-size:20px;
 }
@@ -122,21 +145,18 @@ h1{
 #submit{
     margin-top:2%;
 }
-#shelves{
-    font-size: 100%;
-}
-#type div{
-    text-align: right;
-}
+
 #background{
-    width:100%;
-    height:80px;
     background-color : #[% bgColor %];
     border :0;
 }
-.infos table{
-    font-size: 0.8em;
+
+#background p {
+    font-size: 30px;
+    padding: 10px;
+    color: #[% txtColor %];
 }
+
 .fa{
     cursor: pointer;
     display: inherit;
@@ -155,13 +175,9 @@ h1{
 <script>
 // Set configs
 $(function() {
-    var json = '[% enabledShelves %]';
-    if (json != "") {
-        var enablings = JSON.parse(json);
-        for (var i=0; i < enablings.length; i++) {
-            $("input[name='enabledShelf-"+enablings[i]+"']").prop("checked", true);
-        }
-    }
+    $("form input[name^='enabledShelf']").on("click", function (){
+        $(this).closest("[id^='shelf']").find("input").not(this).prop("disabled", !$(this).prop("checked"));
+    });
 
     $("form tr[id*='shelf']").each(function (){
         var tr = this;
@@ -183,16 +199,23 @@ $(function() {
 $("#doc3 form").submit(function (){
     var form = $("form").serializeArray();
 
+    var order = 0;
     var orders = [];
-    var enablings = [];
-
-    for (var i=0; i < form.length; i++) {
-        var components = form[i].name.split("-");
-        if (components[0] == "enabledShelf") enablings.push(components[1]);
-    }
+    var enablings = {};
 
     $("form tr[id*='shelf']").each(function (){
-        orders.push($(this).attr("id").split("-")[1]);
+        var shelf = $(this);
+        var id = shelf.attr("id").split("-")[1];
+        orders.push(id);
+        if (shelf.find("[name^='enabledShelf']").prop('checked')) {
+            var data = {
+                id : id,
+                title : shelf.find("[name^='title']").val(),
+                type : shelf.find("[name^='type']:checked").val()
+            };
+            enablings[order] = data;
+        }
+        order++;
     });
 
     $("input[name='shelvesOrder']").attr("value", JSON.stringify(orders));

@@ -80,8 +80,8 @@ sub step_1 {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
     my $template = $self->retrieve_template("step_1");
-    my @enabledShelves = (!defined $self->retrieve_data('enabledShelves')) ? () : @{decode_json($self->retrieve_data('enabledShelves'))};
-    $template->param(enabledShelves => \@enabledShelves);
+    my $enabledShelves = (!defined $self->retrieve_data('enabledShelves')) ? () : decode_json($self->retrieve_data('enabledShelves'));
+    $template->param(enabledShelves => $enabledShelves);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
@@ -105,6 +105,7 @@ sub getOrderedShelves {
     # ordering
     if (defined $self->retrieve_data('shelvesOrder')) {
         my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))};
+        my $enabledShelves = decode_json($self->retrieve_data('enabledShelves'));
         my $shelvesOrderCount = @shelvesOrder;
         my @orderedShelves;
         my @otherShelves;
@@ -113,12 +114,18 @@ sub getOrderedShelves {
             my $found = 0;
             for (my $i = 0; $i < $shelvesOrderCount; $i++) {
                 if ($id == $shelvesOrder[$i]) {
-                    $orderedShelves[$i] = $list;
+                    my $carrousel = {shelf => $list};
+                    if (exists($enabledShelves->{$i})) {
+                        $carrousel->{enabled} = 1;
+                        $carrousel->{title} = $enabledShelves->{$i}->{title};
+                        $carrousel->{type} = $enabledShelves->{$i}->{type};
+                    }
+                    $orderedShelves[$i] = $carrousel;
                     $found = 1;
                     last;
                 }
             }
-            push(@otherShelves, $list) unless ($found);
+            push(@otherShelves, {shelf => $list}) unless ($found);
         }
 
         my @temp = @orderedShelves;
@@ -129,6 +136,8 @@ sub getOrderedShelves {
 
         @shelves = @orderedShelves;
         push(@shelves, @otherShelves);
+    } else {
+        @shelves = map { shelf => $_ }, @shelves;
     }
 
     return @shelves;
@@ -169,7 +178,6 @@ sub generateCarrousels{
         'Koha/Plugin/Carrousel/opac-carrousel.tt',
         {
             carrousels  => \@carrousels,
-            type     => $self->retrieve_data('type'),
             bgColor  => $self->retrieve_data('bgColor'),
             txtColor => $self->retrieve_data('txtColor'),
             ENCODING => 'utf8',
@@ -186,14 +194,14 @@ sub getCarrousels {
     my @shelves = $self->getOrderedShelves();
     my @carrousels = ();
 
-    return @carrousels if (!defined $self->retrieve_data('enabledShelves'));
-    my @enabledShelvesId = @{decode_json($self->retrieve_data('enabledShelves'))};
-
     foreach my $list (@shelves) {
-        my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
-        if (grep(/^$id$/, @enabledShelvesId)) {
-            my %carrousel = $self->getCarrousel($list);
-            push(@carrousels, \%carrousel) if %carrousel;
+        if ($list->{enabled}) {
+            my %carrousel = $self->getCarrousel($list->{shelf});
+            if (%carrousel) {
+                $carrousel{title} = $list->{title};
+                $carrousel{type} = $list->{type};
+                push(@carrousels, \%carrousel);
+            }
         }
     }
 
@@ -408,7 +416,6 @@ sub configure {
     if ($cgi->param("action")) {
         my $enabledShelves     = $cgi->param('enabledShelves');
         my $shelvesOrder       = $cgi->param('shelvesOrder');
-        my $type               = $cgi->param('type');
         my $bgColor            = $cgi->param('bgColor');
         my $txtColor           = $cgi->param('txtColor');
         my $last_configured_by = C4::Context->userenv->{'number'};
@@ -417,7 +424,6 @@ sub configure {
             {
                 enabledShelves     => $enabledShelves,
                 shelvesOrder       => $shelvesOrder,
-                type               => $type,
                 bgColor            => $bgColor,
                 txtColor           => $txtColor,
                 last_configured_by => $last_configured_by,
@@ -430,9 +436,8 @@ sub configure {
 
         my $template = $self->retrieve_template("configure");
         $template->param(
-            shelves        => \@shelves,
+            carrousels     => \@shelves,
             enabledShelves => $self->retrieve_data('enabledShelves'),
-            type           => $self->retrieve_data('type'),
             bgColor        => $self->retrieve_data('bgColor'),
             txtColor       => $self->retrieve_data('txtColor'),
             ENCODING       => 'utf8',
