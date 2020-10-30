@@ -37,6 +37,7 @@
                             <th>List</th>
                             <th>Custom title</th>
                             <th>Type</th>
+                            <th>Auto rotate</th>
                             <th>Order</th>
                         </tr>
                     </thead>
@@ -56,6 +57,9 @@
                                         <input id="scrolling" type="radio" name="type-[% carrousel.shelf.shelfnumber %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] />
                                     </div>
                                 </td>
+                                <td class="center">
+                                    <input type="checkbox" name="autorotate-[% carrousel.shelf.shelfnumber %]" value="[% carrousel.shelf.shelfnumber %]" [% IF carrousel.autorotate %]checked="checked"[% END %] [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] />
+                                </td>
                                 <td>
                                     <i class="fa fa-angle-up"></i>
                                     <i class="fa fa-angle-down"></i>
@@ -69,6 +73,26 @@
                 [% ELSE %]
                 <p id="nolist">You have no lists. Click <a href="/cgi-bin/koha/virtualshelves/shelves.pl">here</a> to create one.</p>
                 [% END %]
+            </div>
+
+            <div class="infos">
+                <label>Auto rotation direction:</label>
+                <div class="radio-group">
+                    <div>
+                        <label for="autorotate-left">Left</label>
+                        <input type="radio" id="autorotate-left" name="autorotate-direction" value="left" [% IF !autoRotateDirection OR autoRotateDirection == "left" %]checked="checked"[% END %] />
+                    </div>
+                    <div>
+                        <label for="autorotate-right">Right</label>
+                        <input type="radio" id="autorotate-right" name="autorotate-direction" value="right" [% IF autoRotateDirection == "right" %]checked="checked"[% END %] />
+                    </div>
+                </div>
+            </div>
+
+            <div class="infos">
+                <label>Auto rotation delay (ms):</label>
+                <input type="number" name="autorotate-delay" min="0" class="alignment" value="[% autoRotateDelay %]" />
+                <small>Default value is 1500ms.</small>
             </div>
 
             <div class="infos">
@@ -211,7 +235,8 @@ $("#doc3 form").submit(function (){
             var data = {
                 id : id,
                 title : shelf.find("[name^='title']").val(),
-                type : shelf.find("[name^='type']:checked").val()
+                type : shelf.find("[name^='type']:checked").val(),
+                autorotate : shelf.find("[name^='autorotate']").prop('checked') ? 1 : 0
             };
             enablings[order] = data;
         }

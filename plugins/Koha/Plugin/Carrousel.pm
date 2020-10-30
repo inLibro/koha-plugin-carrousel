@@ -119,6 +119,7 @@ sub getOrderedShelves {
                         $carrousel->{enabled} = 1;
                         $carrousel->{title} = $enabledShelves->{$i}->{title};
                         $carrousel->{type} = $enabledShelves->{$i}->{type};
+                        $carrousel->{autorotate} = $enabledShelves->{$i}->{autorotate};
                     }
                     $orderedShelves[$i] = $carrousel;
                     $found = 1;
@@ -180,6 +181,8 @@ sub generateCarrousels{
             carrousels  => \@carrousels,
             bgColor  => $self->retrieve_data('bgColor'),
             txtColor => $self->retrieve_data('txtColor'),
+            autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
+            autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
             ENCODING => 'utf8',
         },
         \$data,
@@ -200,6 +203,7 @@ sub getCarrousels {
             if (%carrousel) {
                 $carrousel{title} = $list->{title};
                 $carrousel{type} = $list->{type};
+                $carrousel{autorotate} = $list->{autorotate};
                 push(@carrousels, \%carrousel);
             }
         }
@@ -418,6 +422,8 @@ sub configure {
         my $shelvesOrder       = $cgi->param('shelvesOrder');
         my $bgColor            = $cgi->param('bgColor');
         my $txtColor           = $cgi->param('txtColor');
+        my $autoRotateDirection = $cgi->param('autorotate-direction');
+        my $autoRotateDelay    = $cgi->param('autorotate-delay') || undef;
         my $last_configured_by = C4::Context->userenv->{'number'};
 
         $self->store_data(
@@ -426,6 +432,8 @@ sub configure {
                 shelvesOrder       => $shelvesOrder,
                 bgColor            => $bgColor,
                 txtColor           => $txtColor,
+                autoRotateDirection => $autoRotateDirection,
+                autoRotateDelay    => $autoRotateDelay,
                 last_configured_by => $last_configured_by,
             }
         );
@@ -440,6 +448,8 @@ sub configure {
             enabledShelves => $self->retrieve_data('enabledShelves'),
             bgColor        => $self->retrieve_data('bgColor'),
             txtColor       => $self->retrieve_data('txtColor'),
+            autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
+            autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
             ENCODING       => 'utf8',
         );
         print $cgi->header(-type => 'text/html',-charset => 'utf-8');

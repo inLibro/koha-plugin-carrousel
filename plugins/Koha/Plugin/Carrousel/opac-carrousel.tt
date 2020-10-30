@@ -216,24 +216,43 @@ document.addEventListener('DOMContentLoaded', function() {
             if(isMSIE){style.filter.finishy=(reflHeight/h*100)}else{style.height=reflHeight+px}}}radians+=spacing}this.innerWrapper.style.display='block';if(absChange>=0.001){this.controlTimer=setTimeout(function(){context.updateAll()},this.timeDelay)}else{this.stop()}};this.checkImagesLoaded=function(){var i;for(i=0;i<images.length;i++){if((images[i].width===undefined)||((images[i].complete!==undefined)&&(!images[i].complete))){return}}for(i=0;i<images.length;i++){items.push(new Item(images[i],options));$(images[i]).data('itemIndex',i)}clearInterval(this.tt);this.showFrontText();this.autoRotate();this.updateAll()};this.tt=setInterval(function(){ctx.checkImagesLoaded()},50)};$.fn.CloudCarousel=function(options){this.each(function(){options=$.extend({},{reflHeight:0,reflOpacity:0.5,reflGap:0,minScale:0.5,xPos:0,yPos:0,xRadius:0,yRadius:0,altBox:null,titleBox:null,FPS:30,autoRotate:'no',autoRotateDelay:1500,speed:0.2,mouseWheel:false,bringToFront:false},options);$(this).data('cloudcarousel',new Controller(this,$('.cloudcarousel',$(this)),options))});return this}})(jQuery);
 
     //This initialises carousels on the container elements specified.
-    $(".carrousel").each(function (){
-        var controls = $(this).find(".carousel-control");
-        $(this).CloudCarousel(
-        {
-            xPos : $(this).parent().width() * 0.5,
-            yPos : 10,
-            xRadius : $(this).parent().width() / 2,
-            yRadius : $(this).parent().height() / 7,
-            buttonLeft: $(controls).filter(".left"),
-            buttonRight: $(controls).filter(".right"),
-            titleBox: $(this).find(".title-text"),
-            minScale: 0.25,
-            reflHeight : 40,
-            reflGap : 4,
-            reflOpacity : 0.75
-        }
-        );
-    });
+    [% FOREACH carrousel IN carrousels %]
+        [% IF carrousel.type == "carrousel" %]
+            $("#carrousel-[% loop.index %]").each(function (){
+                var controls = $(this).find(".carousel-control");
+                $(this).CloudCarousel(
+                {
+                    [% IF carrousel.autorotate %]
+                        autoRotate: "[% autoRotateDirection || 'left' %]",
+                        [% IF autoRotateDelay %]autoRotateDelay: [% autoRotateDelay %],[% END %]
+                    [% END %]
+                    xPos : $(this).parent().width() * 0.5,
+                    yPos : 10,
+                    xRadius : $(this).parent().width() / 2,
+                    yRadius : $(this).parent().height() / 7,
+                    buttonLeft: $(controls).filter(".left"),
+                    buttonRight: $(controls).filter(".right"),
+                    titleBox: $(this).find(".title-text"),
+                    minScale: 0.25,
+                    reflHeight : 40,
+                    reflGap : 4,
+                    reflOpacity : 0.75
+                }
+                );
+            });
+        [% ELSE %]
+            [% IF carrousel.autorotate %]
+                setInterval(
+                    function() {
+                        $("#carrousel-[% loop.index %] .controls button")
+                            [% IF !autoRotateDirection || autoRotateDirection == "left" %].eq(0)[% ELSIF autoRotateDirection == "right" %].eq(1)[% END %]
+                            .click();
+                    }, [% autoRotateDelay || 1500 %]
+                );
+            [% END %]
+        [% END %]
+    [% END %]
+
     $(".loadingDiv").delay(1000);
     $(".loadingDiv").fadeOut(1000);
 });
