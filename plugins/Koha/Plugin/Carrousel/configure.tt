@@ -52,6 +52,8 @@
                                     [% SWITCH carrousel.module %]
                                     [% CASE "reports" %]
                                         Reports
+                                    [% CASE "collections" %]
+                                        Collections
                                     [% CASE %]
                                         Lists
                                     [% END %]
@@ -59,6 +61,8 @@
                                 <td>
                                     [% IF carrousel.module == "reports" %]
                                         <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id %]&phase=Show SQL">
+                                    [% ELSIF carrousel.module == "collections" %]
+                                        <a href="/cgi-bin/koha/rotating_collections/addItems.pl?colId=[% carrousel.id %]">
                                     [% ELSE %]
                                         <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id %]">
                                     [% END %]
@@ -126,6 +130,22 @@
                         <p><small>Reports results must include biblionumber for it to generate a carrousel.</small></p>
                     [% ELSE %]
                         <p class="nolist">You have no reports. Click <a href="/cgi-bin/koha/reports/reports-home.pl">here</a> to create one.</p>
+                    [% END %]
+
+                    <label>Collections</label>
+                    [% IF collections %]
+                        [% SET module = "collections" %]
+                        <select name="[% module %]" multiple="multiple">
+                            [% FOREACH collection IN collections %]
+                                [% IF enabled.$module.grep("^$collection.colId\$").size %]
+                                    <option value="[% collection.colId %]" selected="selected">[% collection.colTitle %]</option>
+                                [% ELSE %]
+                                    <option value="[% collection.colId %]">[% collection.colTitle %]</option>
+                                [% END %]
+                            [% END %]
+                        </select>
+                    [% ELSE %]
+                        <p class="nolist">You have no collections. Click <a href="/cgi-bin/koha/rotating_collections/rotatingCollections.pl">here</a> to create one.</p>
                     [% END %]
                 </div>
             </div>
@@ -365,12 +385,16 @@ function addLine (module, id, name) {
       + "    <td class=\"center\">"
       + ((module === "reports") ?
         "        Reports"
-      : "        Lists")
+      : ((module === "collections") ?
+        "        Collections"
+      : "        Lists"))
       + "    </td>"
       + "    <td>"
       + ((module === "reports") ?
         "        <a href=\"/cgi-bin/koha/reports/guided_reports.pl?reports=" + id + "&phase=Show SQL\">"
-      : "        <a href=\"/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=" + id + "\">")
+      : ((module === "collections") ?
+        "        <a href=\"/cgi-bin/koha/rotating_collections/addItems.pl?colId=" + id + "\">"
+      : "        <a href=\"/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=" + id + "\">"))
       +              name
       + "        </a>"
       + "    </td>"

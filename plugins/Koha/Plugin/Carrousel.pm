@@ -90,11 +90,11 @@ sub step_1 {
 sub getDisplayName {
     my ( $self, $module, $id ) = @_;
     my $name = "";
-    
-    if ($useSql) {
-        my $table = ($module eq "reports") ? "saved_sql" : "virtualshelves";
-        my $column_id = ($module eq "reports") ? "id" : "shelfnumber";
-        my $column_name = ($module eq "reports") ? "report_name" : "shelfname";
+
+    if ($useSql || $module eq "collections") {
+        my $table = ($module eq "reports") ? "saved_sql" : (($module eq "collections") ? "collections" : "virtualshelves");
+        my $column_id = ($module eq "reports") ? "id" : (($module eq "collections") ? "colId" : "shelfnumber");
+        my $column_name = ($module eq "reports") ? "report_name" : (($module eq "collections") ? "colTitle" : "shelfname");
 
         my $stmt = $dbh->prepare("SELECT * FROM $table WHERE $column_id = ?");
         $stmt->execute($id);
@@ -136,6 +136,12 @@ sub getModules {
         $modules->{reports} = Koha::Reports->search();
     }
 
+    my $stmt = $dbh->prepare("SELECT * FROM collections ORDER BY colTitle");
+    $stmt->execute();
+    while (my $row = $stmt->fetchrow_hashref()) {
+        push @{$modules->{collections}}, $row;
+    }
+
     return $modules;
 }
 
@@ -174,6 +180,17 @@ sub loadContent {
             }
         } else {
             warn "Report $id can't be used because it needs parameters.";
+        }
+    } elsif ($module eq "collections") {
+        my $stmt = $dbh->prepare(
+            "SELECT distinct biblionumber
+            FROM collections_tracking
+            JOIN items USING (itemnumber)
+            WHERE colId = ?");
+        $stmt->execute($id);
+
+        while (my $row = $stmt->fetchrow_hashref()) {
+            push @content, $row->{biblionumber};
         }
     } elsif ($useSql) {
         my $stmt = $dbh->prepare("SELECT * FROM virtualshelfcontents WHERE shelfnumber = ?");
@@ -474,6 +491,7 @@ sub configure {
             carrousels     => $carrousels,
             lists          => $modules->{lists},
             reports        => $modules->{reports},
+            collections    => $modules->{collections},
             bgColor        => $self->retrieve_data('bgColor'),
             txtColor       => $self->retrieve_data('txtColor'),
             autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
