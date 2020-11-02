@@ -37,6 +37,7 @@ use C4::Output;
 use C4::XSLT;
 use Koha::Reports;
 use C4::Reports::Guided;
+use Koha::Uploader;
 
 our $VERSION = 3.0;
 our $metadata = {
@@ -242,6 +243,45 @@ sub generateCarrousels{
     ) || warn "Unable to generate Carrousel, " . $tt->error();
 
     $self->insertIntoPref($data);
+    $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
+}
+
+sub generateJSONFile {
+    my ( $self, $carrousels ) = @_;
+    my @json;
+    foreach my $carrousel (@{$carrousels}) {
+        my @documents;
+        foreach my $document (@{$carrousel->{documents}}) {
+            my $url = C4::Context->preference('OPACBaseURL') . "/cgi-bin/koha/opac-detail.pl?biblionumber=" . $document->{biblionumber};
+            push @documents, {
+                title  => $document->{title},
+                author => $document->{author},
+                image  => $document->{url},
+                url    => $url,
+            };
+        }
+        push @json, {
+            title => $carrousel->{title} || $carrousel->{name},
+            documents => \@documents,
+        };
+    }
+
+    # save file
+    my $hash = "carrousel";
+    my $filename = "$hash.json";
+    my $path = File::Spec->catdir( C4::Context->config('upload_path'), "${hash}_${filename}" );
+    open my $fh, ">", $path;
+    print $fh encode_json(\@json);
+    close $fh;
+
+    unless (Koha::UploadedFiles->search({ hashvalue => $hash, filename => $filename })->count ) {
+        my $rec = Koha::UploadedFile->new({
+            hashvalue => $hash,
+            filename  => $filename,
+            public    => 1,
+            permanent => 1,
+        })->store;
+    }
 }
 
 sub getCarrousels {
@@ -275,17 +315,22 @@ sub getCarrouselContent {
         }
         next if ! $record;
         my $title;
+        my $author;
         my $marcflavour = C4::Context->preference("marcflavour");
         if ($marcflavour eq 'MARC21'){
             $title = $record->subfield('245', 'a');
+            $author = $record->subfield( '100', 'a' );
+            $author = $record->subfield( '110', 'a' ) unless $author;
+            $author = $record->subfield( '111', 'a' ) unless $author;
         }elsif ($marcflavour eq 'UNIMARC'){
             $title = $record->subfield('200', 'a');
+            author = $record->subfield( '200', 'f' );
         }
         $title =~ s/[,:\/\s]+$//;
 
         my $url = getThumbnailUrl( $biblionumber, $record );
         if ( $url ){
-            my %image = ( url => $url, title => $title, biblionumber => $biblionumber );
+            my %image = ( url => $url, title => $title, author => $author, biblionumber => $biblionumber );
             push @images, \%image;
         }else{
             warn "[Koha::Plugin::Carrousel] There was no image found for biblionumber $biblionumber : \" $title \"\n";
@@ -469,6 +514,7 @@ sub configure {
         my $autoRotateDirection = $cgi->param('autorotate-direction');
         my $autoRotateDelay    = $cgi->param('autorotate-delay') || undef;
         my $last_configured_by = C4::Context->userenv->{'number'};
+        my $generateJSON       = $cgi->param('generateJSON');
 
         $self->store_data(
             {
@@ -478,6 +524,7 @@ sub configure {
                 autoRotateDirection => $autoRotateDirection,
                 autoRotateDelay    => $autoRotateDelay,
                 last_configured_by => $last_configured_by,
+                generateJSON       => $generateJSON,
             }
         );
 
