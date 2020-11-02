@@ -30,12 +30,13 @@ use LWP::Simple;
 use Template;
 use utf8;
 use base qw(Koha::Plugins::Base);
-#use C4::Auth;
 use C4::Biblio;
 use C4::Context;
 use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
+use Koha::Reports;
+use C4::Reports::Guided;
 
 our $VERSION = 3.0;
 our $metadata = {
@@ -91,9 +92,9 @@ sub getDisplayName {
     my $name = "";
     
     if ($useSql) {
-        my $table = ($module eq "lists") ? "virtualshelves" : "virtualshelves";
-        my $column_id = ($module eq "lists") ? "shelfnumber" : "shelfnumber";
-        my $column_name = ($module eq "lists") ? "shelfname" : "shelfname";
+        my $table = ($module eq "reports") ? "saved_sql" : "virtualshelves";
+        my $column_id = ($module eq "reports") ? "id" : "shelfnumber";
+        my $column_name = ($module eq "reports") ? "report_name" : "shelfname";
 
         my $stmt = $dbh->prepare("SELECT * FROM $table WHERE $column_id = ?");
         $stmt->execute($id);
@@ -102,9 +103,9 @@ sub getDisplayName {
             $name = $row->{$column_name};
         }
     } else {
-        if ($module eq "lists") {
-            my $shelve = Koha::Virtualshelves->find({ shelfnumber => $id });
-            $name = $shelve->shelfname if $shelve;
+        if ($module eq "reports") {
+            my $report = Koha::Reports->find({ id => $id });
+            $name = $report->report_name if $report;
         } else {
             my $shelve = Koha::Virtualshelves->find({ shelfnumber => $id });
             $name = $shelve->shelfname if $shelve;
@@ -124,8 +125,15 @@ sub getModules {
         while (my $row = $stmt->fetchrow_hashref()) {
             push @{$modules->{lists}}, $row;
         }
+
+        $stmt = $dbh->prepare("SELECT * FROM saved_sql ORDER BY report_name");
+        $stmt->execute();
+        while (my $row = $stmt->fetchrow_hashref()) {
+            push @{$modules->{reports}}, $row;
+        }
     } else {
         $modules->{lists} = Koha::Virtualshelves->get_public_shelves();
+        $modules->{reports} = Koha::Reports->search();
     }
 
     return $modules;
@@ -136,7 +144,38 @@ sub loadContent {
     my ( $self, $module, $id ) = @_;
     my @content;
 
-    if ($useSql) {
+    if ($module eq "reports") {
+        my $sql = "";
+        if ($useSql) {
+            my $stmt = $dbh->prepare("SELECT * FROM saved_sql WHERE id = ?");
+            $stmt->execute($id);
+
+            while (my $row = $stmt->fetchrow_hashref()) {
+                $sql = $row->{savedsql};
+            }
+        } else {
+            my $report = Koha::Reports->find($id);
+            $sql = $report->savedsql;
+        }
+
+        unless ($sql =~ /<</) {
+            my ( $sth, $errors ) = execute_query($sql);
+            if ($sth) {
+                while ( my $row = $sth->fetchrow_hashref() ) {
+                    if (defined($row->{biblionumber})) {
+                        push @content, $row->{biblionumber};
+                    } else {
+                        warn "Report $id can't be used because it doesn't use biblionumber.";
+                        last;
+                    }
+                }
+            } else {
+                warn "An error occured while executing report $id.";
+            }
+        } else {
+            warn "Report $id can't be used because it needs parameters.";
+        }
+    } elsif ($useSql) {
         my $stmt = $dbh->prepare("SELECT * FROM virtualshelfcontents WHERE shelfnumber = ?");
         $stmt->execute($id);
         while (my $row = $stmt->fetchrow_hashref()) {
@@ -434,6 +473,7 @@ sub configure {
         $template->param(
             carrousels     => $carrousels,
             lists          => $modules->{lists},
+            reports        => $modules->{reports},
             bgColor        => $self->retrieve_data('bgColor'),
             txtColor       => $self->retrieve_data('txtColor'),
             autoRotateDirection => $self->retrieve_data('autoRotateDirection'),

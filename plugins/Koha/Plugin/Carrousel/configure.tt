@@ -50,15 +50,15 @@
                             <tr id="[% carrousel.module %]-[% carrousel.id %]">
                                 <td class="center">
                                     [% SWITCH carrousel.module %]
-                                    [% CASE "lists" %]
-                                        Lists
+                                    [% CASE "reports" %]
+                                        Reports
                                     [% CASE %]
                                         Lists
                                     [% END %]
                                 </td>
                                 <td>
-                                    [% IF carrousel.module == "lists" %]
-                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id %]">
+                                    [% IF carrousel.module == "reports" %]
+                                        <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id %]&phase=Show SQL">
                                     [% ELSE %]
                                         <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id %]">
                                     [% END %]
@@ -109,6 +109,23 @@
                         </select>
                     [% ELSE %]
                         <p class="nolist">You have no lists. Click <a href="/cgi-bin/koha/virtualshelves/shelves.pl">here</a> to create one.</p>
+                    [% END %]
+
+                    <label>Reports</label>
+                    [% IF reports %]
+                        [% SET module = "reports" %]
+                        <select name="[% module %]" multiple="multiple">
+                            [% FOREACH report IN reports %]
+                                [% IF enabled.$module.grep("^$report.id\$").size %]
+                                    <option value="[% report.id %]" selected="selected">[% report.report_name %]</option>
+                                [% ELSE %]
+                                    <option value="[% report.id %]">[% report.report_name %]</option>
+                                [% END %]
+                            [% END %]
+                        </select>
+                        <p><small>Reports results must include biblionumber for it to generate a carrousel.</small></p>
+                    [% ELSE %]
+                        <p class="nolist">You have no reports. Click <a href="/cgi-bin/koha/reports/reports-home.pl">here</a> to create one.</p>
                     [% END %]
                 </div>
             </div>
@@ -193,10 +210,21 @@ input[type="number"] {
     padding-left: 25px;
 }
 
-.infos small {
+#add-carrousels label {
+    display: block;
+}
+
+#add-carrousels label:not(:first-child) {
+    margin-top: 15px;
+}
+
+small {
     display: block;
     margin-top: 15px;
     font-size: 80%;
+}
+
+.infos small {
     text-align: right;
 }
 
@@ -335,13 +363,13 @@ function addLine (module, id, name) {
     var html =
         "<tr id=\"" + module + "-" + id + "\">"
       + "    <td class=\"center\">"
-      + ((module === "lists") ?
-        "        Lists"
+      + ((module === "reports") ?
+        "        Reports"
       : "        Lists")
       + "    </td>"
       + "    <td>"
-      + ((module === "lists") ?
-        "        <a href=\"/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=" + id + "\">"
+      + ((module === "reports") ?
+        "        <a href=\"/cgi-bin/koha/reports/guided_reports.pl?reports=" + id + "&phase=Show SQL\">"
       : "        <a href=\"/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=" + id + "\">")
       +              name
       + "        </a>"
