@@ -3,6 +3,8 @@
 <title>Koha:Carrousel Plugin: Configuration</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <script src=[%PLUGIN_PATH%]/js/jscolor.js></script>
+<script type="text/javascript" src="[% interface %]/lib/jquery/plugins/multiple-select/jquery.multiple.select.js"></script>
+<link rel="stylesheet" type="text/css" href="[% interface %]/lib/jquery/plugins/multiple-select/multiple-select.css" />
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
@@ -23,17 +25,15 @@
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
 
-            <input type="hidden" name="enabledShelves" />
-            <input type="hidden" name="shelvesOrder" />
+            <input type="hidden" name="carrousels" />
 
             <div>
-                <label>Choisir et ordonner les carrousels : </label>
-                <br>
-                [% IF carrousels %]
+                <h4>Choisir et ordonner les carrousels : </h4>
+
                 <table>
                     <thead>
                         <tr>
-                            <th>Générer</th>
+                            <th>Module</th>
                             <th>Liste</th>
                             <th>Titre</th>
                             <th>Type</th>
@@ -42,38 +42,78 @@
                         </tr>
                     </thead>
                     <tbody>
+                        [% SET enabled = {} %]
                         [% FOREACH carrousel IN carrousels %]
-                            <tr id="shelf-[% carrousel.shelf.shelfnumber %]">
-                                <td class="center"><input type="checkbox" name="enabledShelf-[% carrousel.shelf.shelfnumber %]" value="[% carrousel.shelf.shelfnumber %]" [% IF carrousel.enabled %]checked="checked"[% END %] /></td>
-                                <td><a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.shelf.shelfnumber %]">[% carrousel.shelf.shelfname %]</a></td>
-                                <td><input type="text" name="title-[% carrousel.shelf.shelfnumber %]" value="[% carrousel.title %]" [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] /></td>
+                            [% SET module = carrousel.module %]
+                            [% UNLESS enabled.defined("$module") %][% SET enabled.$module = [] %][% END %]
+                            [% enabled.$module.push(carrousel.id) %]
+                            <tr id="[% carrousel.module %]-[% carrousel.id %]">
+                                <td class="center">
+                                    [% SWITCH carrousel.module %]
+                                    [% CASE "lists" %]
+                                        Listes
+                                    [% CASE %]
+                                        Listes
+                                    [% END %]
+                                </td>
+                                <td>
+                                    [% IF carrousel.module == "lists" %]
+                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id %]">
+                                    [% ELSE %]
+                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id %]">
+                                    [% END %]
+                                        [% carrousel.name %]
+                                    </a>
+                                </td>
+                                <td><input type="text" name="title-[% carrousel.id %]" value="[% carrousel.title %]" /></td>
                                 <td class="radio-group">
                                     <div>
                                         <label for="carrousel">Carrousel</label>
-                                        <input id="carrousel" type="radio" name="type-[% carrousel.shelf.shelfnumber %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] />
+                                        <input id="carrousel" type="radio" name="type-[% carrousel.id %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] />
                                     <div>
                                     </div>
                                         <label for="scrolling">À défilement</label>
-                                        <input id="scrolling" type="radio" name="type-[% carrousel.shelf.shelfnumber %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] />
+                                        <input id="scrolling" type="radio" name="type-[% carrousel.id %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
                                     </div>
                                 </td>
                                 <td class="center">
-                                    <input type="checkbox" name="autorotate-[% carrousel.shelf.shelfnumber %]" value="[% carrousel.shelf.shelfnumber %]" [% IF carrousel.autorotate %]checked="checked"[% END %] [% UNLESS carrousel.enabled %]disabled="disabled"[% END %] />
+                                    <input type="checkbox" name="autorotate-[% carrousel.id %]" value="[% carrousel.id %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
                                 </td>
                                 <td>
                                     <i class="fa fa-angle-up"></i>
                                     <i class="fa fa-angle-down"></i>
                                     <i class="fa fa-angle-double-up"></i>
                                     <i class="fa fa-angle-double-down"></i>
+                                    <i class="fa fa-times-circle error"></i>
                                 </td>
                             </tr>
                         [% END %]
                     </tbody>
                 </table>
-                [% ELSE %]
-                <p id="nolist">Vous n'avez aucune liste. Cliquez <a href="/cgi-bin/koha/virtualshelves/shelves.pl">ici</a> pour en créer une.</p>
-                [% END %]
+                <p class="nolist noCarrousel"[% IF carrousels %] style="display:none;"[% END %]>Vous n'avez aucun carrousel. Utilisez les sélecteurs ci-bas pour en ajouter.</p>
+
+                <h5>Ajouter un carrousel :</h5>
+
+                <div id="add-carrousels">
+                    <label>Listes</label>
+                    [% IF lists %]
+                        [% SET module = "lists" %]
+                        <select name="[% module %]" multiple="multiple">
+                            [% FOREACH list IN lists %]
+                                [% IF enabled.$module.grep("^$list.shelfnumber\$").size %]
+                                    <option value="[% list.shelfnumber %]" selected="selected">[% list.shelfname %]</option>
+                                [% ELSE %]
+                                    <option value="[% list.shelfnumber %]">[% list.shelfname %]</option>
+                                [% END %]
+                            [% END %]
+                        </select>
+                    [% ELSE %]
+                        <p class="nolist">Vous n'avez aucune liste. Cliquez <a href="/cgi-bin/koha/virtualshelves/shelves.pl">ici</a> pour en créer une.</p>
+                    [% END %]
+                </div>
             </div>
+
+            <h4>Options</h4>
 
             <div class="infos">
                 <label>Direction de la rotation automatique:</label>
@@ -116,7 +156,8 @@
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
 <style>
-#inlibro-carrousel table {
+#inlibro-carrousel table,
+.ms-parent, .ms-drop {
     font-size: 0.8em;
 }
 
@@ -144,11 +185,12 @@ input[type="number"] {
 .alignment{
     float:right;
 }
-.infos{
+
+.infos, #add-carrousels{
     clear: both;
-    width: 500px;
+    width: 650px;
     margin: 20px 0;
-    overflow: auto;
+    padding-left: 25px;
 }
 
 .infos small {
@@ -177,7 +219,7 @@ h1{
 
 #background p {
     font-size: 30px;
-    padding: 10px;
+    padding: 25px 10px;
     color: #[% txtColor %];
 }
 
@@ -190,7 +232,8 @@ h1{
 .fa:hover{
     color: grey;
 }
-#nolist{
+
+.nolist{
     font-size: 0.75em;
     color: grey;
 }
@@ -199,52 +242,63 @@ h1{
 <script>
 // Set configs
 $(function() {
-    $("form input[name^='enabledShelf']").on("click", function (){
-        $(this).closest("[id^='shelf']").find("input").not(this).prop("disabled", !$(this).prop("checked"));
+    $("select[multiple='multiple']").multipleSelect(
+        {
+            placeholder: _("Merci de sélectionner ..."),
+            selectAllText: _("Tout sélectionner"),
+            allSelected: _("Tous"),
+            countSelected: _("# de % selectionné(e)s"),
+            noMatchesFound: _("Aucune correspondances trouvées")
+        }
+    );
+
+    $(".ms-drop [name^='selectAll']").on("click", function () {
+        var module = $(this).closest(".ms-parent").prev().prop("name");
+        var checked = $(this).prop("checked");
+        $(this).closest(".ms-drop").find("input[type='checkbox']").not("[name^='selectAll']").each(function () {
+            var id = $(this).val();
+            var tr = $("tr#" + module + "-" + id);
+            if (checked && tr.length === 0) {
+                addLine(module, id, $(this).parent().text());
+            } else if (!checked && tr.length === 1) {
+                tr.remove();
+            }
+        });
     });
 
-    $("form tr[id*='shelf']").each(function (){
-        var tr = this;
-        $(this).find(".fa-angle-up").click(function (){
-            if ($(tr).index() > 1) $(tr).insertBefore($(tr).prev());
-        });
-        $(this).find(".fa-angle-down").click(function (){
-            $(tr).insertAfter($(tr).next());
-        });
-        $(this).find(".fa-angle-double-up").click(function (){
-            if ($(tr).index() > 1) $(tr).insertAfter($(tr).parent().children().first());
-        });
-        $(this).find(".fa-angle-double-down").click(function (){
-            $(tr).insertAfter($(tr).parent().children().last());
-        });
+    $(".ms-drop input[type='checkbox']").not("[name^='selectAll']").on("click", function () {
+        var module = $(this).closest(".ms-parent").prev().prop("name");
+        if ($(this).prop('checked')) {
+            addLine(module, $(this).val(), $(this).parent().text());
+        } else {
+            $("#" + module + "-" + $(this).val()).remove();
+            if ($("tbody tr").length === 0) $(".noCarrousel").show();
+        }
+    });
+
+    $("tbody tr").each(function (){
+        actionButtons(this);
     });
 });
 
 $("#doc3 form").submit(function (){
     var form = $("form").serializeArray();
 
-    var order = 0;
-    var orders = [];
-    var enablings = {};
-
-    $("form tr[id*='shelf']").each(function (){
-        var shelf = $(this);
-        var id = shelf.attr("id").split("-")[1];
-        orders.push(id);
-        if (shelf.find("[name^='enabledShelf']").prop('checked')) {
-            var data = {
-                id : id,
-                title : shelf.find("[name^='title']").val(),
-                type : shelf.find("[name^='type']:checked").val(),
-                autorotate : shelf.find("[name^='autorotate']").prop('checked') ? 1 : 0
-            };
-            enablings[order] = data;
-        }
-        order++;
+    var enablings = [];
+    $("tbody tr").each(function (){
+        var carrousel = $(this);
+        var id = carrousel.attr("id").split("-");
+        var data = {
+            id : id[1],
+            module : id[0],
+            title : carrousel.find("[name^='title']").val(),
+            type : carrousel.find("[name^='type']:checked").val(),
+            autorotate : carrousel.find("[name^='autorotate']").prop('checked') ? 1 : 0
+        };
+        enablings.push(data);
     });
 
-    $("input[name='shelvesOrder']").attr("value", JSON.stringify(orders));
-    $("input[name='enabledShelves']").attr("value", JSON.stringify(enablings));
+    $("input[name='carrousels']").attr("value", JSON.stringify(enablings));
 });
 
 function update(jscolor, object) {
@@ -254,5 +308,70 @@ function update(jscolor, object) {
     }else{
         document.getElementById('text').style.color = '#' + jscolor;
     }
+}
+
+function actionButtons (tr) {
+    $(tr).find(".fa-angle-up").click(function (){
+        if ($(tr).index() > 0) $(tr).insertBefore($(tr).prev());
+    });
+    $(tr).find(".fa-angle-down").click(function (){
+        $(tr).insertAfter($(tr).next());
+    });
+    $(tr).find(".fa-angle-double-up").click(function (){
+        if ($(tr).index() > 0) $(tr).insertBefore($(tr).parent().children().first());
+    });
+    $(tr).find(".fa-angle-double-down").click(function (){
+        $(tr).insertAfter($(tr).parent().children().last());
+    });
+    $(tr).find(".fa-times-circle").click(function (){
+        var id = $(tr).attr("id").split("-");
+        $("[name='selectItem" + id[0] + "'][value='" + id[1] + "']").click();
+        $(tr).remove();
+        if ($("tbody tr").length === 0) $(".noCarrousel").show();
+    });
+}
+
+function addLine (module, id, name) {
+    var html =
+        "<tr id=\"" + module + "-" + id + "\">"
+      + "    <td class=\"center\">"
+      + ((module === "lists") ?
+        "        Listes"
+      : "        Listes")
+      + "    </td>"
+      + "    <td>"
+      + ((module === "lists") ?
+        "        <a href=\"/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=" + id + "\">"
+      : "        <a href=\"/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=" + id + "\">")
+      +              name
+      + "        </a>"
+      + "    </td>"
+      + "    <td><input type=\"text\" name=\"title-" + id + "\" value=\"\" /></td>"
+      + "    <td class=\"radio-group\">"
+      + "        <div>"
+      + "            <label for=\"carrousel\">Carousel</label>"
+      + "            <input id=\"carrousel\" type=\"radio\" name=\"type-" + id + "\" value=\"carrousel\" checked=\"checked\" />"
+      + "        <div>"
+      + "        </div>"
+      + "            <label for=\"scrolling\">À défilement</label>"
+      + "            <input id=\"scrolling\" type=\"radio\" name=\"type-" + id + "\" value=\"scrolling\" />"
+      + "        </div>"
+      + "    </td>"
+      + "    <td class=\"center\">"
+      + "        <input type=\"checkbox\" name=\"autorotate-" + id + "\" value=\"" + id + "\" />"
+      + "    </td>"
+      + "    <td>"
+      + "        <i class=\"fa fa-angle-up\"></i>"
+      + "        <i class=\"fa fa-angle-down\"></i>"
+      + "        <i class=\"fa fa-angle-double-up\"></i>"
+      + "        <i class=\"fa fa-angle-double-down\"></i>"
+      + "        <i class=\"fa fa-times-circle error\"></i>"
+      + "    </td>"
+      + "</tr>";
+
+    var line = $(html);
+    actionButtons(line);
+    $("tbody").append(line);
+    $(".noCarrousel").hide();
 }
 </script>

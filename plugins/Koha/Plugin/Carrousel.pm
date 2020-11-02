@@ -25,7 +25,7 @@ use Modern::Perl;
 use strict;
 use CGI;
 use DBI;
-use JSON qw( decode_json );
+use JSON qw( decode_json encode_json );
 use LWP::Simple;
 use Template;
 use utf8;
@@ -37,13 +37,13 @@ use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
 use C4::XSLT;
 
-our $VERSION = 2.0;
+our $VERSION = 3.0;
 our $metadata = {
-    name            => 'Carrousel 2.0',
-    author          => 'Mehdi Hamidi',
+    name            => 'Carrousel 3.0',
+    author          => 'Mehdi Hamidi, Maryse Simard',
     description     => 'Generates a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2020-09-03',
+    date_updated    => '2020-10-30',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -80,95 +80,91 @@ sub step_1 {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
     my $template = $self->retrieve_template("step_1");
-    my $enabledShelves = (!defined $self->retrieve_data('enabledShelves')) ? () : decode_json($self->retrieve_data('enabledShelves'));
-    $template->param(enabledShelves => $enabledShelves);
+    my $carrousels = (!defined $self->retrieve_data('carrousels')) ? () : decode_json($self->retrieve_data('carrousels'));
+    $template->param(carrousels => $carrousels);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
 
-sub getOrderedShelves {
-    my ( $self, $args ) = @_;
-    my @shelves;
-
+sub getDisplayName {
+    my ( $self, $module, $id ) = @_;
+    my $name = "";
+    
     if ($useSql) {
-        my $dbh = $dbh;
-        my $stmt = $dbh->prepare("SELECT * FROM virtualshelves WHERE category = 2 ORDER BY shelfname");
-        $stmt->execute();
+        my $table = ($module eq "lists") ? "virtualshelves" : "virtualshelves";
+        my $column_id = ($module eq "lists") ? "shelfnumber" : "shelfnumber";
+        my $column_name = ($module eq "lists") ? "shelfname" : "shelfname";
+
+        my $stmt = $dbh->prepare("SELECT * FROM $table WHERE $column_id = ?");
+        $stmt->execute($id);
 
         while (my $row = $stmt->fetchrow_hashref()) {
-            push @shelves, $row;
+            $name = $row->{$column_name};
         }
     } else {
-        @shelves = Koha::Virtualshelves->get_public_shelves();
+        if ($module eq "lists") {
+            my $shelve = Koha::Virtualshelves->find({ shelfnumber => $id });
+            $name = $shelve->shelfname if $shelve;
+        } else {
+            my $shelve = Koha::Virtualshelves->find({ shelfnumber => $id });
+            $name = $shelve->shelfname if $shelve;
+        }
     }
 
-    # ordering
-    if (defined $self->retrieve_data('shelvesOrder')) {
-        my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))};
-        my $enabledShelves = decode_json($self->retrieve_data('enabledShelves'));
-        my $shelvesOrderCount = @shelvesOrder;
-        my @orderedShelves;
-        my @otherShelves;
-        foreach my $list (@shelves) {
-            my $id = ($useSql) ? $list->{'shelfnumber'} : $list->shelfnumber;
-            my $found = 0;
-            for (my $i = 0; $i < $shelvesOrderCount; $i++) {
-                if ($id == $shelvesOrder[$i]) {
-                    my $carrousel = {shelf => $list};
-                    if (exists($enabledShelves->{$i})) {
-                        $carrousel->{enabled} = 1;
-                        $carrousel->{title} = $enabledShelves->{$i}->{title};
-                        $carrousel->{type} = $enabledShelves->{$i}->{type};
-                        $carrousel->{autorotate} = $enabledShelves->{$i}->{autorotate};
-                    }
-                    $orderedShelves[$i] = $carrousel;
-                    $found = 1;
-                    last;
-                }
-            }
-            push(@otherShelves, {shelf => $list}) unless ($found);
-        }
+    return $name;
+}
 
-        my @temp = @orderedShelves;
-        @orderedShelves = ();
-        for my $list (@temp) {
-            push(@orderedShelves, $list) if ($list != undef);
-        }
+sub getModules {
+    my ( $self, $args ) = @_;
+    my $modules;
 
-        @shelves = @orderedShelves;
-        push(@shelves, @otherShelves);
+    if ($useSql) {
+        my $stmt = $dbh->prepare("SELECT * FROM virtualshelves WHERE category = 2 ORDER BY shelfname");
+        $stmt->execute();
+        while (my $row = $stmt->fetchrow_hashref()) {
+            push @{$modules->{lists}}, $row;
+        }
     } else {
-        @shelves = map { shelf => $_ }, @shelves;
+        $modules->{lists} = Koha::Virtualshelves->get_public_shelves();
     }
 
-    return @shelves;
+    return $modules;
 }
 
 #Charger le contenus des listes en utilisant sql si le module virtualshelfcontents n'est pas disponible
 sub loadContent {
-    my ( $self, $virtualshelf ) = @_;
+    my ( $self, $module, $id ) = @_;
     my @content;
 
     if ($useSql) {
-        my $id = $virtualshelf->{'shelfnumber'};
-        my $stmt = $dbh->prepare("select * from virtualshelfcontents where shelfnumber =?");
+        my $stmt = $dbh->prepare("SELECT * FROM virtualshelfcontents WHERE shelfnumber = ?");
         $stmt->execute($id);
-
-        my $i = 0;
         while (my $row = $stmt->fetchrow_hashref()) {
-            $content[$i] = $row;
-            $i++;
+            push @content, $row->{biblionumber};
         }
     } else {
-        @content = Koha::Virtualshelfcontents->search({shelfnumber => $virtualshelf->shelfnumber});
+        my @shelves = Koha::Virtualshelfcontents->search({ shelfnumber => $id });
+        foreach my $item (@shelves) {
+            push @content, $item->biblionumber;
+        }
     }
 
     return @content;
 }
 
+sub getEnabledCarrousels {
+    my ( $self ) = @_;
+    my $shelves = ();
+    $shelves = decode_json($self->retrieve_data('carrousels')) if ($self->retrieve_data('carrousels'));
+    foreach my $carrousel (@{$shelves}) {
+        $carrousel->{name} = $self->getDisplayName($carrousel->{module}, $carrousel->{id});
+    }
+    return $shelves;
+}
+
 sub generateCarrousels{
     my ( $self ) = @_;
-    my @carrousels = $self->getCarrousels();
+    my $carrousels = $self->getCarrousels();
     my $tt = Template->new(
         INCLUDE_PATH => C4::Context->config("pluginsdir"),
         ENCODING     => 'utf8',
@@ -178,7 +174,7 @@ sub generateCarrousels{
     $tt->process(
         'Koha/Plugin/Carrousel/opac-carrousel.tt',
         {
-            carrousels  => \@carrousels,
+            carrousels => $carrousels,
             bgColor  => $self->retrieve_data('bgColor'),
             txtColor => $self->retrieve_data('txtColor'),
             autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
@@ -194,35 +190,28 @@ sub generateCarrousels{
 
 sub getCarrousels {
     my ( $self ) = @_;
-    my @shelves = $self->getOrderedShelves();
-    my @carrousels = ();
+    my $enabled_carrousels = $self->getEnabledCarrousels();
+    my @carrousels;
 
-    foreach my $list (@shelves) {
-        if ($list->{enabled}) {
-            my %carrousel = $self->getCarrousel($list->{shelf});
-            if (%carrousel) {
-                $carrousel{title} = $list->{title};
-                $carrousel{type} = $list->{type};
-                $carrousel{autorotate} = $list->{autorotate};
-                push(@carrousels, \%carrousel);
-            }
+    foreach my $carrousel (@{$enabled_carrousels}) {
+        my $documents = $self->getCarrouselContent($carrousel->{module}, $carrousel->{id});
+        if ($documents) {
+            $carrousel->{documents} = $documents;
+            push @carrousels, $carrousel;
         }
     }
 
-    return @carrousels;
+    return \@carrousels;
 }
 
-sub getCarrousel{
-    my ( $self, $shelf ) = @_;
+sub getCarrouselContent {
+    my ( $self, $module, $id ) = @_;
 
-    my $shelfname = ($useSql) ? $shelf->{'shelfname'} : $shelf->shelfname;
-    #$shelfname =~ s/[^a-zA-Z0-9]/_/g;
-    #content : shelfnumber,biblionumber,flags,dateadded, borrowernumber
-    my @contents = $self->loadContent($shelf);
+    my @contents = $self->loadContent($module, $id);
+    return unless @contents;
 
     my @images;
-    foreach my $content ( @contents ) {
-        my $biblionumber = ($useSql) ? $content->{'biblionumber'} : $content->biblionumber;
+    foreach my $biblionumber ( @contents ) {
         my $record = GetMarcBiblio({ biblionumber => $biblionumber });
         # Attempt the old call
         if (! $record) {
@@ -248,12 +237,11 @@ sub getCarrousel{
     }
 
     unless ( @images ) {
-        my $shelfid = ($useSql) ? $shelf->{'shelfnumber'} : $shelf->shelfnumber;
-        warn "[Koha::Plugin::Carrousel] No images were found for virtualshelf '$shelfname' (id: $shelfid). OpacMainUserBlock kept unchanged.\n";
+        warn "[Koha::Plugin::Carrousel] No images were found for $module with id $id. OpacMainUserBlock kept unchanged.\n";
         return;
     }
 
-    return ('name', $shelfname, 'documents', \@images);
+    return \@images;
 }
 
 sub insertIntoPref{
@@ -418,7 +406,7 @@ sub configure {
     my $cgi = $self->{'cgi'};
 
     if ($cgi->param("action")) {
-        my $enabledShelves     = $cgi->param('enabledShelves');
+        my $carrousels         = $cgi->param('carrousels'),
         my $shelvesOrder       = $cgi->param('shelvesOrder');
         my $bgColor            = $cgi->param('bgColor');
         my $txtColor           = $cgi->param('txtColor');
@@ -428,8 +416,7 @@ sub configure {
 
         $self->store_data(
             {
-                enabledShelves     => $enabledShelves,
-                shelvesOrder       => $shelvesOrder,
+                carrousels         => $carrousels,
                 bgColor            => $bgColor,
                 txtColor           => $txtColor,
                 autoRotateDirection => $autoRotateDirection,
@@ -440,12 +427,13 @@ sub configure {
 
         $self->go_home();
     } else {
-        my @shelves = $self->getOrderedShelves();
+        my $carrousels = $self->getEnabledCarrousels();
+        my $modules = $self->getModules();
 
         my $template = $self->retrieve_template("configure");
         $template->param(
-            carrousels     => \@shelves,
-            enabledShelves => $self->retrieve_data('enabledShelves'),
+            carrousels     => $carrousels,
+            lists          => $modules->{lists},
             bgColor        => $self->retrieve_data('bgColor'),
             txtColor       => $self->retrieve_data('txtColor'),
             autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
@@ -455,6 +443,38 @@ sub configure {
         print $cgi->header(-type => 'text/html',-charset => 'utf-8');
         print $template->output();
     }
+}
+
+sub upgrade {
+    my ( $self, $args ) = @_;
+    my $database_version = $self->retrieve_data('__INSTALLED_VERSION__') || $VERSION;
+
+    if ($database_version < 3.0) {
+        my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))} if (defined $self->retrieve_data('shelvesOrder'));
+        my @enabledShelves = @{decode_json($self->retrieve_data('enabledShelves'))} if (defined $self->retrieve_data('enabledShelves'));
+        my $type = $self->retrieve_data('type');
+
+        my @carrousels;
+        foreach my $id (@shelvesOrder) {
+            if (grep(/^$id$/, @enabledShelves)) {
+                my $carrousel = {
+                    id     => $id,
+                    module => "lists",
+                    title  => "",
+                    type   => $type || "carrousel",
+                    autorotate => 0
+                };
+                push @carrousels, $carrousel;
+            }
+        }
+
+        $self->store_data({ carrousels => encode_json(\@carrousels) });
+
+        my $sth = $dbh->prepare("DELETE FROM plugin_data WHERE plugin_class = ? AND plugin_key in ('enabledShelves', 'shelvesOrder', 'type')");
+        $sth->execute( $self->{'class'} );
+    }
+
+    return 1;
 }
 
 #Supprimer le plugin avec toutes ses données
