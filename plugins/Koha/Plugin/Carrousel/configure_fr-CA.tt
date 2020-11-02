@@ -3,6 +3,8 @@
 <title>Koha:Carrousel Plugin: Configuration</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <script src=[%PLUGIN_PATH%]/js/jscolor.js></script>
+<script type="text/javascript" src="[% interface %]/lib/jquery/plugins/multiple-select/jquery.multiple.select.js"></script>
+<link rel="stylesheet" type="text/css" href="[% interface %]/lib/jquery/plugins/multiple-select/multiple-select.css" />
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
@@ -18,100 +20,244 @@
         </div>
 
         <h3>Configuration des carrousels</h3>
-        <form method="get">
-            <input type="hidden" name="enabledShelves" />
-            <input type="hidden" name="shelvesOrder" />
-
-            <div class="infos">
-                <label>Choisir et ordonner les carrousels : </label>
-                <br>
-                [% IF shelves %]
-                <table>
-                    <tr>
-                        <th>Liste</th>
-                        <th>Générer</th>
-                        <th>Ordre</th>
-                    </tr>
-                    [% FOREACH shelf IN shelves %]
-                    <tr id="shelf-[% shelf.shelfnumber %]">
-                        <td>[% shelf.shelfname %]</td>
-                        <td><input type="checkbox" name="enabledShelf-[% shelf.shelfnumber %]" value="[% shelf.shelfnumber %]" /></td>
-                        <td>
-                            <i class="fa fa-angle-up"></i>
-                            <i class="fa fa-angle-down"></i>
-                            <i class="fa fa-angle-double-up"></i>
-                            <i class="fa fa-angle-double-down"></i>
-                        </td>
-                    </tr>
-                    [% END %]
-                </table>
-                [% ELSE %]
-                <p id="nolist">Vous n'avez aucune liste. Cliquez <a href="/cgi-bin/koha/virtualshelves/shelves.pl">ici</a> pour en créer une.</p>
-                [% END %]
-            </div>
-
-            <div id="type" class="infos">
-                <label>Type :</label>
-                <span class="alignment">
-                    <div>
-                        <label for="carrousel">Carrousel</label>
-                        <input id="carrousel" type="radio" name="type" value="carrousel" [% IF !type OR type == "carrousel" %]checked="checked"[% END %]>
-                    </div>
-                    <div>
-                        <label for="scrolling">À défilement</label>
-                        <input id="scrolling" type="radio" name="type" value="scrolling" [% IF type == "scrolling" %]checked="checked"[% END %]>
-                    </div>
-                </span>
-            </div>
-
-            <div class="infos">
-                Couleur du texte : <input name="txtColor" onchange="update(this.value, 'text')" id="colors" class="jscolor alignment " value="[% txtColor %]">
-            </div>
-
-            <div class="infos">
-                Couleur de l'arrière-plan : <input name="bgColor" onchange="update(this.value, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]">
-            </div>
+        <form method="get" id="inlibro-carrousel">
             <input type="hidden" name="class" value="[% CLASS %]"/>
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
-            <br>
 
-            <div id="background">
-                <p id="text" style="font-size: 30px; color:#FFFFFF; padding : 4.75% 2%"> This is just an example </p>
+            <input type="hidden" name="carrousels" />
+
+            <div>
+                <h4>Choisir et ordonner les carrousels : </h4>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Module</th>
+                            <th>Liste</th>
+                            <th>Titre</th>
+                            <th>Type</th>
+                            <th>Auto rotation</th>
+                            <th>Ordre</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        [% SET enabled = {} %]
+                        [% FOREACH carrousel IN carrousels %]
+                            [% SET module = carrousel.module %]
+                            [% UNLESS enabled.defined("$module") %][% SET enabled.$module = [] %][% END %]
+                            [% enabled.$module.push(carrousel.id) %]
+                            <tr id="[% carrousel.module %]-[% carrousel.id %]">
+                                <td class="center">
+                                    [% SWITCH carrousel.module %]
+                                    [% CASE "reports" %]
+                                        Rapports
+                                    [% CASE "collections" %]
+                                        Collections
+                                    [% CASE %]
+                                        Listes
+                                    [% END %]
+                                </td>
+                                <td>
+                                    [% IF carrousel.module == "reports" %]
+                                        <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id %]&phase=Show SQL">
+                                    [% ELSIF carrousel.module == "collections" %]
+                                        <a href="/cgi-bin/koha/rotating_collections/addItems.pl?colId=[% carrousel.id %]">
+                                    [% ELSE %]
+                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id %]">
+                                    [% END %]
+                                        [% carrousel.name %]
+                                    </a>
+                                </td>
+                                <td><input type="text" name="title-[% carrousel.id %]" value="[% carrousel.title %]" /></td>
+                                <td class="radio-group">
+                                    <div>
+                                        <label for="carrousel">Carrousel</label>
+                                        <input id="carrousel" type="radio" name="type-[% carrousel.id %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] />
+                                    <div>
+                                    </div>
+                                        <label for="scrolling">À défilement</label>
+                                        <input id="scrolling" type="radio" name="type-[% carrousel.id %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
+                                    </div>
+                                </td>
+                                <td class="center">
+                                    <input type="checkbox" name="autorotate-[% carrousel.id %]" value="[% carrousel.id %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
+                                </td>
+                                <td>
+                                    <i class="fa fa-angle-up"></i>
+                                    <i class="fa fa-angle-down"></i>
+                                    <i class="fa fa-angle-double-up"></i>
+                                    <i class="fa fa-angle-double-down"></i>
+                                    <i class="fa fa-times-circle error"></i>
+                                </td>
+                            </tr>
+                        [% END %]
+                    </tbody>
+                </table>
+                <p class="nolist noCarrousel"[% IF carrousels %] style="display:none;"[% END %]>Vous n'avez aucun carrousel. Utilisez les sélecteurs ci-bas pour en ajouter.</p>
+
+                <h5>Ajouter un carrousel :</h5>
+
+                <div id="add-carrousels">
+                    <label>Listes</label>
+                    [% IF lists %]
+                        [% SET module = "lists" %]
+                        <select name="[% module %]" multiple="multiple">
+                            [% FOREACH list IN lists %]
+                                [% IF enabled.$module.grep("^$list.shelfnumber\$").size %]
+                                    <option value="[% list.shelfnumber %]" selected="selected">[% list.shelfname %]</option>
+                                [% ELSE %]
+                                    <option value="[% list.shelfnumber %]">[% list.shelfname %]</option>
+                                [% END %]
+                            [% END %]
+                        </select>
+                    [% ELSE %]
+                        <p class="nolist">Vous n'avez aucune liste. Cliquez <a href="/cgi-bin/koha/virtualshelves/shelves.pl">ici</a> pour en créer une.</p>
+                    [% END %]
+
+                    <label>Rapports</label>
+                    [% IF reports %]
+                        [% SET module = "reports" %]
+                        <select name="[% module %]" multiple="multiple">
+                            [% FOREACH report IN reports %]
+                                [% IF enabled.$module.grep("^$report.id\$").size %]
+                                    <option value="[% report.id %]" selected="selected">[% report.report_name %]</option>
+                                [% ELSE %]
+                                    <option value="[% report.id %]">[% report.report_name %]</option>
+                                [% END %]
+                            [% END %]
+                        </select>
+                        <p><small>Le résultat des rapports doit inclure le biblionumber pour qu'il génère un carrousel.</small></p>
+                    [% ELSE %]
+                        <p class="nolist">Vous n'avez aucun rapport. Cliquez <a href="/cgi-bin/koha/reports/reports-home.pl">ici</a> pour en créer un.</p>
+                    [% END %]
+
+                    <label>Collections</label>
+                    [% IF collections %]
+                        [% SET module = "collections" %]
+                        <select name="[% module %]" multiple="multiple">
+                            [% FOREACH collection IN collections %]
+                                [% IF enabled.$module.grep("^$collection.colId\$").size %]
+                                    <option value="[% collection.colId %]" selected="selected">[% collection.colTitle %]</option>
+                                [% ELSE %]
+                                    <option value="[% collection.colId %]">[% collection.colTitle %]</option>
+                                [% END %]
+                            [% END %]
+                        </select>
+                    [% ELSE %]
+                        <p class="nolist">Vous n'avez aucune collection. Cliquez <a href="/cgi-bin/koha/rotating_collections/rotatingCollections.pl">ici</a> pour en créer une.</p>
+                    [% END %]
+                </div>
+            </div>
+
+            <h4>Options</h4>
+
+            <div class="infos">
+                <label>Direction de la rotation automatique:</label>
+                <div class="radio-group">
+                    <div>
+                        <label for="autorotate-left">Gauche</label>
+                        <input type="radio" id="autorotate-left" name="autorotate-direction" value="left" [% IF !autoRotateDirection OR autoRotateDirection == "left" %]checked="checked"[% END %] />
+                    </div>
+                    <div>
+                        <label for="autorotate-right">Droite</label>
+                        <input type="radio" id="autorotate-right" name="autorotate-direction" value="right" [% IF autoRotateDirection == "right" %]checked="checked"[% END %] />
+                    </div>
+                </div>
+            </div>
+
+            <div class="infos">
+                <label>Délai de la rotation automatique (ms):</label>
+                <input type="number" name="autorotate-delay" min="0" class="alignment" value="[% autoRotateDelay %]" />
+                <small>La valeur par défaut est 1500ms.</small>
+            </div>
+
+            <div class="infos">
+                Couleur du texte : <input name="txtColor" onchange="update(this.value, 'text')" id="colors" class="jscolor alignment" value="[% txtColor || '000000' %]" />
+            </div>
+
+            <div class="infos">
+                Couleur de l'arrière-plan : <input name="bgColor" onchange="update(this.value, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]" />
+            </div>
+
+            <div id="background" class="infos">
+                <p id="text"> Ceci est un exemple </p>
+            </div>
+
+            <div class="infos">
+                <label for="generateJSON">Générer un fichier JSON</label>
+                <input id="generateJSON" type="checkbox" name="generateJSON" value="1" [% IF generateJSON %]checked="checked"[% END %] />
+                <label for="generateJSON">
+                    <small>Lors de la génération des carrousels, aussi créer un fichier JSON contenant les informations concernant les éléments de chaque carrousels.</small>
+                </label>
+                <small>Le fichier est ensuite disponible à l'adresse : <a href="[% Koha.Preference('OPACBaseURL') %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel">[% Koha.Preference('OPACBaseURL') || "&lt;opac_url&gt;" %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel</a></small>
             </div>
 
             <input id="submit" type="submit" value="Appliquer la configuration">
 
         </form>
-
-
-
     </div>
 </div>
 
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
 <style>
+#inlibro-carrousel table,
+.ms-parent, .ms-drop {
+    font-size: 0.8em;
+}
+
+#inlibro-carrousel td {
+    vertical-align: middle;
+}
+
+#inlibro-carrousel td.center {
+    text-align: center;
+}
+
+.radio-group {
+    text-align: right;
+}
+
+input[type="number"] {
+    width: 30%;
+}
+
 #colors{
     height :25px;
     width : 30%;
 }
-#shelves{
-    width : 32.5%;
-}
-form{
-    width:500px;
-}
+
 .alignment{
     float:right;
 }
-.infos{
+
+.infos, #add-carrousels{
     clear: both;
+    width: 650px;
     margin: 20px 0;
-    overflow: auto;
+    padding-left: 25px;
 }
+
+#add-carrousels label {
+    display: block;
+}
+
+#add-carrousels label:not(:first-child) {
+    margin-top: 15px;
+}
+
+small {
+    display: block;
+    margin-top: 15px;
+    font-size: 80%;
+}
+
+.infos small {
+    text-align: right;
+}
+
 #content{
-    width : 450px;
     margin:2% 1%;
     font-size:20px;
 }
@@ -122,21 +268,18 @@ h1{
 #submit{
     margin-top:2%;
 }
-#shelves{
-    font-size: 100%;
-}
-#type div{
-    text-align: right;
-}
+
 #background{
-    width:100%;
-    height:80px;
     background-color : #[% bgColor %];
     border :0;
 }
-.infos table{
-    font-size: 0.8em;
+
+#background p {
+    font-size: 30px;
+    padding: 25px 10px;
+    color: #[% txtColor %];
 }
+
 .fa{
     cursor: pointer;
     display: inherit;
@@ -146,7 +289,8 @@ h1{
 .fa:hover{
     color: grey;
 }
-#nolist{
+
+.nolist{
     font-size: 0.75em;
     color: grey;
 }
@@ -155,48 +299,63 @@ h1{
 <script>
 // Set configs
 $(function() {
-    var json = '[% enabledShelves %]';
-    if (json != "") {
-        var enablings = JSON.parse(json);
-        for (var i=0; i < enablings.length; i++) {
-            $("input[name='enabledShelf-"+enablings[i]+"']").prop("checked", true);
+    $("select[multiple='multiple']").multipleSelect(
+        {
+            placeholder: _("Merci de sélectionner ..."),
+            selectAllText: _("Tout sélectionner"),
+            allSelected: _("Tous"),
+            countSelected: _("# de % selectionné(e)s"),
+            noMatchesFound: _("Aucune correspondances trouvées")
         }
-    }
+    );
 
-    $("form tr[id*='shelf']").each(function (){
-        var tr = this;
-        $(this).find(".fa-angle-up").click(function (){
-            if ($(tr).index() > 1) $(tr).insertBefore($(tr).prev());
+    $(".ms-drop [name^='selectAll']").on("click", function () {
+        var module = $(this).closest(".ms-parent").prev().prop("name");
+        var checked = $(this).prop("checked");
+        $(this).closest(".ms-drop").find("input[type='checkbox']").not("[name^='selectAll']").each(function () {
+            var id = $(this).val();
+            var tr = $("tr#" + module + "-" + id);
+            if (checked && tr.length === 0) {
+                addLine(module, id, $(this).parent().text());
+            } else if (!checked && tr.length === 1) {
+                tr.remove();
+            }
         });
-        $(this).find(".fa-angle-down").click(function (){
-            $(tr).insertAfter($(tr).next());
-        });
-        $(this).find(".fa-angle-double-up").click(function (){
-            if ($(tr).index() > 1) $(tr).insertAfter($(tr).parent().children().first());
-        });
-        $(this).find(".fa-angle-double-down").click(function (){
-            $(tr).insertAfter($(tr).parent().children().last());
-        });
+    });
+
+    $(".ms-drop input[type='checkbox']").not("[name^='selectAll']").on("click", function () {
+        var module = $(this).closest(".ms-parent").prev().prop("name");
+        if ($(this).prop('checked')) {
+            addLine(module, $(this).val(), $(this).parent().text());
+        } else {
+            $("#" + module + "-" + $(this).val()).remove();
+            if ($("tbody tr").length === 0) $(".noCarrousel").show();
+        }
+    });
+
+    $("tbody tr").each(function (){
+        actionButtons(this);
     });
 });
 
 $("#doc3 form").submit(function (){
     var form = $("form").serializeArray();
 
-    var orders = [];
     var enablings = [];
-
-    for (var i=0; i < form.length; i++) {
-        var components = form[i].name.split("-");
-        if (components[0] == "enabledShelf") enablings.push(components[1]);
-    }
-
-    $("form tr[id*='shelf']").each(function (){
-        orders.push($(this).attr("id").split("-")[1]);
+    $("tbody tr").each(function (){
+        var carrousel = $(this);
+        var id = carrousel.attr("id").split("-");
+        var data = {
+            id : id[1],
+            module : id[0],
+            title : carrousel.find("[name^='title']").val(),
+            type : carrousel.find("[name^='type']:checked").val(),
+            autorotate : carrousel.find("[name^='autorotate']").prop('checked') ? 1 : 0
+        };
+        enablings.push(data);
     });
 
-    $("input[name='shelvesOrder']").attr("value", JSON.stringify(orders));
-    $("input[name='enabledShelves']").attr("value", JSON.stringify(enablings));
+    $("input[name='carrousels']").attr("value", JSON.stringify(enablings));
 });
 
 function update(jscolor, object) {
@@ -206,5 +365,74 @@ function update(jscolor, object) {
     }else{
         document.getElementById('text').style.color = '#' + jscolor;
     }
+}
+
+function actionButtons (tr) {
+    $(tr).find(".fa-angle-up").click(function (){
+        if ($(tr).index() > 0) $(tr).insertBefore($(tr).prev());
+    });
+    $(tr).find(".fa-angle-down").click(function (){
+        $(tr).insertAfter($(tr).next());
+    });
+    $(tr).find(".fa-angle-double-up").click(function (){
+        if ($(tr).index() > 0) $(tr).insertBefore($(tr).parent().children().first());
+    });
+    $(tr).find(".fa-angle-double-down").click(function (){
+        $(tr).insertAfter($(tr).parent().children().last());
+    });
+    $(tr).find(".fa-times-circle").click(function (){
+        var id = $(tr).attr("id").split("-");
+        $("[name='selectItem" + id[0] + "'][value='" + id[1] + "']").click();
+        $(tr).remove();
+        if ($("tbody tr").length === 0) $(".noCarrousel").show();
+    });
+}
+
+function addLine (module, id, name) {
+    var html =
+        "<tr id=\"" + module + "-" + id + "\">"
+      + "    <td class=\"center\">"
+      + ((module === "reports") ?
+        "        Rapports"
+      : ((module === "collections") ?
+        "        Collections"
+      : "        Listes"))
+      + "    </td>"
+      + "    <td>"
+      + ((module === "reports") ?
+        "        <a href=\"/cgi-bin/koha/reports/guided_reports.pl?reports=" + id + "&phase=Show SQL\">"
+      : ((module === "collections") ?
+        "        <a href=\"/cgi-bin/koha/rotating_collections/addItems.pl?colId=" + id + "\">"
+      : "        <a href=\"/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=" + id + "\">"))
+      +              name
+      + "        </a>"
+      + "    </td>"
+      + "    <td><input type=\"text\" name=\"title-" + id + "\" value=\"\" /></td>"
+      + "    <td class=\"radio-group\">"
+      + "        <div>"
+      + "            <label for=\"carrousel\">Carousel</label>"
+      + "            <input id=\"carrousel\" type=\"radio\" name=\"type-" + id + "\" value=\"carrousel\" checked=\"checked\" />"
+      + "        <div>"
+      + "        </div>"
+      + "            <label for=\"scrolling\">À défilement</label>"
+      + "            <input id=\"scrolling\" type=\"radio\" name=\"type-" + id + "\" value=\"scrolling\" />"
+      + "        </div>"
+      + "    </td>"
+      + "    <td class=\"center\">"
+      + "        <input type=\"checkbox\" name=\"autorotate-" + id + "\" value=\"" + id + "\" />"
+      + "    </td>"
+      + "    <td>"
+      + "        <i class=\"fa fa-angle-up\"></i>"
+      + "        <i class=\"fa fa-angle-down\"></i>"
+      + "        <i class=\"fa fa-angle-double-up\"></i>"
+      + "        <i class=\"fa fa-angle-double-down\"></i>"
+      + "        <i class=\"fa fa-times-circle error\"></i>"
+      + "    </td>"
+      + "</tr>";
+
+    var line = $(html);
+    actionButtons(line);
+    $("tbody").append(line);
+    $(".noCarrousel").hide();
 }
 </script>
