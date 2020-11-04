@@ -324,7 +324,7 @@ sub getCarrouselContent {
             $author = $record->subfield( '111', 'a' ) unless $author;
         }elsif ($marcflavour eq 'UNIMARC'){
             $title = $record->subfield('200', 'a');
-            author = $record->subfield( '200', 'f' );
+            $author = $record->subfield( '200', 'f' );
         }
         $title =~ s/[,:\/\s]+$//;
 
