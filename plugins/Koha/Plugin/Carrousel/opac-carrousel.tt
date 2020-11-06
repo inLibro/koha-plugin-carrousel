@@ -1,6 +1,7 @@
 
 <meta charset="utf-8"/>
 
+<div id="inlibro-carrousel">
 [% FOREACH carrousel IN carrousels %]
     [% IF carrousel.type == "carrousel" %]
         <div class='carrouselFrame'>
@@ -39,6 +40,7 @@
         </div>
     [% END %]
 [% END %]
+</div>
 
 <style>
 [% UNLESS txtColor %]
@@ -48,7 +50,7 @@
     [% bgColor = '373737' %]
 [% END %]
 
-.carrouselFrame {
+#inlibro-carrousel .carrouselFrame {
     background: #DDDDDD;
     border-radius: 8px;
     margin: 1em 0;
@@ -57,11 +59,11 @@
     position: relative;
 }
 
-.carrousel{
+#inlibro-carrousel .carrousel{
     height : 300px;
 }
 
-.loadingDiv{
+#inlibro-carrousel .loadingDiv{
     background : white;
     position : absolute;
     height : 100%;
@@ -71,51 +73,51 @@
 
 }
 
-.carousel-caption .title-text{
+#inlibro-carrousel .carousel-caption .title-text{
     color : #[%txtColor%];
 }
 
-.carousel-control,
-.carousel-caption{
+#inlibro-carrousel .carousel-control,
+#inlibro-carrousel .carousel-caption{
     background-color : #[%bgColor%];
     z-index:1000;
     cursor : pointer;
 }
 
-.carousel-caption{
+#inlibro-carrousel .carousel-caption{
     font-weight : bold;
     position: absolute;
     left: 0;
     right: 0;
 }
 
-.carousel-control,
-.carousel-caption{
+#inlibro-carrousel .carousel-control,
+#inlibro-carrousel .carousel-caption{
     background-color : #[%bgColor%];
     z-index:1000;
 }
 
-.carousel-caption{
+#inlibro-carrousel .carousel-caption{
     font-weight : bold;
 }
 
-a.locked{
+#inlibro-carrousel a.locked{
     width:100px;
 }
 
-.slider {
+#inlibro-carrousel .slider {
     overflow: hidden;
 }
 
-.slider img {
+#inlibro-carrousel .slider img {
     height: 175px;
 }
 
-.slider hr + div {
+#inlibro-carrousel .slider hr + div {
     background-color: #d5e1df;
 }
 
-.special-title{ 
+#inlibro-carrousel .special-title{ 
     text-align: center;
     margin: 0;
     margin-top: 10px;
@@ -126,34 +128,34 @@ a.locked{
     color:black;
 }
 
-hr{
+#inlibro-carrousel hr{
     margin: -5px 0px 15px 0px;
 }
 
-h2 {
+#inlibro-carrousel h2 {
     color: black;
 }
 
-.images {
+#inlibro-carrousel .images {
     left: 0px;
     position: relative;
     white-space: nowrap;
 
 }
 
-.controls{
+#inlibro-carrousel .controls{
     margin-bottom: 115px;
     margin-top: 20px;
 }
 
-button{
+#inlibro-carrousel button{
     height:4vh;
     font-size: 22px;
     color : #[%txtColor%];
     background-color: #[%bgColor%];
 }
 
-.images a {
+#inlibro-carrousel .images a {
     display: inline-block;
     margin-right: 5px;
 }
