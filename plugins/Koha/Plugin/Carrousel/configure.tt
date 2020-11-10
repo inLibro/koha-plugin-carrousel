@@ -1,3 +1,4 @@
+[% USE Koha %]
 [% INCLUDE 'doc-head-open.inc' %]
 <!-- Head-->
 <title>Koha:Carrousel Plugin: Configuration</title>
@@ -15,7 +16,7 @@
 
         <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
             <p style="text-align: left;">This plugin created by</p>
-            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_en.svg'/>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_en.svg' alt="inLibro" />
             <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
         </div>
 
@@ -100,7 +101,7 @@
 
                 <div id="add-carrousels">
                     <label>Lists</label>
-                    [% IF lists %]
+                    [% IF lists.count %]
                         [% SET module = "lists" %]
                         <select name="[% module %]" multiple="multiple">
                             [% FOREACH list IN lists %]
@@ -116,7 +117,7 @@
                     [% END %]
 
                     <label>Reports</label>
-                    [% IF reports %]
+                    [% IF reports.count %]
                         [% SET module = "reports" %]
                         <select name="[% module %]" multiple="multiple">
                             [% FOREACH report IN reports %]
@@ -245,6 +246,10 @@ input[type="number"] {
 
 #add-carrousels label:not(:first-child) {
     margin-top: 15px;
+}
+
+#add-carrousels .ms-parent {
+    min-width: 200px;
 }
 
 small {
