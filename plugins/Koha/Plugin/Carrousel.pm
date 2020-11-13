@@ -619,19 +619,21 @@ sub retrieve_template {
     my ( $self, $template_prefix ) = @_;
     my $cgi = $self->{'cgi'};
 
-    return undef unless $template_prefix eq 'step_1' || $template_prefix eq 'configure';
+    my $template = undef;
+    return $template unless $template_prefix eq 'step_1' || $template_prefix eq 'configure';
 
     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
-    my $template = undef;
-    eval {
-        $template = $self->get_template({ file => $template_prefix . '_' . $preferedLanguage . ".tt" })
-    };
-
-    if ( !$template ) {
-        $preferedLanguage = substr $preferedLanguage, 0, 2;
+    if ($preferedLanguage) {
         eval {
-            $template = $self->get_template( { file => $template_prefix . '_' . $preferedLanguage .  ".tt" })
+            $template = $self->get_template({ file => $template_prefix . '_' . $preferedLanguage . ".tt" })
         };
+
+        if ( !$template ) {
+            $preferedLanguage = substr $preferedLanguage, 0, 2;
+            eval {
+                $template = $self->get_template( { file => $template_prefix . '_' . $preferedLanguage .  ".tt" })
+            };
+        }
     }
 
     $template = $self->get_template( { file => $template_prefix . '.tt' } ) unless $template;
