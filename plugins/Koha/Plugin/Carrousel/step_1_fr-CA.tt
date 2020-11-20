@@ -11,7 +11,7 @@
 
         <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
             <p style="text-align: left;">Cette extension a été créée par</p>
-            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg'/>
+            <img width='450px' src='[%PLUGIN_PATH%]/images/inLibro_fr.svg' alt="inLibro" />
             <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extensions Koha</p>
         </div>
 
@@ -22,7 +22,7 @@
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
-            [% IF (enabledShelves.size() > 0) %]
+            [% IF (carrousels.size() > 0) %]
             <input id="submit" type="submit" value="Générer">
             [% ELSE %]
             <div class="alert alert-danger">

@@ -191,7 +191,7 @@
                 <label for="generateJSON">
                     <small>When generating the carrousels, also create a JSON file containing information about all of the carrousels' items.</small>
                 </label>
-                <small>The file can then be found at this url: <a href="[% Koha.Preference('OPACBaseURL') %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel">[% Koha.Preference('OPACBaseURL') || "&lt;opac_url&gt;" %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel</a></small>
+                <p><small>The file can then be found at this url: <a href="[% Koha.Preference('OPACBaseURL') %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel">[% Koha.Preference('OPACBaseURL') || "&lt;opac_url&gt;" %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel</a></small></p>
             </div>
 
             <input id="submit" type="submit" value="Apply configuration">
@@ -258,7 +258,7 @@ small {
     font-size: 80%;
 }
 
-.infos small {
+.infos > small {
     text-align: right;
 }
 

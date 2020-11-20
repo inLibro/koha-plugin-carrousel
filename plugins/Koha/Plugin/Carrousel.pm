@@ -543,6 +543,7 @@ sub configure {
             txtColor       => $self->retrieve_data('txtColor'),
             autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
             autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
+            generateJSON   => $self->retrieve_data('generateJSON'),
             ENCODING       => 'utf8',
         );
         print $cgi->header(-type => 'text/html',-charset => 'utf-8');
