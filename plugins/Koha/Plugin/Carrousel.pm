@@ -26,6 +26,7 @@ use strict;
 use CGI;
 use DBI;
 use JSON qw( decode_json encode_json );
+use Encode qw( encode_utf8 );
 use LWP::Simple;
 use Template;
 use utf8;
@@ -82,7 +83,7 @@ sub step_1 {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
     my $template = $self->retrieve_template("step_1");
-    my $carrousels = (!defined $self->retrieve_data('carrousels')) ? () : decode_json($self->retrieve_data('carrousels'));
+    my $carrousels = (!defined $self->retrieve_data('carrousels')) ? () : decode_json(encode_utf8($self->retrieve_data('carrousels')));
     $template->param(carrousels => $carrousels);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
@@ -212,7 +213,7 @@ sub loadContent {
 sub getEnabledCarrousels {
     my ( $self ) = @_;
     my $shelves = ();
-    $shelves = decode_json($self->retrieve_data('carrousels')) if ($self->retrieve_data('carrousels'));
+    $shelves = decode_json(encode_utf8($self->retrieve_data('carrousels'))) if ($self->retrieve_data('carrousels'));
     foreach my $carrousel (@{$shelves}) {
         $carrousel->{name} = $self->getDisplayName($carrousel->{module}, $carrousel->{id});
     }
