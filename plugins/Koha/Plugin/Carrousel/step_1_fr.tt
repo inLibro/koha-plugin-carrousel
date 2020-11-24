@@ -22,7 +22,7 @@
             <input type="hidden" name="method" value="[% METHOD %]"/>
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
-            [% IF (carrousels.size() > 0) %]
+            [% IF carrousels && (carrousels.size() > 0) %]
             <input id="submit" type="submit" value="Générer">
             [% ELSE %]
             <div class="alert alert-danger">
