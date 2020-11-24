@@ -26,6 +26,7 @@ use strict;
 use CGI;
 use DBI;
 use JSON qw( decode_json encode_json );
+use Encode qw( encode_utf8 );
 use LWP::Simple;
 use Template;
 use utf8;
@@ -82,7 +83,7 @@ sub step_1 {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
     my $template = $self->retrieve_template("step_1");
-    my $carrousels = (!defined $self->retrieve_data('carrousels')) ? () : decode_json($self->retrieve_data('carrousels'));
+    my $carrousels = (!defined $self->retrieve_data('carrousels')) ? () : decode_json(encode_utf8($self->retrieve_data('carrousels')));
     $template->param(carrousels => $carrousels);
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
@@ -162,25 +163,29 @@ sub loadContent {
             }
         } else {
             my $report = Koha::Reports->find($id);
-            $sql = $report->savedsql;
+            $sql = $report->savedsql if $report;
         }
 
-        unless ($sql =~ /<</) {
-            my ( $sth, $errors ) = execute_query($sql);
-            if ($sth) {
-                while ( my $row = $sth->fetchrow_hashref() ) {
-                    if (defined($row->{biblionumber})) {
-                        push @content, $row->{biblionumber};
-                    } else {
-                        warn "Report $id can't be used because it doesn't use biblionumber.";
-                        last;
+        unless ($sql) {
+            warn "Report $id was not found.";
+        } else {
+            unless ($sql =~ /<</) {
+                my ( $sth, $errors ) = execute_query($sql);
+                if ($sth) {
+                    while ( my $row = $sth->fetchrow_hashref() ) {
+                        if (defined($row->{biblionumber})) {
+                            push @content, $row->{biblionumber};
+                        } else {
+                            warn "Report $id can't be used because it doesn't use biblionumber.";
+                            last;
+                        }
                     }
+                } else {
+                    warn "An error occured while executing report $id.";
                 }
             } else {
-                warn "An error occured while executing report $id.";
+                warn "Report $id can't be used because it needs parameters.";
             }
-        } else {
-            warn "Report $id can't be used because it needs parameters.";
         }
     } elsif ($module eq "collections") {
         my $stmt = $dbh->prepare(
@@ -212,7 +217,7 @@ sub loadContent {
 sub getEnabledCarrousels {
     my ( $self ) = @_;
     my $shelves = ();
-    $shelves = decode_json($self->retrieve_data('carrousels')) if ($self->retrieve_data('carrousels'));
+    $shelves = decode_json(encode_utf8($self->retrieve_data('carrousels'))) if ($self->retrieve_data('carrousels'));
     foreach my $carrousel (@{$shelves}) {
         $carrousel->{name} = $self->getDisplayName($carrousel->{module}, $carrousel->{id});
     }
@@ -576,7 +581,7 @@ sub upgrade {
 
         $self->store_data({ carrousels => encode_json(\@carrousels) });
 
-        my $sth = $dbh->prepare("DELETE FROM plugin_data WHERE plugin_class = ? AND plugin_key in ('enabledShelves', 'shelvesOrder', 'type')");
+        my $sth = $dbh->prepare("DELETE FROM plugin_data WHERE plugin_class = ? AND plugin_key in ('enabledShelves', 'shelves', 'shelvesOrder', 'type')");
         $sth->execute( $self->{'class'} );
     }
 
@@ -586,8 +591,7 @@ sub upgrade {
 #Supprimer le plugin avec toutes ses données
 sub uninstall() {
     my ( $self, $args ) = @_;
-    my $table = $self->get_qualified_table_name('mytable');
-    my $dbh = $dbh;
+
     my $stmt = $dbh->prepare("select * from systempreferences where variable='OpacMainUserBlock'");
     $stmt->execute();
 
@@ -610,7 +614,7 @@ sub uninstall() {
     $query->finish();
     $stmt->finish();
 
-    return C4::Context->dbh->do("DROP TABLE $table");
+    return 1;
 }
 
 # retrieve the template that includes the prefix passed

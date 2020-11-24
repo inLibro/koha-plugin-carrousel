@@ -70,19 +70,19 @@
                                         [% carrousel.name %]
                                     </a>
                                 </td>
-                                <td><input type="text" name="title-[% carrousel.id %]" value="[% carrousel.title %]" /></td>
+                                <td><input type="text" name="title-[% carrousel.module %]-[% carrousel.id %]" value="[% carrousel.title %]" /></td>
                                 <td class="radio-group">
                                     <div>
                                         <label for="carrousel">Carrousel</label>
-                                        <input id="carrousel" type="radio" name="type-[% carrousel.id %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] />
+                                        <input id="carrousel" type="radio" name="type-[% carrousel.module %]-[% carrousel.id %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] />
                                     <div>
                                     </div>
                                         <label for="scrolling">À défilement</label>
-                                        <input id="scrolling" type="radio" name="type-[% carrousel.id %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
+                                        <input id="scrolling" type="radio" name="type-[% carrousel.module %]-[% carrousel.id %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
                                     </div>
                                 </td>
                                 <td class="center">
-                                    <input type="checkbox" name="autorotate-[% carrousel.id %]" value="[% carrousel.id %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
+                                    <input type="checkbox" name="autorotate-[% carrousel.module %]-[% carrousel.id %]" value="[% carrousel.id %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
                                 </td>
                                 <td>
                                     <i class="fa fa-angle-up"></i>
@@ -412,19 +412,19 @@ function addLine (module, id, name) {
       +              name
       + "        </a>"
       + "    </td>"
-      + "    <td><input type=\"text\" name=\"title-" + id + "\" value=\"\" /></td>"
+      + "    <td><input type=\"text\" name=\"title-" + module + "-" + id + "\" value=\"\" /></td>"
       + "    <td class=\"radio-group\">"
       + "        <div>"
       + "            <label for=\"carrousel\">Carousel</label>"
-      + "            <input id=\"carrousel\" type=\"radio\" name=\"type-" + id + "\" value=\"carrousel\" checked=\"checked\" />"
+      + "            <input id=\"carrousel\" type=\"radio\" name=\"type-" + module + "-" + id + "\" value=\"carrousel\" checked=\"checked\" />"
       + "        <div>"
       + "        </div>"
       + "            <label for=\"scrolling\">À défilement</label>"
-      + "            <input id=\"scrolling\" type=\"radio\" name=\"type-" + id + "\" value=\"scrolling\" />"
+      + "            <input id=\"scrolling\" type=\"radio\" name=\"type-" + module + "-" + id + "\" value=\"scrolling\" />"
       + "        </div>"
       + "    </td>"
       + "    <td class=\"center\">"
-      + "        <input type=\"checkbox\" name=\"autorotate-" + id + "\" value=\"" + id + "\" />"
+      + "        <input type=\"checkbox\" name=\"autorotate-" + module + "-" + id + "\" value=\"" + id + "\" />"
       + "    </td>"
       + "    <td>"
       + "        <i class=\"fa fa-angle-up\"></i>"
