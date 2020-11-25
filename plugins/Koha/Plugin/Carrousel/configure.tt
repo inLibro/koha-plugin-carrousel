@@ -12,7 +12,7 @@
 <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Carrousel</div>
 
 <div id="doc3">
-    <div id="content">
+    <div id="inlibro-content">
 
         <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
             <p style="text-align: left;">This plugin created by</p>
@@ -216,86 +216,86 @@
     text-align: center;
 }
 
-.radio-group {
+#inlibro-carrousel .radio-group {
     text-align: right;
 }
 
-input[type="number"] {
+#inlibro-carrousel input[type="number"] {
     width: 30%;
 }
 
-#colors{
+#inlibro-carrousel #colors{
     height :25px;
     width : 30%;
 }
 
-.alignment{
+#inlibro-carrousel .alignment{
     float:right;
 }
 
-.infos, #add-carrousels{
+#inlibro-carrousel .infos, #add-carrousels{
     clear: both;
     width: 650px;
     margin: 20px 0;
     padding-left: 25px;
 }
 
-#add-carrousels label {
+#inlibro-carrousel #add-carrousels label {
     display: block;
 }
 
-#add-carrousels label:not(:first-child) {
+#inlibro-carrousel #add-carrousels label:not(:first-child) {
     margin-top: 15px;
 }
 
-#add-carrousels .ms-parent {
+#inlibro-carrousel #add-carrousels .ms-parent {
     min-width: 200px;
 }
 
-small {
+#inlibro-carrousel small {
     display: block;
     margin-top: 15px;
     font-size: 80%;
 }
 
-.infos > small {
+#inlibro-carrousel .infos > small {
     text-align: right;
 }
 
-#content{
+#inlibro-content {
     margin:2% 1%;
     font-size:20px;
 }
-h1{
+#inlibro-carrousel h1{
     font-size: 300%;
     margin:2% 2%;
 }
-#submit{
+#inlibro-carrousel #submit{
     margin-top:2%;
 }
 
-#background{
+#inlibro-carrousel #background{
     background-color : #[% bgColor %];
     border :0;
 }
 
-#background p {
+#inlibro-carrousel #background p {
     font-size: 30px;
     padding: 25px 10px;
     color: #[% txtColor %];
 }
 
-.fa{
+#inlibro-carrousel .fa{
     cursor: pointer;
     display: inherit;
     font-size: 24px;
     padding: 0 5px;
 }
-.fa:hover{
+#inlibro-carrousel .fa:hover{
     color: grey;
 }
 
-.nolist{
+#inlibro-carrousel .nolist{
     font-size: 0.75em;
     color: grey;
 }
