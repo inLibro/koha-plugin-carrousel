@@ -39,14 +39,15 @@ use C4::XSLT;
 use Koha::Reports;
 use C4::Reports::Guided;
 use Koha::Uploader;
+use Koha::News;
 
-our $VERSION = 3.0;
+our $VERSION = 3.5;
 our $metadata = {
-    name            => 'Carrousel 3.0',
-    author          => 'Mehdi Hamidi, Maryse Simard',
+    name            => 'Carrousel 3.5',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez',
     description     => 'Generates a carrousel from available lists',
     date_authored   => '2016-05-27',
-    date_updated    => '2020-10-30',
+    date_updated    => '2020-11-24',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -351,30 +352,96 @@ sub getCarrouselContent {
 }
 
 sub insertIntoPref{
+    
     my ( $self, $data) = @_;
-    my $stmt = $dbh->prepare("select * from systempreferences where variable='OpacMainUserBlock'");
-    $stmt->execute();
 
-    my $value;
-    while (my $row = $stmt->fetchrow_hashref()) {
-        $value =$row->{'value'};
+    my $spc = $dbh->prepare("SELECT COUNT(*) from systempreferences where variable='OpacMainUserBlock'");
+    $spc->execute();
+    #we count the rows
+    my ($rows) = $spc->fetchrow_array;
+    
+    #we select the preference needed
+    my $opacmain = C4::Context->preference('OpacMainUserBlock');
+
+    $spc->finish();
+    #if 0 and the preference doesn't exist, we have a 19.11 or 20.xx and up
+    if ($rows eq 0 && !defined($opacmain) ){
+        #1. check installed languages
+        my $opaclanguages = C4::Context->preference('opaclanguages');
+        
+        #expected ex opaclanguages = "fr-CA,en"
+        my @languages = split /,/, $opaclanguages;
+        #2. for each installed language
+        foreach my $language (@languages) {
+            #TODO: verify if it has to be applied to individual branches
+            #2.1 check if opacmainuserblock exists
+            my $mainblock = "OpacMainUserBlock_".$language;
+            my $rs = Koha::News->search({ lang => $mainblock });
+            my $c_lang = $rs->count;
+
+            # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
+            my $first_line = "<!-- Debut du carrousel -->";
+            my $second_line ="<!-- Fin du carrousel -->";
+
+            #2.1.1 if not - add
+            if ($c_lang == 0){
+                my $value = '';
+                #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
+                if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
+                    $value = $value."\n".$first_line.$data.$second_line;
+                } else{
+                    $data = $first_line.$data.$second_line;
+                    $value =~ s/$first_line.*?$second_line/$data/s;
+                }
+                Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value })->store;
+            }
+            #2.1.2 if exists - modify
+            else{
+                my $yyiss = $rs->next;
+                my $value = $yyiss->content;
+
+                #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
+                if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
+                    $value = $value."\n".$first_line.$data.$second_line;
+                } else{
+                    $data = $first_line.$data.$second_line;
+                    $value =~ s/$first_line.*?$second_line/$data/s;
+                }
+                $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value });
+            }
+        }
     }
-    $stmt->finish();
+    #we test for both conditions in 19.05
+    elsif ($rows >= 1 && defined($opacmain) ){
+        my $stmt = $dbh->prepare("select * from systempreferences where variable='OpacMainUserBlock'");
+        $stmt->execute();
 
-    # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
-    my $first_line = "<!-- Debut du carrousel -->";
-    my $second_line ="<!-- Fin du carrousel -->";
+        my $value;
+        while (my $row = $stmt->fetchrow_hashref()) {
+            $value =$row->{'value'};
+        }
+        $stmt->finish();
 
-    #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
-    if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
-        $value = $value."\n".$first_line.$data.$second_line;
-    } else{
-        $data = $first_line.$data.$second_line;
-        $value =~ s/$first_line.*?$second_line/$data/s;
+        # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
+        my $first_line = "<!-- Debut du carrousel -->";
+        my $second_line ="<!-- Fin du carrousel -->";
+
+        #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
+        if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
+            $value = $value."\n".$first_line.$data.$second_line;
+        } else{
+            $data = $first_line.$data.$second_line;
+            $value =~ s/$first_line.*?$second_line/$data/s;
+        }
+
+        # Update system preference
+        C4::Context->set_preference( 'OpacMainUserBlock' , $value );
     }
-
-    #Update system preference
-    C4::Context->set_preference( 'OpacMainUserBlock' , $value );
+    else {
+        #somewhere else
+        print "Error! Please check your configuration\n";
+    }
+    
 }
 
 # routines pour récupérer les images
