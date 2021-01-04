@@ -623,6 +623,14 @@ sub configure {
     }
 }
 
+sub install {
+    my ( $self, $args ) = @_;
+
+    # Nothing actually
+
+    return 1;
+}
+
 sub upgrade {
     my ( $self, $args ) = @_;
     my $database_version = $self->retrieve_data('__INSTALLED_VERSION__') || $VERSION;
