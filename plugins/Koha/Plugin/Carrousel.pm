@@ -41,13 +41,13 @@ use C4::Reports::Guided;
 use Koha::Uploader;
 use Koha::News;
 
-our $VERSION = 3.5;
+our $VERSION = 3.5.1;
 our $metadata = {
-    name            => 'Carrousel 3.5',
+    name            => 'Carrousel 3.5.1',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2020-11-24',
+    date_updated    => '2021-01-29',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -355,17 +355,20 @@ sub insertIntoPref{
     
     my ( $self, $data) = @_;
 
-    my $spc = $dbh->prepare("SELECT COUNT(*) from systempreferences where variable='OpacMainUserBlock'");
-    $spc->execute();
-    #we count the rows
-    my ($rows) = $spc->fetchrow_array;
-    
     #we select the preference needed
     my $opacmain = C4::Context->preference('OpacMainUserBlock');
 
-    $spc->finish();
-    #if 0 and the preference doesn't exist, we have a 19.11 or 20.xx and up
-    if ($rows eq 0 && !defined($opacmain) ){
+    # we select the current version of Koha
+    my $kohaversion = Koha::version;
+
+    # remove the 3 last . to have a Perl number
+    $kohaversion =~ s/(.*\..*)\.(.*)\.(.*)/$1$2$3/;
+
+    #we verify if the current version of Koha is older than > 19.05.04
+    my $isOlder = $kohaversion > 19.0504 ? 1 : 0;
+
+    #if the current version of koha > 19.05 we can't use the preference "OpacMainUserBlock"
+    if ($isOlder && !defined($opacmain) ){
         #1. check installed languages
         my $opaclanguages = C4::Context->preference('opaclanguages');
         
@@ -412,7 +415,7 @@ sub insertIntoPref{
         }
     }
     #we test for both conditions in 19.05
-    elsif ($rows >= 1 && defined($opacmain) ){
+    elsif (!$isOlder && defined($opacmain) ){
         my $stmt = $dbh->prepare("select * from systempreferences where variable='OpacMainUserBlock'");
         $stmt->execute();
 
