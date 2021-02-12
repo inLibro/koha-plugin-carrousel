@@ -52,27 +52,28 @@ sub new {
 }
 
 sub tool {
-     my ( $self, $args ) = @_;
-     my $cgi = $self->{'cgi'};
-     my $op = $cgi->param('op');
-     my $branchcode = $cgi->param('branch');
-     my $harduedate = $cgi->param('duedate');
-     my $addcancel = $cgi->param('addcancel');
-     my $category = $cgi->param('category');
-     my $itemtype = $cgi->param('itemtype');
+    my ( $self, $args ) = @_;
+
+    my $cgi = $self->{'cgi'};
+    my $op = $cgi->param('op');
+    my $branchcode = $cgi->param('branch');
+    my $harduedate = $cgi->param('duedate');
+    my $addcancel = $cgi->param('addcancel');
+    my $category = $cgi->param('category');
+    my $itemtype = $cgi->param('itemtype');
 
     my $confirmation = 0;
-     if ($op && $op eq 'valide'){
-         &UpdateHardDueDate($branchcode,$harduedate,$addcancel,$category,$itemtype);
+    if ($op && $op eq 'valide'){
+        &UpdateHardDueDate($branchcode,$harduedate,$addcancel,$category,$itemtype);
         $confirmation = 1;
-     }
+    }
 
     $self->show_config_pages({ confirmation => $confirmation });
- }
+}
 
- sub show_config_pages {
-     my ( $self, $args) = @_;
-     my $cgi = $self->{'cgi'};
+sub show_config_pages {
+    my ( $self, $args) = @_;
+    my $cgi = $self->{'cgi'};
 
     my $confirmation = $args->{confirmation} ? 1 : 0;
     my $branches   = Koha::Libraries->search({}, { order_by => "branchname" });
@@ -80,52 +81,59 @@ sub tool {
     my $itemtypes  = Koha::ItemTypes->search({}, { order_by => "itemtype" });
 
     my $template = $self->retrieve_template({ name => "rule_hard_due_date" });
-     $template->param(
+    $template->param(
         branches     => $branches,
         categories   => $categories,
         itemtypes    => $itemtypes,
         confirmation => $confirmation,
-     );
-     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
-     print $template->output();
- }
+    );
+    print $cgi->header(-type => 'text/html',-charset => 'utf-8');
+    print $template->output();
+}
 
- sub UpdateHardDueDate {
-     my ($branchcode, $hardduedate, $addcancel, $category, $itemtype) = @_;
-     my $dbh   = C4::Context->dbh;
-     my $issues_affected = 0;
-     my $hard_due_date = ($addcancel eq 'add') ? $hardduedate : undef;
-     my $sql = qq{
-         UPDATE issuingrules
-         SET hardduedate = ?, hardduedatecompare = ?
-     };
-     my $where;
-     my $wherebranch = ($branchcode eq "all") ? "" : " branchcode = '$branchcode'";
-     $where = " WHERE $wherebranch" if $wherebranch;
-     my $whereCat = ($category eq "all") ? "" : " categorycode = '$category'";
-     #$wheres = ($where) ? $where : "";
-     if ($where) {
-         $where = ($whereCat) ? $where ." AND " . $whereCat : $where;
-     }else{
-         $where = ($whereCat) ? " WHERE $whereCat " : ''
-     }
-     my $whereItType =  ($itemtype eq "all") ? "" : " itemtype = '$itemtype'";
-     if ($where){
-         $where = ($whereItType) ? $where . " AND " . $whereItType : $where;
-     }else{
-         $where = ($whereItType) ? " WHERE $whereItType " : '';
-     }
-     $sql .= $where if ($where);
-     my $sth = $dbh->prepare($sql);
-     $sth->execute($hard_due_date,-1);
- }
+sub UpdateHardDueDate {
+    my ($branchcode, $hardduedate, $addcancel, $category, $itemtype) = @_;
+    my $hard_due_date = ($addcancel eq 'add') ? $hardduedate : undef;
 
-sub uninstall() {
-     my ( $self, $args ) = @_;
-     my $table = $self->get_qualified_table_name('mytable');
+    my $dbh = C4::Context->dbh;
 
-     return C4::Context->dbh->do("DROP TABLE $table");
- }
+    my $sql = qq{
+        UPDATE issuingrules
+        SET hardduedate = ?, hardduedatecompare = ?
+    };
+    my $where;
+    my $wherebranch = ($branchcode eq "all") ? "" : " branchcode = '$branchcode'";
+    $where = " WHERE $wherebranch" if $wherebranch;
+
+    my $whereCat = ($category eq "all") ? "" : " categorycode = '$category'";
+    #$wheres = ($where) ? $where : "";
+    if ($where) {
+        $where = ($whereCat) ? $where ." AND " . $whereCat : $where;
+    } else {
+        $where = ($whereCat) ? " WHERE $whereCat " : ''
+    }
+
+    my $whereItType = ($itemtype eq "all") ? "" : " itemtype = '$itemtype'";
+    if ($where) {
+        $where = ($whereItType) ? $where . " AND " . $whereItType : $where;
+    } else {
+        $where = ($whereItType) ? " WHERE $whereItType " : '';
+    }
+
+    $sql .= $where if ($where);
+    my $sth = $dbh->prepare($sql);
+    $sth->execute($hard_due_date,-1);
+}
+
+sub install {
+    my ( $self, $params ) = @_;
+    return 1;
+}
+
+sub uninstall {
+    my ( $self, $params ) = @_;
+    return 1;
+}
 
 =head3 retrieve_template
 

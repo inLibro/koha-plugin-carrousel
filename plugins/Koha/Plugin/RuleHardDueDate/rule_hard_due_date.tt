@@ -18,10 +18,10 @@
         </div>
         <h2>Rule Hard Due Date</h2>
         <p> This plugin allows you :
-           <ul class='classul'>
-               <li>to set a specific hard due date for a selected branch, patron cartegory and item type. The settings can either apply to the default circulation rules or to all of them.</li>
-               <li>to rollback the settings.</li>
-           </ul>
+            <ul class='classul'>
+                <li>to set a specific hard due date for a selected branch, patron cartegory and item type. The settings can either apply to the default circulation rules or to all of them.</li>
+                <li>to rollback the settings.</li>
+            </ul>
         </p>
         <form method='get' id="formTraitement">
             <input type='hidden' id='class' name='class' value='[% CLASS %]'/>
@@ -74,54 +74,56 @@
     .cacher {
         display : none;
     }
-     .classul {
+    .classul {
         margin-left : 20px;
     }
 </style>
 <script type="text/javascript">
     $( function() {
         $( "#duedate" ).datepicker({ dateFormat: 'yy-mm-dd' });
-        if ([% confirmation %]){
-            alert (" Modification correctly applied");
+        if ([% confirmation %]) {
+            alert ("Modification correctly applied");
             document.getElementById('formTraitement').submit();
         }
-
     });
-    function update(){
+
+    function update() {
        var operation = document.getElementById('typeoperation').value;
        var dateDue = document.getElementById('duedate').value;
-       if (dateDue == '' && operation == 'add'){
+       if (dateDue == '' && operation == 'add') {
            alert ('You should select hard due date');
-       }else{
-           if(window.confirm("Do you really want to apply this configuration?")){
+       } else {
+           if (window.confirm("Do you really want to apply this configuration?")) {
                document.getElementById('op').value = 'valide';
                document.getElementById('branch').value = document.getElementById('branchs').value;
                document.getElementById('category').value = document.getElementById('categories').value;
                document.getElementById('itemtype').value = document.getElementById('itemtypes').value;
-               if (operation == 'cancel'){
+               if (operation == 'cancel') {
                    document.getElementById('addcancel').value = 'cancel';
-               }else{
+               } else {
                    document.getElementById('addcancel').value = 'add';
                }
                document.getElementById('endop').setAttribute('class','');
-            }else{
+            } else {
                document.getElementById('op').value = '';
            }
-       }
+        }
     }
-    function changeSelect(){
+
+    function changeSelect() {
         var operation = document.getElementById('typeoperation').value;
-        if (operation == 'cancel'){
+        if (operation == 'cancel') {
             document.getElementById('labelduedate').setAttribute('class','cacher');
             document.getElementById('duedate').setAttribute('class','cacher');
             document.getElementById('forbranch').firstChild.data = 'For branch: '
-        }else{
+        } else {
             document.getElementById('labelduedate').setAttribute('class','');
             document.getElementById('duedate').setAttribute('class','');
             document.getElementById('forbranch').firstChild.data = 'for branch:'
         }
     }
-    function checkDate(){
+
+    function checkDate() {
         re = /\d{4}-\d{1,2}-\d{1,2}/;
         if(document.getElementById('duedate').value != '' && !document.getElementById('duedate').value.match(re)){
             alert("Date format not correct : yyyy-mm-dd");
@@ -130,5 +132,3 @@
     }
 </script>
 [% INCLUDE 'intranet-bottom.inc' %]
-
-
