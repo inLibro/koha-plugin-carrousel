@@ -64,46 +64,21 @@ sub tool {
      my $addcancel = $cgi->param('addcancel');
      my $category = $cgi->param('category');
      my $itemtype = $cgi->param('itemtype');
+
+    my $confirmation = 0;
      if ($op && $op eq 'valide'){
-         my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
-         my $template = undef;
-         eval {$template = $self->get_template( { file => "rule_hard_due_date_$preferedLanguage.tt" }  )};
-         if(!$template){
-             $preferedLanguage = substr $preferedLanguage, 0, 2;
-             eval {$template = $self->get_template( { file => "messaging_preference_wizard_$preferedLanguage.   tt" } )};
-         }
-         $template = $self->get_template( { file => 'rule_hard_due_date.tt' } ) unless $template;
-         my $branchloop = &GetBranchs();
-        my $categorieloop;
-        if($new_version) {
-            $categorieloop = Koha::Patron::Categories->search();
-        }else{
-            $categorieloop = &GetBorrowercategoryList();
-        }
          &UpdateHardDueDate($branchcode,$harduedate,$addcancel,$category,$itemtype);
-         $template->param(
-             branchloop => $branchloop,
-             categorieloop => $categorieloop,
-             confirmation => 1,
-         );
-         print $cgi->header(-type => 'text/html',-charset => 'utf-8');
-         print $template->output();
-     }else{
-         $self->show_config_pages();
+        $confirmation = 1;
      }
+
+    $self->show_config_pages({ confirmation => $confirmation });
  }
 
  sub show_config_pages {
      my ( $self, $args) = @_;
      my $cgi = $self->{'cgi'};
-     my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
-     my $template = undef;
-     eval {$template = $self->get_template( { file => "rule_hard_due_date_$preferedLanguage.tt" } )};
-     if(!$template){
-         $preferedLanguage = substr $preferedLanguage, 0, 2;
-         eval {$template = $self->get_template( { file => "rule_hard_due_date_$preferedLanguage.tt" } )};
-     }
-     $template = $self->get_template( { file => 'rule_hard_due_date.tt' } ) unless $template;
+
+    my $confirmation = $args->{confirmation} ? 1 : 0;
      my $branchloop = &GetBranchs();
      my $categorieloop;
      if($new_version) {
@@ -112,11 +87,12 @@ sub tool {
          $categorieloop = &GetBorrowercategoryList();
      }
      my $itemtypeloop = &GetItemsTypes();
+    my $template = $self->retrieve_template({ name => "rule_hard_due_date" });
      $template->param(
          branchloop => $branchloop,
          categorieloop => $categorieloop,
          itemtypeloop => $itemtypeloop,
-         confirmation  => 0,
+        confirmation => $confirmation,
      );
      print $cgi->header(-type => 'text/html',-charset => 'utf-8');
      print $template->output();
@@ -189,5 +165,30 @@ sub uninstall() {
 
      return C4::Context->dbh->do("DROP TABLE $table");
  }
+
+=head3 retrieve_template
+
+Retourne le template pour le nom fourni selon la langue.
+
+=cut
+
+sub retrieve_template {
+    my ( $self, $params ) = @_;
+
+    my $name = $params->{name} // "configure";
+
+    # Le template dépend du cookie, celui par défault est anglais
+    my $preferedLanguage = $self->{"cgi"}->cookie("KohaOpacLanguage") || "";
+    my $template = undef;
+
+    eval {$template = $self->get_template( { file => $name . "_$preferedLanguage.tt" } )};
+    unless ( $template ) {
+        $preferedLanguage = substr $preferedLanguage, 0, 2;
+        eval {$template = $self->get_template( { file => $name . "_$preferedLanguage.tt" } )};
+    }
+    $template = $self->get_template( { file => "$name.tt" } ) unless ( $template );
+
+    return $template;
+}
 
 1;
