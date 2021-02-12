@@ -31,14 +31,14 @@ use C4::Koha;
 use Koha::ItemTypes;
 use Koha::Patron::Categories;
 
-our $VERSION = 1.3;
+our $VERSION = 1.4;
 
 our $metadata = {
     name   => 'Rules hard due dates',
-    author => 'Bouzid Fergani',
+    author => 'Bouzid Fergani, Maryse Simard',
     description => 'Rules hard due dates',
     date_authored   => '2016-12-20',
-    date_updated    => '2017-08-08',
+    date_updated    => '2021-02-12',
     minimum_version => '16.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -97,32 +97,61 @@ sub UpdateHardDueDate {
 
     my $dbh = C4::Context->dbh;
 
-    my $sql = qq{
-        UPDATE issuingrules
-        SET hardduedate = ?, hardduedatecompare = ?
-    };
-    my $where;
-    my $wherebranch = ($branchcode eq "all") ? "" : " branchcode = '$branchcode'";
-    $where = " WHERE $wherebranch" if $wherebranch;
+    eval { $dbh->do( "SELECT * FROM issuingrules WHERE 1 = 0" ); };
+    unless ( $@ ) {
+        my $sql = qq{
+            UPDATE issuingrules
+            SET hardduedate = ?, hardduedatecompare = ?
+        };
+        my $where;
+        my $wherebranch = ($branchcode eq "all") ? "" : " branchcode = '$branchcode'";
+        $where = " WHERE $wherebranch" if $wherebranch;
 
-    my $whereCat = ($category eq "all") ? "" : " categorycode = '$category'";
-    #$wheres = ($where) ? $where : "";
-    if ($where) {
-        $where = ($whereCat) ? $where ." AND " . $whereCat : $where;
+        my $whereCat = ($category eq "all") ? "" : " categorycode = '$category'";
+        #$wheres = ($where) ? $where : "";
+        if ($where) {
+            $where = ($whereCat) ? $where ." AND " . $whereCat : $where;
+        } else {
+            $where = ($whereCat) ? " WHERE $whereCat " : ''
+        }
+
+        my $whereItType = ($itemtype eq "all") ? "" : " itemtype = '$itemtype'";
+        if ($where) {
+            $where = ($whereItType) ? $where . " AND " . $whereItType : $where;
+        } else {
+            $where = ($whereItType) ? " WHERE $whereItType " : '';
+        }
+
+        $sql .= $where if ($where);
+        my $sth = $dbh->prepare($sql);
+        $sth->execute($hard_due_date,-1);
     } else {
-        $where = ($whereCat) ? " WHERE $whereCat " : ''
-    }
+        # Basé sur Koha::CirculationRules->set_rule
+        my $params = {
+            rule_name => ['hardduedate', 'hardduedatecompare'],
+        };
 
-    my $whereItType = ($itemtype eq "all") ? "" : " itemtype = '$itemtype'";
-    if ($where) {
-        $where = ($whereItType) ? $where . " AND " . $whereItType : $where;
-    } else {
-        $where = ($whereItType) ? " WHERE $whereItType " : '';
-    }
+        $params->{categorycode} = $category   eq '*' ? undef : $category   unless ( $category   eq "all" );
+        $params->{branchcode}   = $branchcode eq '*' ? undef : $branchcode unless ( $branchcode eq "all" );
+        $params->{itemtype}     = $itemtype   eq '*' ? undef : $itemtype   unless ( $itemtype   eq "all" );
 
-    $sql .= $where if ($where);
-    my $sth = $dbh->prepare($sql);
-    $sth->execute($hard_due_date,-1);
+        my $changed = 0;
+        my $rules = Koha::CirculationRules->search( $params );
+        while ( my $rule = $rules->next() ) {
+            $changed++;
+            if ( defined $hard_due_date ) {
+                if ($rule->rule_name eq 'hardduedate') {
+                    $rule->rule_value($hard_due_date);
+                } elsif ($rule->rule_name eq 'hardduedate') {
+                    $rule->rule_value(-1);
+                }
+                $rule->update();
+            }
+            else {
+                $rule->delete();
+            }
+        }
+    }
 }
 
 sub install {
