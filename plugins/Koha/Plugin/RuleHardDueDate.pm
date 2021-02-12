@@ -28,6 +28,8 @@ use C4::Context;
 use Koha::DateUtils;
 use C4::Members;
 use C4::Koha;
+use Koha::ItemTypes;
+use Koha::Patron::Categories;
 
 our $VERSION = 1.3;
 
@@ -41,12 +43,6 @@ our $metadata = {
     maximum_version => undef,
     version         => $VERSION,
 };
-my $new_version =0;
-eval("use Koha::ItemTypes");
-eval("use Koha::Patron::Categories");
-if(!$@){
-    $new_version =1;
-}
 
 sub new {
     my ( $class, $args ) = @_;
@@ -79,19 +75,15 @@ sub tool {
      my $cgi = $self->{'cgi'};
 
     my $confirmation = $args->{confirmation} ? 1 : 0;
-     my $branchloop = &GetBranchs();
-     my $categorieloop;
-     if($new_version) {
-         $categorieloop = Koha::Patron::Categories->search;
-     }else{
-         $categorieloop = &GetBorrowercategoryList();
-     }
-     my $itemtypeloop = &GetItemsTypes();
+    my $branches   = Koha::Libraries->search({}, { order_by => "branchname" });
+    my $categories = Koha::Patron::Categories->search();
+    my $itemtypes  = Koha::ItemTypes->search({}, { order_by => "itemtype" });
+
     my $template = $self->retrieve_template({ name => "rule_hard_due_date" });
      $template->param(
-         branchloop => $branchloop,
-         categorieloop => $categorieloop,
-         itemtypeloop => $itemtypeloop,
+        branches     => $branches,
+        categories   => $categories,
+        itemtypes    => $itemtypes,
         confirmation => $confirmation,
      );
      print $cgi->header(-type => 'text/html',-charset => 'utf-8');
@@ -127,37 +119,6 @@ sub tool {
      my $sth = $dbh->prepare($sql);
      $sth->execute($hard_due_date,-1);
  }
-
-sub GetBranchs {
-    my $branches = { map { $_->branchcode => $_->unblessed } Koha::Libraries->search };
-    my $branchloop;
-    for my $thisbranch (sort { $branches->{$a}->{branchname} cmp $branches->{$b}->{branchname} } keys %{$branches}) {
-        push @{$branchloop}, {
-            value => $thisbranch,
-            branchname => $branches->{$thisbranch}->{'branchname'},
-        };
-    }
-    return $branchloop;
-}
-
-sub GetItemsTypes {
-    my $itemtypes;
-    if ($new_version){
-        $itemtypes = { map { $_->itemtype => $_->unblessed } Koha::ItemTypes->search };
-    } else{
-        $itemtypes = GetItemTypes();
-    }
-
-    my @itemtypesloop;
-    foreach my $thisitemtype ( sort keys %$itemtypes ) {
-        my %row = (
-            value       => $thisitemtype,
-            description => $itemtypes->{$thisitemtype}->{description},
-        );
-        push @itemtypesloop, \%row;
-    }
-    return \@itemtypesloop
-}
 
 sub uninstall() {
      my ( $self, $args ) = @_;

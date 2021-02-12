@@ -43,24 +43,24 @@
                     <select id="branchs">
                         <option value="all">All</option>
                         <option value="*">Default</option>
-                        [% FOREACH b IN branchloop %]
-                            <option value="[% b.value %]">[% b.branchname %]</option>
+                        [% FOREACH branch IN branches %]
+                            <option value="[% branch.branchcode %]">[% branch.branchname %]</option>
                         [% END %]
                     </select>
                     <br><span id="forbranch"> patron category: </span>
                     <select id="categories">
                         <option value="all">All</option>
                         <option value="*">Default</option>
-                        [% FOREACH c IN categorieloop %]
-                            <option value="[% c.categorycode %]">[% c.description %]</option>
+                        [% FOREACH category IN categories %]
+                            <option value="[% category.categorycode %]">[% category.description %]</option>
                         [% END %]
                     </select>
                     <br><span id="forbranch"> item type: </span>
                     <select id="itemtypes">
                         <option value="all">All</option>
                         <option value="*">Default</option>
-                        [% FOREACH i IN itemtypeloop %]
-                            <option value="[% i.value %]">[% i.description %]</option>
+                        [% FOREACH itemtype IN itemtypes %]
+                            <option value="[% itemtype.itemtype %]">[% itemtype.description %]</option>
                         [% END %]
                     </select>
                     </p>
