@@ -21,7 +21,7 @@
             <ul class='classul'>
                 <li>de paramétrer la date d'échéance d'un prêt pour un site, une catégorie d'utilisateur et un type de document. Il est possible de modifier soit les règles par défaut, soit toutes les règles de circulation.</li>
                 <li>d'annuler ce paramétrage.</li>
-            <ul>
+            </ul>
         </p>
         <form method='get' id="formTraitement">
             <input type='hidden' id='class' name='class' value='[% CLASS %]'/>
@@ -43,28 +43,28 @@
                     <select id="branchs">
                         <option value="all">Tous</option>
                         <option value="*">Par défaut</option>
-                        [% FOREACH b IN branchloop %]
-                            <option value="[% b.value %]">[% b.branchname %]</option>
+                        [% FOREACH branch IN branches %]
+                            <option value="[% branch.branchcode %]">[% branch.branchname %]</option>
                         [% END %]
-                     </select>
-                     <br><span id="forbranch"> catégorie d'adhérent : </span>
-                     <select id="categories">
-                         <option value="all">Toutes</option>
-                         <option value="*">Par défaut</option>
-                         [% FOREACH c IN categorieloop %]
-                             <option value="[% c.categorycode %]">[% c.description %]</option>
-                         [% END %]
-                     </select>
-                     <br><span id="forbranch"> type de document : </span>
-                     <select id="itemtypes">
-                         <option value="all">Tous</option>
-                         <option value="*">Par défaut</option>
-                         [% FOREACH i IN itemtypeloop %]
-                             <option value="[% i.value %]">[% i.description %]</option>
-                         [% END %]
-                     </select>
-                     </p>
-                     </div>
+                    </select>
+                    <br><span id="forbranch"> catégorie d'adhérent : </span>
+                    <select id="categories">
+                        <option value="all">Toutes</option>
+                        <option value="*">Par défaut</option>
+                        [% FOREACH category IN categories %]
+                            <option value="[% category.categorycode %]">[% category.description %]</option>
+                        [% END %]
+                    </select>
+                    <br><span id="forbranch"> type de document : </span>
+                    <select id="itemtypes">
+                        <option value="all">Tous</option>
+                        <option value="*">Par défaut</option>
+                        [% FOREACH itemtype IN itemtypes %]
+                            <option value="[% itemtype.itemtype %]">[% itemtype.description %]</option>
+                        [% END %]
+                    </select>
+                    </p>
+                    </div>
                     <button id="save"  onclick="update()">Appliquer</button>
                 </p>
             </div>
@@ -81,46 +81,49 @@
 <script type="text/javascript">
     $( function() {
         $( "#duedate" ).datepicker({ dateFormat: 'yy-mm-dd' });
-        if ([% confirmation %] ){
+        if ([% confirmation %]) {
             alert ("La modification a été faite correctement");
             document.getElementById('formTraitement').submit();
         }
     });
-    function update(){
+
+    function update() {
        var operation = document.getElementById('typeoperation').value;
        var dateDue = document.getElementById('duedate').value;
-       if (dateDue == '' && operation == 'add'){
+       if (dateDue == '' && operation == 'add') {
            alert ("Vous devez sélectionner une date d'échéance");
-       }else{
-           if(window.confirm("Souhaitez-vous appliquer ces changements ?")){
+       } else {
+           if (window.confirm("Souhaitez-vous appliquer ces changements ?")) {
                document.getElementById('op').value = 'valide';
                document.getElementById('branch').value = document.getElementById('branchs').value;
                document.getElementById('category').value = document.getElementById('categories').value;
                document.getElementById('itemtype').value = document.getElementById('itemtypes').value;
-               if (operation == 'cancel'){
+               if (operation == 'cancel') {
                    document.getElementById('addcancel').value = 'cancel';
-               }else{
+               } else {
                    document.getElementById('addcancel').value = 'add';
                }
                document.getElementById('endop').setAttribute('class','');
-           }else{
+            } else {
                document.getElementById('op').value = '';
            }
         }
     }
-    function changeSelect(){
+
+    function changeSelect() {
         var operation = document.getElementById('typeoperation').value;
-        if (operation == 'cancel'){
+        if (operation == 'cancel') {
             document.getElementById('labelduedate').setAttribute('class','cacher');
             document.getElementById('duedate').setAttribute('class','cacher');
             document.getElementById('forbranch').firstChild.data = ' Pour la branche : ';
-        }else{
+        } else {
             document.getElementById('labelduedate').setAttribute('class','');
             document.getElementById('duedate').setAttribute('class','');
             document.getElementById('forbranch').firstChild.data = ' pour la branche : '
         }
     }
-    function checkDate(){
+
+    function checkDate() {
         re = /\d{4}-\d{1,2}-\d{1,2}/;
         if(document.getElementById('duedate').value != '' && !document.getElementById('duedate').value.match(re)){
             alert("Format de date incorrect : aaaa-mm-jj");
