@@ -95,10 +95,13 @@ sub UpdateHardDueDate {
     my ($branchcode, $hardduedate, $addcancel, $category, $itemtype) = @_;
     my $hard_due_date = ($addcancel eq 'add') ? $hardduedate : undef;
 
-    my $dbh = C4::Context->dbh;
+    # version actuelle
+    my $kohaversion = C4::Context->preference("Version");
+    $kohaversion =~ s/(.*\..*)\.(.*)\.(.*)/$1$2$3/;
 
-    eval { $dbh->do( "SELECT * FROM issuingrules WHERE 1 = 0" ); };
-    unless ( $@ ) {
+    if ( $kohaversion < 19.1200018 ) {
+        # la table issuingrules existe jusqu'à la version 19.12.00.018
+        my $dbh = C4::Context->dbh;
         my $sql = qq{
             UPDATE issuingrules
             SET hardduedate = ?, hardduedatecompare = ?
