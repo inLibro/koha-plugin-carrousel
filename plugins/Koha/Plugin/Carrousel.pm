@@ -352,23 +352,39 @@ sub getCarrouselContent {
 }
 
 sub insertIntoPref{
-    
     my ( $self, $data) = @_;
-
-    #we select the preference needed
-    my $opacmain = C4::Context->preference('OpacMainUserBlock');
 
     # we select the current version of Koha
     my $kohaversion = Koha::version;
-
     # remove the 3 last . to have a Perl number
     $kohaversion =~ s/(.*\..*)\.(.*)\.(.*)/$1$2$3/;
 
-    #we verify if the current version of Koha is older than > 19.05.04
-    my $isOlder = $kohaversion > 19.0504 ? 1 : 0;
+    # si la version de koha est < 19.12 on utilise la préférence système "OpacMainUserBlock"
+    if ( $kohaversion < 19.1200082 ) {
+        my $stmt = $dbh->prepare("select * from systempreferences where variable='OpacMainUserBlock'");
+        $stmt->execute();
 
-    #if the current version of koha > 19.05 we can't use the preference "OpacMainUserBlock"
-    if ($isOlder && !defined($opacmain) ){
+        my $value;
+        while (my $row = $stmt->fetchrow_hashref()) {
+            $value =$row->{'value'};
+        }
+        $stmt->finish();
+
+        # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
+        my $first_line = "<!-- Debut du carrousel -->";
+        my $second_line ="<!-- Fin du carrousel -->";
+
+        #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
+        if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
+            $value = $value."\n".$first_line.$data.$second_line;
+        } else{
+            $data = $first_line.$data.$second_line;
+            $value =~ s/$first_line.*?$second_line/$data/s;
+        }
+
+        # Update system preference
+        C4::Context->set_preference( 'OpacMainUserBlock' , $value );
+    } elsif ( defined $kohaversion ) {  # sinon, utiliser le système de nouvelle
         #1. check installed languages
         my $opaclanguages = C4::Context->preference('opaclanguages');
         
@@ -413,34 +429,7 @@ sub insertIntoPref{
                 $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value });
             }
         }
-    }
-    #we test for both conditions in 19.05
-    elsif (!$isOlder && defined($opacmain) ){
-        my $stmt = $dbh->prepare("select * from systempreferences where variable='OpacMainUserBlock'");
-        $stmt->execute();
-
-        my $value;
-        while (my $row = $stmt->fetchrow_hashref()) {
-            $value =$row->{'value'};
-        }
-        $stmt->finish();
-
-        # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
-        my $first_line = "<!-- Debut du carrousel -->";
-        my $second_line ="<!-- Fin du carrousel -->";
-
-        #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
-        if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
-            $value = $value."\n".$first_line.$data.$second_line;
-        } else{
-            $data = $first_line.$data.$second_line;
-            $value =~ s/$first_line.*?$second_line/$data/s;
-        }
-
-        # Update system preference
-        C4::Context->set_preference( 'OpacMainUserBlock' , $value );
-    }
-    else {
+    } else {
         #somewhere else
         print "Error! Please check your configuration\n";
     }
