@@ -130,28 +130,44 @@ sub UpdateHardDueDate {
         $sth->execute($hard_due_date,-1);
     } else {
         # Basé sur Koha::CirculationRules->set_rule
-        my $params = {
-            rule_name => ['hardduedate', 'hardduedatecompare'],
-        };
+        # On veut hardduedate et hardduedatecompare, mais la ligne pour hardduedate n'existe pas toujours.
+        # Lors d'une utilisation normale hardduedatecompare devrait toujours exister. La règle ne sera
+        # pas supprimé par l'interface puisqu'il s'agit d'un select.
+        # On récupère donc la règle hardduedate pour chaque hardduedatecompare et on la crée au besoin.
+        my $params = { rule_name => 'hardduedatecompare' };
 
         $params->{categorycode} = $category   eq '*' ? undef : $category   unless ( $category   eq "all" );
         $params->{branchcode}   = $branchcode eq '*' ? undef : $branchcode unless ( $branchcode eq "all" );
         $params->{itemtype}     = $itemtype   eq '*' ? undef : $itemtype   unless ( $itemtype   eq "all" );
 
-        my $changed = 0;
-        my $rules = Koha::CirculationRules->search( $params );
-        while ( my $rule = $rules->next() ) {
-            $changed++;
+        my $hardduedatecompare_rules = Koha::CirculationRules->search( $params );
+
+        while ( my $hardduedatecompare_rule = $hardduedatecompare_rules->next() ) {
+            # trouve le hardduedate allant avec ce hardduedatecompare
+            my $hardduedate_params = {
+                categorycode => $hardduedatecompare_rule->categorycode,
+                branchcode   => $hardduedatecompare_rule->branchcode,
+                itemtype     => $hardduedatecompare_rule->itemtype,
+                rule_name    => 'hardduedate',
+            };
+            my $hardduedate_rule = Koha::CirculationRules->search( $hardduedate_params )->single;
+
             if ( defined $hard_due_date ) {
-                if ($rule->rule_name eq 'hardduedate') {
-                    $rule->rule_value($hard_due_date);
-                } elsif ($rule->rule_name eq 'hardduedate') {
-                    $rule->rule_value(-1);
+                # hardduedatecompare
+                $hardduedatecompare_rule->rule_value(-1);
+                $hardduedatecompare_rule->update();
+
+                # hardduedate
+                if ( $hardduedate_rule ) {
+                    $hardduedate_rule->rule_value($hard_due_date);
+                    $hardduedate_rule->update();
+                } else {
+                    $hardduedate_params->{rule_value} = $hard_due_date;
+                    Koha::CirculationRule->new( $hardduedate_params )->store;
                 }
-                $rule->update();
-            }
-            else {
-                $rule->delete();
+            } else {
+                # ne pas supprimer hardduedatecompare
+                $hardduedate_rule->delete() if ( defined $hardduedate_rule );
             }
         }
     }
