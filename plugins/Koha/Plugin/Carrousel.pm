@@ -41,13 +41,13 @@ use C4::Reports::Guided;
 use Koha::Uploader;
 use Koha::News;
 
-our $VERSION = 3.6;
+our $VERSION = 3.7;
 our $metadata = {
-    name            => 'Carrousel 3.6',
+    name            => 'Carrousel 3.7',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2021-01-29',
+    date_updated    => '2021-03-02',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -95,9 +95,9 @@ sub getDisplayName {
     my $name = "";
 
     if ($useSql || $module eq "collections") {
-        my $table = ($module eq "reports") ? "saved_sql" : (($module eq "collections") ? "collections" : "virtualshelves");
-        my $column_id = ($module eq "reports") ? "id" : (($module eq "collections") ? "colId" : "shelfnumber");
-        my $column_name = ($module eq "reports") ? "report_name" : (($module eq "collections") ? "colTitle" : "shelfname");
+        my $table = ($module eq "reports") ? "saved_sql" : (($module eq "collections") ? "authorised_values" : "virtualshelves");
+        my $column_id = ($module eq "reports") ? "id" : (($module eq "collections") ? "authorised_value" : "shelfnumber");
+        my $column_name = ($module eq "reports") ? "report_name" : (($module eq "collections") ? "lib" : "shelfname");
 
         my $stmt = $dbh->prepare("SELECT * FROM $table WHERE $column_id = ?");
         $stmt->execute($id);
@@ -139,9 +139,15 @@ sub getModules {
         $modules->{reports} = Koha::Reports->search();
     }
 
-    my $stmt = $dbh->prepare("SELECT * FROM collections ORDER BY colTitle");
-    $stmt->execute();
-    while (my $row = $stmt->fetchrow_hashref()) {
+    my $ccodes = C4::Koha::GetAuthorisedValues('CCODE');
+    my @ccodeloop;
+    for my $thisccode (@$ccodes) {
+        my %row = (value => $thisccode->{authorised_value},
+            description => $thisccode->{lib},
+        );
+        push @ccodeloop, \%row;
+    }
+    foreach my $row (@ccodeloop) {
         push @{$modules->{collections}}, $row;
     }
 
@@ -191,9 +197,8 @@ sub loadContent {
     } elsif ($module eq "collections") {
         my $stmt = $dbh->prepare(
             "SELECT distinct biblionumber
-            FROM collections_tracking
-            JOIN items USING (itemnumber)
-            WHERE colId = ?");
+            FROM items
+            WHERE ccode = ?");
         $stmt->execute($id);
 
         while (my $row = $stmt->fetchrow_hashref()) {
