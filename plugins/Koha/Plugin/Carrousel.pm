@@ -356,13 +356,19 @@ sub getCarrouselContent {
     return \@images;
 }
 
+sub getKohaVersion {
+    # Current version of Koha from sources
+    my $kohaversion = Koha::version;
+    # remove the 3 last . to have a Perl number
+    $kohaversion =~ s/(.*\..*)\.(.*)\.(.*)/$1$2$3/;
+    return $kohaversion;
+}
+
 sub insertIntoPref{
     my ( $self, $data) = @_;
 
     # we select the current version of Koha
-    my $kohaversion = Koha::version;
-    # remove the 3 last . to have a Perl number
-    $kohaversion =~ s/(.*\..*)\.(.*)\.(.*)/$1$2$3/;
+    my $kohaversion = getKohaVersion();
 
     # si la version de koha est < 19.12 on utilise la préférence système "OpacMainUserBlock"
     if ( $kohaversion < 19.1200082 ) {
@@ -553,7 +559,12 @@ sub getThumbnailUrl
     }
 
     # We look for image localy, if available we return relative path and exit function.
-    my $stm = $dbh->prepare("SELECT COUNT(*) AS count FROM biblioimages WHERE biblionumber=$biblionumber;");
+    my $cover_images_table='cover_images';
+    if ( getKohaVersion() < 20.0600049 ) {
+        $cover_images_table='biblioimages';
+    }
+
+    my $stm = $dbh->prepare("SELECT COUNT(*) AS count FROM $cover_images_table WHERE biblionumber=$biblionumber;");
     $stm->execute();
     if ( $stm->fetchrow_hashref()->{count} > 0 ) {
         return "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
