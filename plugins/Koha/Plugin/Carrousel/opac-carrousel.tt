@@ -246,9 +246,9 @@ document.addEventListener('DOMContentLoaded', function() {
             [% IF carrousel.autorotate %]
                 setInterval(
                     function() {
-                        $("#carrousel-[% loop.index %] .controls button")
-                            [% IF !autoRotateDirection || autoRotateDirection == "left" %].eq(0)[% ELSIF autoRotateDirection == "right" %].eq(1)[% END %]
-                            .click();
+                        let buttonLeft = $("#carrousel-[% loop.index %] .controls button")[0];
+                        let buttonRight = $("#carrousel-[% loop.index %] .controls button")[1];
+                        [% IF !autoRotateDirection || autoRotateDirection == "left" %]Right(buttonLeft)[% ELSIF autoRotateDirection == "right" %]Left(buttonRight)[% END %];
                     }, [% autoRotateDelay || 1500 %]
                 );
             [% END %]
