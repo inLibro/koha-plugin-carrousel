@@ -41,13 +41,13 @@ use C4::Reports::Guided;
 use Koha::Uploader;
 use Koha::News;
 
-our $VERSION = 3.7;
+our $VERSION = 3.8;
 our $metadata = {
-    name            => 'Carrousel 3.7',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez',
+    name            => 'Carrousel 3.8',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2021-03-02',
+    date_updated    => '2021-06-17',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
