@@ -53,6 +53,9 @@ our $metadata = {
     version         => $VERSION,
 };
 
+#On fixe la limite affichable à 40 afin de ne pas surcharger l'affiche du carrousel
+our $LIMIT_DISPLAYED = 40;
+
 our $useSql = 0;
 if (!(eval("use Koha::Virtualshelves") || !(eval("use Koha::Virtualshelfcontents")))) {
     $useSql =1;
@@ -195,23 +198,28 @@ sub loadContent {
             }
         }
     } elsif ($module eq "collections") {
+        #On fait notre recherche en triant du plus récent au plus aucien
         my $stmt = $dbh->prepare(
-            "SELECT distinct biblionumber
+            "SELECT distinct biblionumber, timestamp
             FROM items
-            WHERE ccode = ?");
+            WHERE ccode = ?
+            ORDER BY timestamp DESC");
         $stmt->execute($id);
 
         while (my $row = $stmt->fetchrow_hashref()) {
             push @content, $row->{biblionumber};
         }
     } elsif ($useSql) {
-        my $stmt = $dbh->prepare("SELECT * FROM virtualshelfcontents WHERE shelfnumber = ?");
+        #On fait notre recherche en triant du plus récent au plus aucien
+        my $stmt = $dbh->prepare("SELECT * FROM virtualshelfcontents WHERE shelfnumber = ?
+        ORDER BY dateadded DESC");
         $stmt->execute($id);
         while (my $row = $stmt->fetchrow_hashref()) {
             push @content, $row->{biblionumber};
         }
     } else {
-        my @shelves = Koha::Virtualshelfcontents->search({ shelfnumber => $id });
+        #On fait notre recherche en triant du plus récent au plus aucien
+        my @shelves = Koha::Virtualshelfcontents->search({ shelfnumber => $id }, {order_by => {-desc => [qw{dateadded}]}});
         foreach my $item (@shelves) {
             push @content, $item->biblionumber;
         }
@@ -318,6 +326,7 @@ sub getCarrouselContent {
     return unless @contents;
 
     my @images;
+    my $index = 0;
     foreach my $biblionumber ( @contents ) {
         my $record = GetMarcBiblio({ biblionumber => $biblionumber });
         # Attempt the old call
@@ -343,9 +352,12 @@ sub getCarrouselContent {
         if ( $url ){
             my %image = ( url => $url, title => $title, author => $author, biblionumber => $biblionumber );
             push @images, \%image;
+            $index++;
         }else{
             warn "[Koha::Plugin::Carrousel] There was no image found for biblionumber $biblionumber : \" $title \"\n";
         }
+        #On vérifie qu'on ne dépasse pas la limite affichable fixée
+        if ($index >= $LIMIT_DISPLAYED) { last; }
     }
 
     unless ( @images ) {

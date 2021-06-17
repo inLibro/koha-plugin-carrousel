@@ -26,7 +26,7 @@
             <input id="submit" type="submit" value="Générer">
             [% ELSE %]
             <div class="alert alert-danger">
-                <strong>Vous n'avez aucune liste ou aucune n'est réglée pour être générée!</strong> Créez des listes ou réglez-les pour pouvoir générer un carrousel.
+                <strong>Aucun carrousel n’est configuré.</strong> Rendez-vous sur la <a href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS | uri %]&method=configure">page de configuration</a> pour configurer vos carrousels avant de les générer.
             </div>
             [% END %]
         </form>
