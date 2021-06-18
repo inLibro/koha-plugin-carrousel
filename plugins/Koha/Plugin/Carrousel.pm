@@ -381,6 +381,9 @@ sub insertIntoPref{
 
     # we select the current version of Koha
     my $kohaversion = getKohaVersion();
+    my $version_line ="<!-- Carrousel $VERSION -->";
+
+    $data = $version_line.$data;
 
     # si la version de koha est < 19.12 on utilise la préférence système "OpacMainUserBlock"
     if ( $kohaversion < 19.1200082 ) {
