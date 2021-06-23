@@ -149,10 +149,12 @@
 }
 
 #inlibro-carrousel button{
-    height:4vh;
-    font-size: 22px;
     color : #[%txtColor%];
     background-color: #[%bgColor%];
+    border: 0;
+    height : 2em;
+    font-size: 120%;
+    border-radius : 3px;
 }
 
 #inlibro-carrousel .images a {
