@@ -37,13 +37,13 @@ use Mail::Sendmail;
 use C4::Languages qw(getlanguage);
 
 
-our $VERSION = 1.1;
+our $VERSION = 1.2;
 our $metadata = {
     name            => 'ILL',
     author          => 'Charles Farmer',
     description     => 'Alow interlibrary loan',
     date_authored   => '2016-05-27',
-    date_updated    => '2017-05-25',
+    date_updated    => '2021-09-16',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -78,12 +78,12 @@ $(document).ready( function(){
     //Pour l'Intranet
     var langPref = $('html').attr('lang').substr(0, 2);
     var label;
-    if(langPref = 'fr'){
+    if(langPref == 'fr'){
         label = 'Vos PEB';
     }else{
         label = 'Your ILL';
     }
-    $('#bd .yui-u.first dl').append("<dt><a href=\"/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::ILL&method=tool&manage\">" + label +"</a></dt><dd>Monitoring ILL</dd>");
+    $('.row .col-sm-4 dl').first().append("<dt><a href=\"/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::ILL&method=tool&manage\">" + label +"</a></dt><dd>Monitoring ILL</dd>");
     });
         };
 
@@ -95,7 +95,7 @@ $(document).ready( function(){
     if(langPref == 'fr'){
         label = 'Mes PEB';
     }else{
-        label = 'your ILL';
+        label = 'Your ILL';
     }
     $('#usermenu ul').append("<li><a href=\"/plugin/Koha/Plugin/ILL/opac-ill.pl\">" + label +"</a></li>");
     });
