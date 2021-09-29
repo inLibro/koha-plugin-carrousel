@@ -37,13 +37,13 @@ use Mail::Sendmail;
 use C4::Languages qw(getlanguage);
 
 
-our $VERSION = 1.2;
+our $VERSION = 1.3;
 our $metadata = {
     name            => 'ILL',
     author          => 'Charles Farmer',
     description     => 'Alow interlibrary loan',
     date_authored   => '2016-05-27',
-    date_updated    => '2021-09-16',
+    date_updated    => '2021-09-23',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -78,12 +78,15 @@ $(document).ready( function(){
     //Pour l'Intranet
     var langPref = $('html').attr('lang').substr(0, 2);
     var label;
+    var description;
     if(langPref == 'fr'){
-        label = 'Vos PEB';
+        label = 'Demandes PEB';
+        description = 'Gérer vos demandes PEB';
     }else{
-        label = 'Your ILL';
+        label = 'ILL requests';
+        description = 'Monitoring ILL requests';
     }
-    $('.row .col-sm-4 dl').first().append("<dt><a href=\"/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::ILL&method=tool&manage\">" + label +"</a></dt><dd>Monitoring ILL</dd>");
+    $('.row .col-sm-4 dl').first().append("<dt><a href=\"/cgi-bin/koha/plugins/run.pl?class=Koha::Plugin::ILL&method=tool&manage\">" + label +"</a></dt><dd>" + description + "</dd>");
     });
         };
 

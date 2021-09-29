@@ -96,6 +96,9 @@ $(document).ready(function() {
 					<p>
 					<input type="checkbox" name='filter' value='ONLOAN' [% IF ( filterONLOAN ) %]checked[% END %]> On loan
 					</p>
+                    <p>
+                    <input type="checkbox" name='filter' value='COMPLETED' [% IF ( filterCOMPLETED ) %]checked[% END %]> Show completed requests
+                    </p>
 					<p>
 					<input type="checkbox" name='filter' value='DELETED' [% IF ( filterDELETED ) %]checked[% END %]> Show deleted requests
 					</p>
@@ -127,9 +130,11 @@ $(document).ready(function() {
 									[% IF ( book.CANCELLED ) %]Cancelled by user[% END %]
 									[% IF ( book.ORDERED ) %]Ordered[% END %]
 									[% IF ( book.REJECTED ) %]Rejected[% END %]
-									[% IF ( book.AVAILABLE ) %]Avalaible in library[% END %]
-									[% IF ( book.DELETED ) %]Deleted[% END %]
-                                                                </td>
+									[% IF ( book.AVAILABLE ) %]Available in library[% END %]
+									[% IF ( book.ONLOAN ) %]On loan[% END %]
+                                    [% IF ( book.COMPLETED ) %]Completed[% END %]
+                                    [% IF ( book.DELETED ) %]Deleted[% END %]
+                                </td>
 							</tr>
 						[% END %]
 					</table>
@@ -161,8 +166,10 @@ $(document).ready(function() {
 									[% IF ( serial.CANCELLED ) %]Cancelled by user[% END %]
 									[% IF ( serial.ORDERED ) %]Ordered[% END %]
 									[% IF ( serial.REJECTED ) %]Rejected[% END %]
-									[% IF ( serial.AVAILABLE ) %]valaible in library[% END %]
-									[% IF ( serial.DELETED ) %]Deleted[% END %]
+									[% IF ( serial.AVAILABLE ) %]Available in library[% END %]
+									[% IF ( serial.ONLOAN ) %]On loan[% END %]
+                                    [% IF ( serial.COMPLETED ) %]Completed[% END %]
+                                    [% IF ( serial.DELETED ) %]Deleted[% END %]
                                                                 </td>
                                                         </tr>
                                                 [% END %]
@@ -180,8 +187,9 @@ $(document).ready(function() {
 							<option value="ACCEPTED">Accepted</option>
 							<option value="ORDERED">Ordered</option>
 							<option value="REJECTED">Rejected</option>
-							<option value="AVAILABLE">Availible</option>
+							<option value="AVAILABLE">Available</option>
 							<option value="ONLOAN">On loan</option>
+                            <option value="COMPLETED">Completed</option>
 						</select>
 						<input type='submit' value='Edit' name='changeStatus'>
 						</p>

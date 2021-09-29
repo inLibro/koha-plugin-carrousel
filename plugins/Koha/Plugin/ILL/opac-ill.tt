@@ -1,3 +1,5 @@
+[% USE Asset %]
+[% USE raw %]
 [% USE Koha %]
 [% INCLUDE 'doc-head-open.inc' %]
 <title>
@@ -7,8 +9,8 @@
 </title>
 [% INCLUDE 'doc-head-close.inc' %]
 [% BLOCK cssinclude %][% END %]
-<script src="[% interface%]/[% theme %]/lib/jquery/jquery.js"></script>
-<script type="text/JavaScript" language="JavaScript">
+[% Asset.js("lib/jquery/jquery-3.4.1.min.js") | $raw %]
+<script>
        $(function() {
             $("#CheckAll").click(function()
             {
@@ -136,6 +138,8 @@
 	                                                [% IF ( book.ORDERED ) %]Ordered by the library[% END %]
 	                                                [% IF ( book.REJECTED ) %]Request declined[% END %]
 	                                                [% IF ( book.AVAILABLE ) %]Available in the library[% END %]
+                                                    [% IF ( book.ONLOAN ) %]On loan[% END %]
+                                                    [% IF ( book.COMPLETED ) %]Completed[% END %]
 	                                            </td>
 	                                        </tr>
 	                                    [% END %]
@@ -149,7 +153,7 @@
 	                                    </tr>
 	                                    [% FOREACH serial IN serials %]
 	                                        <tr style="vertical-align: top"[% IF ( loop.even ) %] class="highlight"[% END %]>
-							<td><input type="checkbox" name="deleteRequest" value="[% serial.requestid %]"</td>
+							<td><input type="checkbox" name="deleteRequest" value="[% serial.requestid %]"></td>
 	                                            <td>[% serial.date %]</td>
 	                                            <td>[% serial.chargedto %]</td>
 	                                            <td>[% serial.maxcost %]</td>
@@ -168,6 +172,8 @@
 	                                                [% IF ( serial.ORDERED ) %]Ordered by the library[% END %]
 	                                                [% IF ( serial.REJECTED ) %]Request declined[% END %]
 	                                                [% IF ( serial.AVAILABLE ) %]Available in the library[% END %]
+                                                    [% IF ( serial.ONLOAN ) %]On loan[% END %]
+                                                    [% IF ( serial.COMPLETED ) %]Completed[% END %]
 	                                            </td>
 	                                        </tr>
 	                                    [% END %]
