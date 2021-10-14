@@ -184,6 +184,8 @@ sub intranet_ill{
     my ( $self, $args ) = @_;
     my ( $template, $borrowernumber, $cookie );
 
+    $input = $self->{'cgi'};
+
     my $id             = $input->param('id');
     my $title          = $input->param('title');
     my $new            = $input->param('new');
@@ -288,7 +290,7 @@ sub intranet_ill{
                                     $message .= "<b>Auteur de l'article : </b>" . $data->{'artauthor'} . '<br/>' if $data->{'artauthor'};
                             }
 
-                $message .= $footer;
+                $message .= $footer if $footer;
                 $message .= '<p>Cordialement,</p><p>L\'équipe CorDis</p>';
 
                 if ( $proceedWithEmail )
