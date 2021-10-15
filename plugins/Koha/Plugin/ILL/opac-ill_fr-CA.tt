@@ -1,3 +1,5 @@
+[% USE Asset %]
+[% USE raw %]
 [% USE Koha %]
 [% INCLUDE 'doc-head-open.inc' %]
 <title>
@@ -7,8 +9,8 @@
 </title>
 [% INCLUDE 'doc-head-close.inc' %]
 [% BLOCK cssinclude %][% END %]
-<script src="[% interface%]/[% theme %]/lib/jquery/jquery.js"></script>
-<script type="text/JavaScript" language="JavaScript">
+[% Asset.js("lib/jquery/jquery-3.4.1.min.js") | $raw %]
+<script>
        $(function() {
             $("#CheckAll").click(function()
             {
@@ -88,7 +90,7 @@
                                     <div class="illline clear"><label class="illlabel2 illmargin">Titre</label> <input type="text" id="serialtitle" name="serialtitle" size="50" maxlength="80" /></div><br/>
                                     <div class="illline clear"><label class="illlabel2 illmargin">Année</label><input class="illmargin" type="text" id="year" name="year" size="9" maxlength="9" /></div><br/>
                                     <div class="illline clear"><label class="illlabel2 illmargin">Volume</label><input class="" type="text" id="volume" name="volume" size="4" maxlength="4" /></div><br/>
-                                    <div class="illline clear"><label class="illlabel2 illmargin">Nombre</label><input type="text" id="number" name="number" size="4" maxlength="4" /></div><br/>
+                                    <div class="illline clear"><label class="illlabel2 illmargin">Numéro</label><input type="text" id="number" name="number" size="4" maxlength="4" /></div><br/>
                                     <div class="illline clear"><label class="illlabel2 illmargin">Pages</label><input type="text" id="pages" name="pages" size="10" maxlength="10" /></div><br/>
                                     <div class="illline clear"><label class="illlabel2 illmargin">Auteur principal</label><input type="text" id="artauthor" name="artauthor" size="50" maxlength="80" /></div><br/>
                                     <div class="illline clear"><label class="illlabel2 illmargin">Titre de l'article</label><input type="text" id="article" name="article" size="50" maxlength="80" /></div><br/>
@@ -131,11 +133,13 @@
 	                                                [% IF ( book.publisher ) %][% book.publisher %][% END %]
 	                                            </td>
 	                                            <td>
-	                                                [% IF ( book.ASKED ) %]Demande envoyée[% END %]
-	                                                [% IF ( book.ACCEPTED ) %]Demande accepté[% END %]
-	                                                [% IF ( book.ORDERED ) %]Demande envoyée par la bibliothèque[% END %]
+	                                                [% IF ( book.ASKED ) %]Nouvelle demande[% END %]
+	                                                [% IF ( book.ACCEPTED ) %]Demande acceptée[% END %]
+	                                                [% IF ( book.ORDERED ) %]En commande par la bibliothèque[% END %]
 	                                                [% IF ( book.REJECTED ) %]Demande refusée[% END %]
-	                                                [% IF ( book.AVAILABLE ) %]Disponible[% END %]
+	                                                [% IF ( book.AVAILABLE ) %]Disponible à la bibliothèque[% END %]
+                                                    [% IF ( book.ONLOAN ) %]En prêt[% END %]
+                                                    [% IF ( book.COMPLETED ) %]Complétée[% END %]
 	                                            </td>
 	                                        </tr>
 	                                    [% END %]
@@ -160,14 +164,16 @@
 	                                                [% IF ( serial.number ) %]No [% serial.number %][% END %]
 	                                                [% IF ( serial.pages ) %]Pages [% serial.pages %][% END %]
 	                                                <br/>
-	                                                Article : [% serial.article %]par [% serial.artauthor %]
+	                                                Article : [% serial.article %] par [% serial.artauthor %]
 	                                            </td>
 	                                            <td>
-	                                                [% IF ( serial.ASKED ) %]Demande envoyée[% END %]
-	                                                [% IF ( serial.ACCEPTED ) %]Demande accepté[% END %]
-	                                                [% IF ( serial.ORDERED ) %]Demande envoyée par la bibliothèque[% END %]
+	                                                [% IF ( serial.ASKED ) %]Nouvelle demande[% END %]
+	                                                [% IF ( serial.ACCEPTED ) %]Demande acceptée[% END %]
+	                                                [% IF ( serial.ORDERED ) %]En commande par la bibliothèque[% END %]
 	                                                [% IF ( serial.REJECTED ) %]Demande refusée[% END %]
-	                                                [% IF ( serial.AVAILABLE ) %]Disponible[% END %]
+	                                                [% IF ( serial.AVAILABLE ) %]Disponible à la bibliothèque[% END %]
+                                                    [% IF ( serial.ONLOAN ) %]En prêt[% END %]
+                                                    [% IF ( serial.COMPLETED ) %]Complétée[% END %]
 	                                            </td>
 	                                        </tr>
 	                                    [% END %]

@@ -96,6 +96,9 @@ $(document).ready(function() {
 					<p>
 					<input type="checkbox" name='filter' value='ONLOAN' [% IF ( filterONLOAN ) %]checked[% END %]> En prêt
 					</p>
+                    <p>
+                    <input type="checkbox" name='filter' value='COMPLETED' [% IF ( filterCOMPLETED ) %]checked[% END %]> Afficher les requêtes complétées
+                    </p>
 					<p>
 					<input type="checkbox" name='filter' value='DELETED' [% IF ( filterDELETED ) %]checked[% END %]> Afficher les requêtes supprimées
 					</p>
@@ -128,7 +131,9 @@ $(document).ready(function() {
 									[% IF ( book.ORDERED ) %]Commandée par la bibliothèque[% END %]
 									[% IF ( book.REJECTED ) %]Demande rejetée [% END %]
 									[% IF ( book.AVAILABLE ) %]Disponible à la bibliothèque[% END %]
-									[% IF ( book.DELETED ) %]Supprimée[% END %]
+									[% IF ( book.ONLOAN ) %]En prêt[% END %]
+                                    [% IF ( book.COMPLETED ) %]Complétée[% END %]
+                                    [% IF ( book.DELETED ) %]Supprimée[% END %]
                                                                 </td>
 							</tr>
 						[% END %]
@@ -162,7 +167,9 @@ $(document).ready(function() {
 									[% IF ( serial.ORDERED ) %]Commandée par la bibliothèque[% END %]
 									[% IF ( serial.REJECTED ) %]Demande rejetée [% END %]
 									[% IF ( serial.AVAILABLE ) %]Disponible à la bibliothèque[% END %]
-									[% IF ( serial.DELETED ) %]Supprimée[% END %]
+									[% IF ( serial.ONLOAN ) %]En prêt[% END %]
+                                    [% IF ( serial.COMPLETED ) %]Complétée[% END %]
+                                    [% IF ( serial.DELETED ) %]Supprimée[% END %]
                                                                 </td>
                                                         </tr>
                                                 [% END %]
@@ -182,6 +189,7 @@ $(document).ready(function() {
 							<option value="REJECTED">Rejetée</option>
 							<option value="AVAILABLE">Disponible</option>
 							<option value="ONLOAN">En prêt</option>
+                            <option value="COMPLETED">Complétée</option>
 						</select>
 						<input type='submit' value='Modifier' name='changeStatus'>
 						</p>
