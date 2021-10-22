@@ -362,7 +362,7 @@ sub intranet_ill{
         $template->param(filterAVAILABLE => 1);
         $template->param(filterONLOAN => 1);
 
-        $statusFilters = "status <> 'DELETED'";
+        $statusFilters = "status <> 'DELETED' AND status <> 'COMPLETED'";
     }
 
 
