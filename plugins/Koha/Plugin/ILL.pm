@@ -37,13 +37,13 @@ use Mail::Sendmail;
 use C4::Languages qw(getlanguage);
 
 
-our $VERSION = 1.3;
+our $VERSION = 1.4;
 our $metadata = {
     name            => 'ILL',
-    author          => 'Charles Farmer',
-    description     => 'Alow interlibrary loan',
+    author          => 'Charles Farmer, Alexis Ripetti',
+    description     => 'Allow interlibrary loan requests',
     date_authored   => '2016-05-27',
-    date_updated    => '2021-09-23',
+    date_updated    => '2021-10-22',
     minimum_version => '3.20',
     maximum_version => undef,
     version         => $VERSION,
@@ -253,6 +253,14 @@ sub intranet_ill{
             if ( $data && ( $newStatus ne $data->{'status'} ) )
             {
                 $sth_changeStatus->execute($newStatus, $requestid);
+
+                # On récupère le nom de la branche pour signer l'email
+                my $userenv_branch  = C4::Context->userenv->{'branch'} || '';
+                my $branchname;
+                if ($userenv_branch and my $library = Koha::Libraries->find($userenv_branch)) {
+                    $branchname = $library->branchname;
+                }
+
                 my $message = '<p>Bonjour ' . ($data->{'title'} ? $data->{'title'} . ' ' : '' ) . $data->{'firstname'} . ' ' . $data->{'surname'}.'</p>';
 
                 my $footer;
@@ -291,7 +299,12 @@ sub intranet_ill{
                             }
 
                 $message .= $footer if $footer;
-                $message .= '<p>Cordialement,</p><p>L\'équipe CorDis</p>';
+                if ($branchname) {
+                    $message .= '<p>Cordialement,</p><p>'. $branchname  . '</p>';
+                }
+                else {
+                    $message .= '<p>Cordialement.</p>';
+                }
 
                 if ( $proceedWithEmail )
                 {
@@ -349,7 +362,7 @@ sub intranet_ill{
         $template->param(filterAVAILABLE => 1);
         $template->param(filterONLOAN => 1);
 
-        $statusFilters = "status <> 'DELETED'";
+        $statusFilters = "status <> 'DELETED' AND status <> 'COMPLETED'";
     }
 
 
