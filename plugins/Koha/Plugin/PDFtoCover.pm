@@ -63,8 +63,8 @@ sub tool {
     my $lock_path = File::Spec->catdir( File::Spec->rootdir(), "tmp", ".Koha.PDFtoCover.lock" );
     my $lock = (-e $lock_path) ? 1 : 0;
 
-    my $pdftocairo = "/usr/bin/pdftocairo";
-    unless ( -e $pdftocairo ) {
+    my $poppler = "/usr/bin/poppler-utils";
+    unless ( -e $poppler ) {
         $self->missingModule();
     }
     elsif ( $op && $op eq 'valide' ) {
