@@ -26,7 +26,7 @@
         </form>
 
         <div class="alert">
-            <h2>Ce plugin ne peut pas être utilisé, car la commande : pdftocairo n'est pas disponible, veuillez contacter votre administrateur ou installer le paquet pour utiliser ce plugin.</h2>
+            <h2>Ce plugin ne peut pas être utilisé, car la commande : poppler-utils n'est pas disponible, veuillez contacter votre administrateur ou installer le paquet pour utiliser ce plugin.</h2>
         </div>
     </div>
 </div>
