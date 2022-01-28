@@ -42,9 +42,9 @@ use Koha::Uploader;
 use Koha::News;
 use Koha::DateUtils;
 
-our $VERSION = 4;
+our $VERSION = 4.0;
 our $metadata = {
-    name            => 'Carrousel 4',
+    name            => 'Carrousel 4.0',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
@@ -453,7 +453,7 @@ sub insertIntoPref{
                     $data = $first_line.$data.$second_line;
                     $value =~ s/$first_line.*?$second_line/$data/s;
                 }
-                $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value, updated_on => dt_from_string()) });
+                $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value, updated_on => dt_from_string() });
             }
         }
     } else {
