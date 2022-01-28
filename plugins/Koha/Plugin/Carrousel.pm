@@ -40,15 +40,16 @@ use Koha::Reports;
 use C4::Reports::Guided;
 use Koha::Uploader;
 use Koha::News;
+use Koha::DateUtils;
 
-our $VERSION = 3.9;
+our $VERSION = 4;
 our $metadata = {
-    name            => 'Carrousel 3.9',
+    name            => 'Carrousel 4',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2021-06-23',
-    minimum_version => '3.20',
+    date_updated    => '2022-01-28',
+    minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
 };
@@ -438,7 +439,7 @@ sub insertIntoPref{
                     $data = $first_line.$data.$second_line;
                     $value =~ s/$first_line.*?$second_line/$data/s;
                 }
-                Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value })->store;
+                Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value, published_on => dt_from_string()->ymd() })->store;
             }
             #2.1.2 if exists - modify
             else{
@@ -452,7 +453,7 @@ sub insertIntoPref{
                     $data = $first_line.$data.$second_line;
                     $value =~ s/$first_line.*?$second_line/$data/s;
                 }
-                $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value });
+                $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value, updated_on => dt_from_string()) });
             }
         }
     } else {
