@@ -439,7 +439,11 @@ sub insertIntoPref{
                     $data = $first_line.$data.$second_line;
                     $value =~ s/$first_line.*?$second_line/$data/s;
                 }
-                Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value, published_on => dt_from_string()->ymd() })->store;
+                if ($kohaversion > 21.05) {
+                    Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value, published_on => dt_from_string()->ymd() })->store;
+                } else {
+                    Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value })->store;
+                }
             }
             #2.1.2 if exists - modify
             else{
@@ -453,7 +457,11 @@ sub insertIntoPref{
                     $data = $first_line.$data.$second_line;
                     $value =~ s/$first_line.*?$second_line/$data/s;
                 }
-                $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value, updated_on => dt_from_string() });
+                if ($kohaversion > 21.05) {
+                    $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value, updated_on => dt_from_string() });
+                } else {
+                    $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value });
+                }
             }
         }
     } else {
