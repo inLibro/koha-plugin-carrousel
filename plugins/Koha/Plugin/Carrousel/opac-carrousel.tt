@@ -4,12 +4,12 @@
 <div id="inlibro-carrousel">
 [% FOREACH carrousel IN carrousels %]
     [% IF carrousel.type == "carrousel" %]
-        <div class='carrouselFrame'>
+        <div class="carrouselFrame">
             <p class="special-title">[% carrousel.title || carrousel.name %]</p>
             <div class="loadingDiv"></div>
-            <div id="carrousel-[% loop.index %]" class='carrousel'>
-                <a class='left carousel-control'>&lsaquo;</a>
-                <a class='right carousel-control'>&rsaquo;</a>
+            <div id="carrousel-[% loop.index %]" class="carrousel">
+                <a class="left carousel-control">&lsaquo;</a>
+                <a class="right carousel-control">&rsaquo;</a>
                 [% FOREACH item IN carrousel.documents %]
                     <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]"><img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/></a>
                 [% END %]
