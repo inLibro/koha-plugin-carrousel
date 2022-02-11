@@ -42,13 +42,13 @@ use Koha::Uploader;
 use Koha::News;
 use Koha::DateUtils;
 
-our $VERSION = 3.10;
+our $VERSION = "3.10.1";
 our $metadata = {
-    name            => 'Carrousel 3.10',
+    name            => 'Carrousel 3.10.1',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2022-02-01',
+    date_updated    => '2022-02-08',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -439,7 +439,11 @@ sub insertIntoPref{
                     $data = $first_line.$data.$second_line;
                     $value =~ s/$first_line.*?$second_line/$data/s;
                 }
-                Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value, published_on => dt_from_string()->ymd() })->store;
+                if ($kohaversion > 21.05) {
+                    Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value, published_on => dt_from_string()->ymd() })->store;
+                } else {
+                    Koha::NewsItem->new({ lang => $mainblock, number => '0', title => $mainblock, content => $value })->store;
+                }
             }
             #2.1.2 if exists - modify
             else{
@@ -453,7 +457,11 @@ sub insertIntoPref{
                     $data = $first_line.$data.$second_line;
                     $value =~ s/$first_line.*?$second_line/$data/s;
                 }
-                $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value, updated_on => dt_from_string() });
+                if ($kohaversion > 21.05) {
+                    $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value, updated_on => dt_from_string() });
+                } else {
+                    $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value });
+                }
             }
         }
     } else {
@@ -659,7 +667,8 @@ sub upgrade {
     my ( $self, $args ) = @_;
     my $database_version = $self->retrieve_data('__INSTALLED_VERSION__') || $VERSION;
 
-    if ($database_version < 3.0) {
+    # _version_compare Returns 1 if the first argument is the higher version
+    if ($self->_version_compare("3.0", $database_version) == 1) {
         my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))} if (defined $self->retrieve_data('shelvesOrder'));
         my @enabledShelves = @{decode_json($self->retrieve_data('enabledShelves'))} if (defined $self->retrieve_data('enabledShelves'));
         my $type = $self->retrieve_data('type');
