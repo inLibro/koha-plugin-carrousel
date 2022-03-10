@@ -31,7 +31,7 @@ use LWP::Simple;
 use Template;
 use utf8;
 use base qw(Koha::Plugins::Base);
-use C4::Biblio;
+use C4::Biblio qw( GetMarcBiblio );
 use C4::Context;
 use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
@@ -39,16 +39,26 @@ use C4::XSLT;
 use Koha::Reports;
 use C4::Reports::Guided;
 use Koha::Uploader;
-use Koha::News;
-use Koha::DateUtils;
+use Koha::DateUtils qw( dt_from_string );
 
-our $VERSION = "3.10.1";
+BEGIN {
+    my $kohaversion = Koha::version;
+    $kohaversion =~ s/(.*\..*)\.(.*)\.(.*)/$1$2$3/;
+    my $module = $kohaversion < 21.11 ? "Koha::News" : "Koha::AdditionalContents";
+    my $file = $module;
+    $file =~ s[::][/]g;
+    $file .= '.pm';
+    require $file;
+    $module->import;
+}
+
+our $VERSION = "3.11.0";
 our $metadata = {
-    name            => 'Carrousel 3.10.1',
+    name            => 'Carrousel 3.11.0',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2022-02-08',
+    date_updated    => '2022-03-10',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -220,8 +230,8 @@ sub loadContent {
         }
     } else {
         #On fait notre recherche en triant du plus récent au plus aucien
-        my @shelves = Koha::Virtualshelfcontents->search({ shelfnumber => $id }, {order_by => {-desc => [qw{dateadded}]}});
-        foreach my $item (@shelves) {
+        my $shelves = Koha::Virtualshelfcontents->search({ shelfnumber => $id }, {order_by => {-desc => [qw{dateadded}]}});
+        while ( my $item = $shelves->next ) {
             push @content, $item->biblionumber;
         }
     }
@@ -411,7 +421,9 @@ sub insertIntoPref{
 
         # Update system preference
         C4::Context->set_preference( 'OpacMainUserBlock' , $value );
-    } elsif ( defined $kohaversion ) {  # sinon, utiliser le système de nouvelle
+    }
+    # Après la version 21.11, Koha::News n'existe plus
+    elsif ( $kohaversion < 21.11 ) {
         #1. check installed languages
         my $opaclanguages = C4::Context->preference('opaclanguages');
         
@@ -462,6 +474,104 @@ sub insertIntoPref{
                 } else {
                     $yyiss->update({ lang => $mainblock,number => '0',title => $mainblock,content => $value });
                 }
+            }
+        }
+    }
+    elsif ( defined $kohaversion ) {  # sinon, utiliser le système de contenu additionnel
+        #1. check installed languages
+        my $opaclanguages = C4::Context->preference('opaclanguages');
+
+        #expected ex opaclanguages = "fr-CA,en"
+        my @languages = split /,/, $opaclanguages;
+        #2. for each installed language
+        foreach my $lang (@languages) {
+            my $location = 'OpacMainUserBlock';
+            my $published_on = dt_from_string()->ymd();
+            my $code = undef;
+            my $expirationdate = undef;
+            my $branchcode = undef;
+            my $number = undef;
+            my $title = 'OpacMainUserBlock_'.$lang;
+            my $category = 'html_customizations';
+            my $borrowernumber = undef;
+            my $content = '';
+
+            # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
+            my $first_line = "<!-- Debut du carrousel -->";
+            my $second_line ="<!-- Fin du carrousel -->";
+
+            #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
+            if(index($content, $first_line) == -1 && index($content, $second_line) == -1  ){
+                $content = $content."\n".$first_line.$data.$second_line;
+            } else{
+                $data = $first_line.$data.$second_line;
+                $content =~ s/$first_line.*?$second_line/$data/s;
+            }
+
+            #TODO: verify if it has to be applied to individual branches
+            #2.1 check if opacmainuserblock exists
+            my $additional_content = Koha::AdditionalContents->find({
+            location   => $location,
+            branchcode => $branchcode,
+            });
+            if( $additional_content ) {
+                $code = $additional_content->code;
+            }
+
+            # get entry for this specific lang
+            $additional_content = Koha::AdditionalContents->find({
+                code       => $code || 'tmp_code',
+                category   => $category,
+                branchcode => $branchcode,
+                lang       => $lang,
+            });
+
+            #2.1.2 if lang exists update
+            if ( $additional_content ) {
+                my $updated;
+                eval {
+                    $additional_content->set({
+                        category       => $category,
+                        code           => $code,
+                        location       => $location,
+                        branchcode     => $branchcode,
+                        title          => $title,
+                        content        => $content,
+                        lang           => $lang,
+                        expirationdate => $expirationdate,
+                        published_on   => $published_on,
+                        number         => $number,
+                        borrowernumber => $borrowernumber,
+                    });
+                    $updated = $additional_content->_result->get_dirty_columns;
+                    $additional_content->store;
+                };
+            }
+            #2.1.3 else add new
+            else {
+                my $additional_content = Koha::AdditionalContent->new({
+                    category       => $category,
+                    code           => $code || 'tmp_code',
+                    location       => $location,
+                    branchcode     => $branchcode,
+                    title          => $title,
+                    content        => $content,
+                    lang           => $lang,
+                    expirationdate => $expirationdate,
+                    published_on   => $published_on,
+                    number         => $number,
+                    borrowernumber => $borrowernumber,
+                })->store;
+                eval {
+                    $additional_content->store;
+                    unless ($code) {
+                        $additional_content->discard_changes;
+                        $code = $category eq 'news'
+                        ? 'News_' . $additional_content->idnew
+                        : $location . '_' . $additional_content->idnew;
+                        $additional_content->code($code)->store;
+                    }
+                };
             }
         }
     } else {
