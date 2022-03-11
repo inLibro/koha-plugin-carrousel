@@ -191,7 +191,8 @@ sub loadContent {
             warn "Report $id was not found.";
         } else {
             unless ($sql =~ /<</) {
-                my ( $sth, $errors ) = execute_query($sql);
+                my $sth = $dbh->prepare($sql);
+                $sth->execute();
                 if ($sth) {
                     while ( my $row = $sth->fetchrow_hashref() ) {
                         if (defined($row->{biblionumber})) {
