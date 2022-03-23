@@ -35,7 +35,7 @@ use File::Spec;
 use JSON qw( encode_json );
 
 our $dbh      = C4::Context->dbh();
-our $VERSION  = 1.4;
+our $VERSION  = 1.5;
 our $metadata = {
     name            => 'PDFtoCover',
     author          => 'Mehdi Hamidi, Bouzid Fergani, Arthur Bousquet',
