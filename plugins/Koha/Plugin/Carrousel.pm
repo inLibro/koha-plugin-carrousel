@@ -52,9 +52,9 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "3.11.0";
+our $VERSION = "3.12.0";
 our $metadata = {
-    name            => 'Carrousel 3.11.0',
+    name            => 'Carrousel 3.12.0',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
@@ -616,8 +616,13 @@ sub getUrlFromExternalSources {
     # les clefs sont les systempreferences du même nom
     my $es = {};
 
-    $es->{OpacCoce} = {
+    $es->{BourriquetOpac} = {
         'priority' => 1,
+        'url' => C4::Context->preference('OPACBaseURL')."/cgi-bin/koha/svc/bourriquet/images/?stdnos=$isbn|$biblionumber&providers=".C4::Context->preference('BourriquetProviders'),
+    };
+
+    $es->{OpacCoce} = {
+        'priority' => 2,
         'retrieval' => \&retrieveUrlFromCoceJson,
         'url' => C4::Context->preference('CoceHost').'/cover'
                 ."?id=$isbn"
@@ -627,19 +632,19 @@ sub getUrlFromExternalSources {
     };
 
     $es->{OPACAmazonCoverImages} = {
-        'priority' => 2,
+        'priority' => 3,
         'url' => "https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg",
         'content_length' => 500, # FIXME pourquoi seuil minimal de 500?
     };
 
     $es->{GoogleJackets} = {
-        'priority' => 3,
+        'priority' => 4,
         'retrieval' => \&retrieveUrlFromGoogleJson,
         'url' => "https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA",
     };
 
     $es->{OpenLibraryCovers} = {
-        'priority' => 4,
+        'priority' => 5,
         'url' => "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg?default=false",
     };
 
@@ -662,6 +667,15 @@ sub getUrlFromExternalSources {
         if ( exists $es->{$provider}->{retrieval} ) {
             $url = $es->{$provider}->{retrieval}->($res);
             next unless $url;
+        }
+
+       if ($provider eq "BourriquetOpac") {
+             use JSON;
+             my $json = JSON->new->allow_nonref;
+             $json = $json->decode($res->content);
+             # FIXME : Doit regarder si thumbnail est vide sinon prendre dans record_numbers sinon faire next
+             $url = $json->{"stdnos"}{$isbn}{"thumbnail"};
+             $url = 'data:image/jpg;base64, ' . $url;
         }
 
         if ( $url =~ m!^/9j/! ) {
