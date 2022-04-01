@@ -160,8 +160,6 @@ sub mergeReports{
             }
             $sectionData{'reports'} = \%sectionReports;
             $finalReport{$section} = \%sectionData;
-            use Data::Dumper;
-            warn "7777777777777777777" . Dumper(%finalReport);
         }else{
             $endOfReport=1;
         }
