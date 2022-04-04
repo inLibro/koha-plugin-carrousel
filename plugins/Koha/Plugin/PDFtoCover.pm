@@ -30,18 +30,28 @@ use LWP::Simple;
 use base qw(Koha::Plugins::Base);
 use C4::Auth;
 use C4::Context;
-use C4::Images;
 use File::Spec;
 use JSON qw( encode_json );
 
+BEGIN {
+    my $kohaversion = Koha::version;
+    $kohaversion =~ s/(.*\..*)\.(.*)\.(.*)/$1$2$3/;
+    my $module = $kohaversion < 21.0508000 ? "C4::Images" : "Koha::CoverImages";
+    my $file = $module;
+    $file =~ s[::][/]g;
+    $file .= '.pm';
+    require $file;
+    $module->import;
+}
+
 our $dbh      = C4::Context->dbh();
-our $VERSION  = 1.5;
+our $VERSION  = 1.6;
 our $metadata = {
     name            => 'PDFtoCover',
-    author          => 'Mehdi Hamidi, Bouzid Fergani, Arthur Bousquet',
+    author          => 'Mehdi Hamidi, Bouzid Fergani, Arthur Bousquet, The Minh Luong',
     description     => 'Creates cover images for documents missing one',
     date_authored   => '2016-06-08',
-    date_updated    => '2020-09-10',
+    date_updated    => '2022-04-04',
     minimum_version => '17.05',
     version         => $VERSION,
 };
@@ -115,12 +125,24 @@ sub missingModule {
     print $template->output();
 }
 
+sub getKohaVersion {
+    # Current version of Koha from sources
+    my $kohaversion = Koha::version;
+    # remove the 3 last . to have a Perl number
+    $kohaversion =~ s/(.*\..*)\.(.*)\.(.*)/$1$2$3/;
+    return $kohaversion;
+}
+
 sub displayAffected {
     my ( $self, $args ) = @_;
     my $pdf = 0;
-    my $query
-        = "SELECT count(*) as count FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in (select biblionumber from biblioimages);";
-
+    my $kohaversion = getKohaVersion();
+    my $query = "";
+    if($kohaversion < 21.0508000){
+      $query = "SELECT count(*) as count FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in (select biblionumber from biblioimages);";
+    }else{
+      $query = "SELECT count(*) as count FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in (select biblionumber from cover_images);";
+    }
     my $stmt = $dbh->prepare($query);
     $stmt->execute();
 
@@ -135,10 +157,13 @@ sub genererVignette {
     my ( $self, $args ) = @_;
     my $dbh = C4::Context->dbh;
     my $ua = LWP::UserAgent->new( timeout => "5" );
-
-    my $query
-        = "SELECT a.biblionumber, EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") AS url FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in (select biblionumber from biblioimages);";
-
+    my $kohaversion = getKohaVersion();
+    my $query = "";
+    if($kohaversion < 21.0508000){
+      $query = "SELECT a.biblionumber, EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") AS url FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in (select biblionumber from biblioimages);";
+    }else{
+      $query = "SELECT a.biblionumber, EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") AS url FROM biblio_metadata AS a WHERE EXTRACTVALUE(a.metadata,\"record/datafield[\@tag='856']/subfield[\@code='u']\") <> '' and a.biblionumber not in (select biblionumber from cover_images);";
+    }
     # Retourne 856$u, qui est le(s) URI(s) d'une ressource numérique
     my $sthSelectPdfUri = $dbh->prepare($query);
     $sthSelectPdfUri->execute();
@@ -165,7 +190,19 @@ sub genererVignette {
 
                     my $srcimage = GD::Image->new($imageFile);
                     my $replace  = 1;
-                    C4::Images::PutImage( $biblionumber, $srcimage, $replace );
+                    if($kohaversion < 21.0508000){
+                        C4::Images::PutImage( $biblionumber, $srcimage, $replace );
+                    }else{
+                        my $input = CGI->new;
+                        my $itemnumber = $input->param('itemnumber');
+                        Koha::CoverImage->new(
+                            {
+                              biblionumber => $biblionumber,
+                              itemnumber   => $itemnumber,
+                              src_image    => $srcimage
+                            }
+                        )->store;
+                    }
                     foreach my $file (@filestodelete) {
                         unlink $file or warn "Could not unlink $file: $!\nNo more images to import.Exiting.";
                     }
