@@ -25,19 +25,21 @@ use strict;
 use CGI;
 use DBI;
 use Template;
-use C4::Auth;
+use C4::Auth qw( get_template_and_user );
 use utf8;
 use base qw(Koha::Plugins::Base);
 use Data::Dumper;
-use C4::NewsChannels;
+use C4::Output qw( output_html_with_http_headers );
+use Koha::Objects qw( find );
 use C4::Output;
-use Koha::DateUtils;
+use Koha::DateUtils qw( dt_from_string );
 use Encode;
 use Mail::Sendmail;
 use C4::Languages qw(getlanguage);
+use C4::Installer;
 
 
-our $VERSION = 1.4;
+our $VERSION = 1.5;
 our $metadata = {
     name            => 'ILL',
     author          => 'Charles Farmer, Alexis Ripetti',
@@ -103,8 +105,8 @@ $(document).ready( function(){
     $('#usermenu ul').append("<li><a href=\"/plugin/Koha/Plugin/ILL/opac-ill.pl\">" + label +"</a></li>");
     });
             };
-
-        $self->create_tables() unless table_exist();
+        my $tableName = $self->get_qualified_table_name($table_name);
+        $self->create_tables($tableName) unless TableExists($tableName);
         insert_into_pref("IntranetUserJS",$pref_value_intranet);
         insert_into_pref("OPACUserJS",$pref_value_opac);
         $self->go_home();
@@ -127,9 +129,10 @@ sub table_exist{
 
 
 sub create_tables{
+    my ($self, $table) = @_;
     $| = 1;
 
-    $dbh->do("CREATE TABLE `$table_name` (
+    $dbh->do("CREATE TABLE `$table` (
         `requestid`     INT(8) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         `borrowerid`    INT(11) NOT NULL,
         `type`          VARCHAR(10) NOT NULL,
@@ -196,7 +199,7 @@ sub intranet_ill{
     my $changeStatus = $input->param('changeStatus') ne '';
     my $deleteSelection = $input->param('deleteSelected') ne '';
 
-    my $new_detail = get_opac_new($id);
+    my $new_detail = Koha::Objects->find($id);
 
     my $lang = getlanguage($input);
     if($lang eq "fr-CA" or $lang eq "fr-FR"){
@@ -232,16 +235,16 @@ sub intranet_ill{
         }
         );
     }
-
+    my $tableName = $self->get_qualified_table_name($table_name);
     my $op = $input->param('op');
 
-    my $sth_getRequest = $dbh->prepare("SELECT *, borrowers.email, borrowers.title, borrowers.firstname, borrowers.surname FROM $table_name LEFT JOIN borrowers ON $table_name.borrowerid = borrowers.borrowernumber WHERE $table_name.requestid = ?");
+    my $sth_getRequest = $dbh->prepare("SELECT *, borrowers.email, borrowers.title, borrowers.firstname, borrowers.surname FROM $tableName LEFT JOIN borrowers ON $tableName.borrowerid = borrowers.borrowernumber WHERE $tableName.requestid = ?");
 
     my @selectedRequests = $input->param('selectRequest');
 
     if ( $changeStatus || $deleteSelection )
     {
-        my $sth_changeStatus = $dbh->prepare("UPDATE $table_name SET status = ? WHERE requestid = ?");
+        my $sth_changeStatus = $dbh->prepare("UPDATE $tableName SET status = ? WHERE requestid = ?");
 
         my $newStatus = $deleteSelection ? 'DELETED' : $input->param('newStatus');
 
@@ -367,9 +370,8 @@ sub intranet_ill{
 
 
     my $sth_borrower = $dbh->prepare("SELECT title, firstname, surname FROM borrowers WHERE borrowernumber=?");
-
-    my $fullquery = "SELECT * FROM $table_name WHERE type='BOOK' ". ($statusFilters ? "AND ($statusFilters)" : "") . " ORDER BY date";
-    my $sth_bookrequests = $dbh->prepare("SELECT * FROM $table_name WHERE type='BOOK' ". ($statusFilters ? "AND ($statusFilters)" : "") . " ORDER BY date");
+    my $fullquery = "SELECT * FROM $tableName WHERE type='BOOK' ". ($statusFilters ? "AND ($statusFilters)" : "") . " ORDER BY date";
+    my $sth_bookrequests = $dbh->prepare("SELECT * FROM $tableName WHERE type='BOOK' ". ($statusFilters ? "AND ($statusFilters)" : "") . " ORDER BY date");
     $sth_bookrequests->execute();
     my @books;
     if ( $sth_bookrequests->rows() )
@@ -399,7 +401,7 @@ sub intranet_ill{
             $template->param( books => \@books, hasrequests => 1);
     }
 
-    my $sth_serialrequests = $dbh->prepare("SELECT * FROM $table_name WHERE type='SERIAL' " . ( $statusFilters ? "AND ( $statusFilters )" : "" ) . " ORDER BY date");
+    my $sth_serialrequests = $dbh->prepare("SELECT * FROM $tableName WHERE type='SERIAL' " . ( $statusFilters ? "AND ( $statusFilters )" : "" ) . " ORDER BY date");
     $sth_serialrequests->execute();
     my @serials;
 
@@ -444,7 +446,7 @@ sub intranet_ill{
 
 #Supprimer le plugin avec toutes ses données
 sub uninstall() {
-    $dbh->do("DROP TABLE `$table_name` CASCADE");
+    $dbh->do("DROP TABLE koha_plugin_ill_plugin_illrequest CASCADE");
     my $stm = $dbh->prepare("DELETE FROM systempreferences WHERE variable = ?");
     $stm->execute('InterLibraryLoans');
     $stm->finish();
