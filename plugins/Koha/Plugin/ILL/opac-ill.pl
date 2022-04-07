@@ -23,12 +23,12 @@ use CGI;
 use Mail::Sendmail;
 use Encode;
 
-use C4::Auth;    # get_template_and_user
-use C4::Output;
+use C4::Auth qw( get_template_and_user );    # get_template_and_user
+use C4::Output qw( output_html_with_http_headers );
 use C4::Suggestions;
 use C4::Members;
 use Data::Dumper;
-use Koha::DateUtils;
+use Koha::DateUtils qw( dt_from_string );
 use Koha::Patrons;
 use C4::Languages qw(getlanguage);
 
@@ -97,7 +97,7 @@ if ( $op eq "add_confirm" )
     my $baseurl = C4::Context->preference("staffClientBaseURL");
     my $message ='';
 
-        my $sth = $dbh->prepare( "INSERT INTO plugin_illrequest
+        my $sth = $dbh->prepare( "INSERT INTO koha_plugin_ill_plugin_illrequest
                                  (borrowerid, type, chargedto, approvedby, maxcost, booktitle, serialtitle, author, pubyear, isbn, publisher, artauthor, year, volume, number, pages, article, status)
                                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" );
         $sth->execute($borrowernumber, $type, $chargedto, $approvedby, $maxcost, $booktitle, $serialtitle, $author, $pubyear, $isbn, $publisher, $artauthor, $year, $volume, $number, $pages, $article, 'ASKED');
@@ -209,7 +209,7 @@ if ( $op eq "add_confirm" )
 
 if ( $op eq "delete_confirm" )
 {
-    my $sth_deleteRequest = $dbh->prepare("UPDATE plugin_illrequest SET status='CANCELLED' WHERE requestid = ? AND borrowerid = ?");
+    my $sth_deleteRequest = $dbh->prepare("UPDATE koha_plugin_ill_plugin_illrequest SET status='CANCELLED' WHERE requestid = ? AND borrowerid = ?");
 
     my @deleteRequests = $input->param("deleteRequest");
 
@@ -222,7 +222,7 @@ if ( $op eq "delete_confirm" )
 
 if ( $op ne 'add')
 {
-    my $sth_bookrequests = $dbh->prepare("SELECT * FROM plugin_illrequest WHERE type='BOOK' AND borrowerid = ? AND ( status <> 'CANCELLED' AND status <> 'DELETED' ) order by date");
+    my $sth_bookrequests = $dbh->prepare("SELECT * FROM koha_plugin_ill_plugin_illrequest WHERE type='BOOK' AND borrowerid = ? AND ( status <> 'CANCELLED' AND status <> 'DELETED' ) order by date");
     $sth_bookrequests->execute($borrowernumber);
     my @books;
 
@@ -243,7 +243,7 @@ if ( $op ne 'add')
         $template->param( books => \@books);
     }
 
-    my $sth_serialrequests = $dbh->prepare("SELECT * FROM plugin_illrequest WHERE type='SERIAL' AND borrowerid = ? AND status <> 'CANCELLED' order by date");
+    my $sth_serialrequests = $dbh->prepare("SELECT * FROM koha_plugin_ill_plugin_illrequest WHERE type='SERIAL' AND borrowerid = ? AND status <> 'CANCELLED' order by date");
     $sth_serialrequests->execute($borrowernumber);
     my @serials;
 
