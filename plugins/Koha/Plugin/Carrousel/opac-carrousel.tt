@@ -33,8 +33,8 @@
                     </div>
                 </div>
                 <div class="controls">
-                    <button class="[% carrousel.title || carrousel.name %]" style="float:left" onclick="Right(this)" type="button">Précédent</button>
-                    <button class="[% carrousel.title || carrousel.name %]" style="float:right" onclick="Left(this)" type="button">Suivant</button>
+                    <button class="[% carrousel.title || carrousel.name %]" style="float:left" onclick="Right(this)" type="button">&lt;</button>
+                    <button class="[% carrousel.title || carrousel.name %]" style="float:right" onclick="Left(this)" type="button">&gt;</button>
                 </div>
             [% END %]
         </div>
