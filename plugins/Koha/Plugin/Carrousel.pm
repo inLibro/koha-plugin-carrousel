@@ -52,9 +52,9 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "3.12.0";
+our $VERSION = "3.13.0";
 our $metadata = {
-    name            => 'Carrousel 3.12.0',
+    name            => 'Carrousel 3.13.0',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
