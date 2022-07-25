@@ -666,6 +666,28 @@ sub retrieveUrlFromCoceJson {
     }
 }
 
+sub retrieveUrlFromBourriquetJson {
+    my $res = shift;
+    my $json = decode_json($res->decoded_content);
+    my $stdnos = $json->{stdnos};
+    my $record_numbers = $json->{record_numbers};
+
+    if (keys(%$stdnos)) {
+        my @keys_stdnos = keys(%$stdnos);
+        return unless $stdnos->{$keys_stdnos[0]};
+        return unless $stdnos->{$keys_stdnos[0]}->{thumbnail} ne "";
+        return $stdnos->{$keys_stdnos[0]}->{thumbnail};
+    } elsif (keys(%$record_numbers)) {
+        my @keys_record_numbers = keys(%$record_numbers);
+        return unless $record_numbers->{$keys_record_numbers[0]};
+        return unless $record_numbers->{$keys_record_numbers[0]}->{thumbnail} ne "";
+        return $record_numbers->{$keys_record_numbers[0]}->{thumbnail};
+    }
+    else {
+        return;
+    }
+}
+
 sub getUrlFromExternalSources {
     my $isbn = shift;
     my $biblionumber = shift;
@@ -673,10 +695,13 @@ sub getUrlFromExternalSources {
     # les clefs sont les systempreferences du même nom
     my $es = {};
 
-    $es->{BourriquetOpac} = {
-        'priority' => 1,
-        'url' => C4::Context->preference('OPACBaseURL')."/cgi-bin/koha/svc/bourriquet/images/?stdnos=$isbn|$biblionumber&providers=".C4::Context->preference('BourriquetProviders'),
-    };
+    if (C4::Context->preference('BourriquetOpac') && C4::Context->preference('BourriquetToken') && C4::Context->preference('BourriquetProviders')) {
+        $es->{BourriquetOpac} = {
+            'priority' => 1,
+            'retrieval' => \&retrieveUrlFromBourriquetJson,
+            'url' => C4::Context->preference('OPACBaseURL')."/cgi-bin/koha/svc/bourriquet/images/?stdnos=$isbn|$biblionumber&providers=".C4::Context->preference('BourriquetProviders'),
+        };
+    }
 
     $es->{OpacCoce} = {
         'priority' => 2,
@@ -724,15 +749,6 @@ sub getUrlFromExternalSources {
         if ( exists $es->{$provider}->{retrieval} ) {
             $url = $es->{$provider}->{retrieval}->($res);
             next unless $url;
-        }
-
-       if ($provider eq "BourriquetOpac") {
-             use JSON;
-             my $json = JSON->new->allow_nonref;
-             $json = $json->decode($res->content);
-             # FIXME : Doit regarder si thumbnail est vide sinon prendre dans record_numbers sinon faire next
-             $url = $json->{"stdnos"}{$isbn}{"thumbnail"};
-             $url = 'data:image/jpg;base64, ' . $url;
         }
 
         if ( $url =~ m!^/9j/! ) {
