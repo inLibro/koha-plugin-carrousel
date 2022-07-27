@@ -31,7 +31,7 @@ use LWP::Simple;
 use Template;
 use utf8;
 use base qw(Koha::Plugins::Base);
-use C4::Biblio qw( GetMarcBiblio );
+use Koha::Biblio;
 use C4::Context;
 use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
@@ -52,13 +52,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.0.0";
+our $VERSION = "4.0.1";
 our $metadata = {
-    name            => 'Carrousel 4.0.0',
+    name            => 'Carrousel 4.0.1',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2022-06-08',
+    date_updated    => '2022-07-27',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -403,11 +403,9 @@ sub getCarrouselContent {
     my @images;
     my $index = 0;
     foreach my $biblionumber ( @contents ) {
-        my $record = GetMarcBiblio({ biblionumber => $biblionumber });
-        # Attempt the old call
-        if (! $record) {
-            $record = GetMarcBiblio( $biblionumber );
-        }
+        my $biblio = Koha::Biblios->find($biblionumber);
+        next unless $biblio;
+        my $record = $biblio->metadata->record;
         next if ! $record;
         my $title;
         my $author;
