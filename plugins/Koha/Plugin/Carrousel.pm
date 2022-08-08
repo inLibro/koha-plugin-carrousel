@@ -52,13 +52,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.0.1";
+our $VERSION = "4.0.2";
 our $metadata = {
-    name            => 'Carrousel 4.0.1',
+    name            => 'Carrousel 4.0.2',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2022-07-27',
+    date_updated    => '2022-08-08',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -747,6 +747,11 @@ sub getUrlFromExternalSources {
         if ( exists $es->{$provider}->{retrieval} ) {
             $url = $es->{$provider}->{retrieval}->($res);
             next unless $url;
+        }
+
+        # GoogleJackets returns http links.
+        if ( $url =~ m!^http://!) {
+            $url =~ s/http:\/\//https:\/\//;
         }
 
         if ( $url =~ m!^/9j/! ) {
