@@ -52,9 +52,9 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.0.2";
+our $VERSION = "4.0.3";
 our $metadata = {
-    name            => 'Carrousel 4.0.2',
+    name            => 'Carrousel 4.0.3',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
@@ -581,6 +581,7 @@ sub insertIntoPref{
             category   => $category,
             branchcode => $branchcode,
             lang       => $lang,
+            title      => $title,
         });
 
         #2.1.2 if lang exists update
