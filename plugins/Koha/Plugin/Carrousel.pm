@@ -570,6 +570,7 @@ sub insertIntoPref{
         my $additional_content = Koha::AdditionalContents->find({
         location   => $location,
         branchcode => $branchcode,
+        title      => $title,
         });
         if( $additional_content ) {
             $code = $additional_content->code;
