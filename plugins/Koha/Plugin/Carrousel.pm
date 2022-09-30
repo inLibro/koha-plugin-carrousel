@@ -249,7 +249,8 @@ sub getEnabledCarrousels {
         $carrousel->{name} = $self->getDisplayName($carrousel->{module}, $carrousel->{id});
         my $branchcode;
         if ($carrousel->{module} eq "lists") {
-            my $borrowernumber = Koha::Virtualshelves->find($carrousel->{id})->owner;
+            my $shelf = Koha::Virtualshelves->find($carrousel->{id});
+            my $borrowernumber = $shelf->owner if defined $shelf;
             if (C4::Context->preference("IndependentBranches")) {
                 my $patron = Koha::Patrons->find($borrowernumber);
                 $branchcode = $patron->branchcode if defined $patron;
