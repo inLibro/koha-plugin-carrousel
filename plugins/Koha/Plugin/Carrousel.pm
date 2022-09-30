@@ -52,9 +52,9 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.0.3";
+our $VERSION = "4.0.4";
 our $metadata = {
-    name            => 'Carrousel 4.0.3',
+    name            => 'Carrousel 4.0.4',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
@@ -668,6 +668,8 @@ sub retrieveUrlFromCoceJson {
 
 sub retrieveUrlFromBourriquetJson {
     my $res = shift;
+    return unless $res->decoded_content;
+
     my $json = decode_json($res->decoded_content);
     my $stdnos = $json->{stdnos};
     my $record_numbers = $json->{record_numbers};
