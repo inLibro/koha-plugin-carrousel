@@ -70,7 +70,7 @@
 </style>
  <script type="text/javascript">
  $( function() {
-     $( "#since" ).datepicker();
+     $( "#since" ).flatpickr();
      document.getElementById('lunch').disabled = false;
      if ([% exist %] > 1 && [% lock %] > 0 ){
          document.getElementById('lunch').disabled = true;

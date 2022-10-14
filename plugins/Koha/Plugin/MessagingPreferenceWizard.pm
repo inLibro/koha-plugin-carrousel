@@ -35,15 +35,15 @@ use Data::Dumper;
 use File::Spec;
 use Koha::DateUtils qw ( dt_from_string );
 
-our $VERSION = 1.3;
+our $VERSION = 1.4;
 
 our $metadata = {
     name   => 'Enhanced messaging preferences wizard',
     author => 'Bouzid Fergani',
     description => 'Setup or reset the enhanced messaging preferences to default values',
     date_authored   => '2016-07-13',
-    date_updated    => '2019-11-22',
-    minimum_version => '3.1406000',
+    date_updated    => '2022-10-14',
+    minimum_version => '22.05.00',
     maximum_version => undef,
     version         => $VERSION,
 };
