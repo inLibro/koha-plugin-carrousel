@@ -33,16 +33,17 @@ use Pod::Usage;
 use Getopt::Long;
 use Data::Dumper;
 use File::Spec;
+use Koha::DateUtils qw ( dt_from_string );
 
-our $VERSION = 1.2;
+our $VERSION = 1.4;
 
 our $metadata = {
     name   => 'Enhanced messaging preferences wizard',
     author => 'Bouzid Fergani',
     description => 'Setup or reset the enhanced messaging preferences to default values',
     date_authored   => '2016-07-13',
-    date_updated    => '2019-11-22',
-    minimum_version => '3.1406000',
+    date_updated    => '2022-10-14',
+    minimum_version => '22.05.00',
     maximum_version => undef,
     version         => $VERSION,
 };
@@ -70,12 +71,16 @@ sub tool {
     my $truncate = $cgi->param('trunc');
     my $since = $cgi->param('since');
     if ($op eq 'valide'){
-        $since = '0000-00-00' if (!$since);
+        if (!$since) {
+            $since = '1972-01-01';
+        } else {
+            $since = eval { dt_from_string(scalar $since) };
+        }
         warn "[Koha::Plugin::MessagingPreferenceWizard::tool][DEBUG] Truncate is ON, DELETE'ing borrower_message_preferences\n"
             if $truncate;
         warn "[Koha::Plugin::MessagingPreferenceWizard::tool][DEBUG] Only updating accounts where dateenrolled >= $since\n";
         my $dbh = C4::Context->dbh;
-        $dbh->{AutoCommit} = 0;
+        #$dbh->{AutoCommit} = 0;
         if ( $truncate ) {
             my $sth = $dbh->prepare("DELETE FROM borrower_message_preferences");
             $sth->execute();
@@ -113,7 +118,7 @@ sub tool {
                 categorycode   => $categorycode,
             } );
         }
-        $dbh->commit();
+        #$dbh->commit();
         `rm /tmp/.PluginMessaging.lock 2>/dev/null`;
         exit 0;
     }else{
