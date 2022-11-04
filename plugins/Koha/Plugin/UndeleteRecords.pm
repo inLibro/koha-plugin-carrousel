@@ -25,16 +25,17 @@ use utf8;
 use base qw(Koha::Plugins::Base);
 use C4::Auth;
 use C4::Context;
+use Koha::DateUtils qw( dt_from_string );
 use Data::Dumper;
 
-our $VERSION = 0.5;
+our $VERSION = 0.6;
 our $metadata = {
 	name            => 'UndeleteRecords',
 	author          => 'David Bourgault',
 	description     => 'Undelete records',
 	date_authored   => '2017-11-15',
-	date_updated    => '2018-07-26',
-	minimum_version => '17.05',
+	date_updated    => '2022-11-04',
+	minimum_version => '22.05',
 	maximum_version => undef,
 	version         => $VERSION,
 };
@@ -100,8 +101,8 @@ sub home {
 sub calculate {
 	my $self = shift;
 	my $target = shift;
-    my $FromDate = shift;
-    my $ToDate = shift;
+    my $FromDate = dt_from_string(shift);
+    my $ToDate = dt_from_string(shift);
 	my $cgi = $self->{cgi};
 	my $template = $self->tmpl;
     my $all_deleted_sql = "SELECT deleteditems.itemnumber, deleteditems.barcode, COALESCE(deletedbiblio.title,biblio.title),
@@ -118,6 +119,7 @@ sub calculate {
         LEFT JOIN biblioitems ON deleteditems.biblionumber = biblioitems.biblionumber
         WHERE deleteditems.timestamp >= '$FromDate' 
             AND deleteditems.timestamp <= IF('$ToDate' LIKE '' AND '$FromDate' NOT LIKE '', NOW(), DATE_ADD('$ToDate', INTERVAL 1 DAY));";
+    # FIXME: prepared statement inutile/mal fait
     my $sth = $dbh->prepare($all_deleted_sql);
     $sth->execute();
     my @all_itemnumber = ( );
@@ -167,11 +169,13 @@ sub fusion {
 	my $cgi = $self->{cgi};
 	my $template = $self->tmpl;
     my $itemnumbers_sql = join ',', @selected_itemnumbers;
+    $itemnumbers_sql = "''" unless $itemnumbers_sql;
     my @selected_biblionumbers = ( );
     my @selected_count = ( );
     my $undeleted_biblionumbers_sql = "SELECT biblionumber, count(*) FROM deleteditems WHERE itemnumber IN(";
-    $undeleted_biblionumbers_sql .= join ',', @selected_itemnumbers;
+    $undeleted_biblionumbers_sql .= $itemnumbers_sql;
     $undeleted_biblionumbers_sql .= ") GROUP BY biblionumber;";
+    # FIXME: prepared statement inutile/mal fait
     my $sth = $dbh->prepare($undeleted_biblionumbers_sql);
     $sth->execute();
     while(my @retreived_items = $sth->fetchrow_array()){
@@ -211,8 +215,8 @@ sub fusion {
                     )
     ;");
     
-    $dbh->do("INSERT INTO biblio_metadata
-        SELECT *
+    $dbh->do("INSERT INTO biblio_metadata(biblionumber,format,`schema`,metadata)
+        SELECT biblionumber,format,`schema`,metadata
         FROM deletedbiblio_metadata 
         WHERE deletedbiblio_metadata.biblionumber
             IN (

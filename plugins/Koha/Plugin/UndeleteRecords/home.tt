@@ -2,6 +2,7 @@
 <!-- Head-->
 <title>Koha:UndeleteRecords Plugin</title>
 [% INCLUDE 'doc-head-close.inc' %]
+[% INCLUDE 'calendar.inc' %]
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
@@ -78,8 +79,8 @@
 					<input autocomplete="off" id="target" name="target" class="card-input ui-autocomplete-input" type="hidden" />
                    
                     Records deleted between these dates:
-                    <input type="text" name="FromDate" id="FromDate" class="datepicker card-input ui-autocomplete-input" onchange="checkValue()" placeholder="From" style="width: 90%;"/>
-                    <input type="text" name="ToDate" id="ToDate" class="datepicker card-input ui-autocomplete-input" placeholder="To" style="width: 90%;"/>
+                    <input type="text" name="FromDate" id="FromDate" class="flatpickr card-input ui-autocomplete-input" onchange="checkValue()" placeholder="From" style="width: 90%;"/>
+                    <input type="text" name="ToDate" id="ToDate" class="flatpickr card-input ui-autocomplete-input" placeholder="To" style="width: 90%;"/>
 				</fieldset>
 				<fieldset>
 					<input id="submit" type="submit" value="Calculate" />
@@ -90,12 +91,6 @@
 </div>
 <!-- Footer-->
 <script>
-    $(function() {
-        $( "#FromDate" ).datepicker();
-        $( "#ToDate" ).datepicker(); 
-        $( ".datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
-    });
-    
     function checkValue(){
         var FromDate = document.getElementById('FromDate').value;     
         if(FromDate ==''){
