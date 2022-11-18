@@ -45,13 +45,13 @@ BEGIN {
 }
 
 our $dbh      = C4::Context->dbh();
-our $VERSION  = 1.6;
+our $VERSION  = 1.7;
 our $metadata = {
     name            => 'PDFtoCover',
     author          => 'Mehdi Hamidi, Bouzid Fergani, Arthur Bousquet, The Minh Luong',
     description     => 'Creates cover images for documents missing one',
     date_authored   => '2016-06-08',
-    date_updated    => '2022-04-04',
+    date_updated    => '2022-11-18',
     minimum_version => '17.05',
     version         => $VERSION,
 };
@@ -184,7 +184,7 @@ sub genererVignette {
                 $save     = "/tmp/$filename";
                 if ( is_success( getstore( $url, $save ) ) ) {
                     push @filestodelete, $save;
-                    `pdftocairo $save -png $save -singlefile 2>&1`;    # Conversion de pdf à png, seulement pour la première page
+                    `pdftocairo "$save" -png "$save" -singlefile 2>&1`;    # Conversion de pdf à png, seulement pour la première page
                     my $imageFile = $save . ".png";
                     push @filestodelete, $imageFile;
 
