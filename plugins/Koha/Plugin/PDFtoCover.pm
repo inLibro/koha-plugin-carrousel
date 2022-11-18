@@ -45,7 +45,7 @@ BEGIN {
 }
 
 our $dbh      = C4::Context->dbh();
-our $VERSION  = 1.7;
+our $VERSION  = 1.8;
 our $metadata = {
     name            => 'PDFtoCover',
     author          => 'Mehdi Hamidi, Bouzid Fergani, Arthur Bousquet, The Minh Luong',
@@ -177,11 +177,9 @@ sub genererVignette {
 
                 # On vérifie que le fichier à l'URL spécifié est bel et bien un pdf
                 my @filestodelete = ();
-                my $filename      = $url;
-                my $save          = '';
-                $filename =~ m/.*\/(.*)$/;
-                $filename = $1;
-                $save     = "/tmp/$filename";
+                my $save          = C4::Context->temporary_directory();
+                $save =~ s/\/*$/\//;
+                $save .= $biblionumber;
                 if ( is_success( getstore( $url, $save ) ) ) {
                     push @filestodelete, $save;
                     `pdftocairo "$save" -png "$save" -singlefile 2>&1`;    # Conversion de pdf à png, seulement pour la première page
