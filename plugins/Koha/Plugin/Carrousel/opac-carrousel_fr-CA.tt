@@ -8,8 +8,8 @@
             <p class="special-title">[% carrousel.title || carrousel.name %]</p>
             <div class="loadingDiv"></div>
             <div id="carrousel-[% loop.index %]" class="carrousel">
-                <a class="left carousel-control" aria-label="suivant" tabindex="0">&lsaquo;</a>
-                <a class="right carousel-control" aria-label="précédent" tabindex="0">&rsaquo;</a>
+                <a class="left carousel-control" aria-label="précédent" tabindex="0">&lsaquo;</a>
+                <a class="right carousel-control" aria-label="suivant" tabindex="0">&rsaquo;</a>
                 [% FOREACH item IN carrousel.documents %]
                     <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                 [% END %]
