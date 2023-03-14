@@ -52,9 +52,9 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.0.5";
+our $VERSION = "4.1.0";
 our $metadata = {
-    name            => 'Carrousel 4.0.5',
+    name            => 'Carrousel 4.1.0',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
@@ -316,7 +316,24 @@ sub generateCarrousels{
                 { binmode => ':utf8' }
             ) || warn "Unable to generate Carrousel, " . $tt->error();
 
-            $self->insertIntoPref($data, $branchcode);
+            $self->insertIntoPref($data, $branchcode, "en");
+            $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
+
+            $tt->process(
+                'Koha/Plugin/Carrousel/opac-carrousel_fr-CA.tt',
+                {
+                    carrousels => $carrousels,
+                    bgColor  => $self->retrieve_data('bgColor'),
+                    txtColor => $self->retrieve_data('txtColor'),
+                    autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
+                    autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
+                    ENCODING => 'utf8',
+                },
+                \$data,
+                { binmode => ':utf8' }
+            ) || warn "Unable to generate Carrousel, " . $tt->error();
+
+            $self->insertIntoPref($data, $branchcode, "fr-CA");
             $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
         }
     } else {
@@ -336,7 +353,25 @@ sub generateCarrousels{
             { binmode => ':utf8' }
         ) || warn "Unable to generate Carrousel, " . $tt->error();
 
-        $self->insertIntoPref($data, undef);
+        $self->insertIntoPref($data, undef, "en");
+        $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
+        
+        $data = "";        
+        $tt->process(
+            'Koha/Plugin/Carrousel/opac-carrousel_fr-CA.tt',
+            {
+                carrousels => $carrousels,
+                bgColor  => $self->retrieve_data('bgColor'),
+                txtColor => $self->retrieve_data('txtColor'),
+                autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
+                autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
+                ENCODING => 'utf8',
+            },
+            \$data,
+            { binmode => ':utf8' }
+        ) || warn "Unable to generate Carrousel, " . $tt->error();
+
+        $self->insertIntoPref($data, undef, "fr-CA");
         $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
     }
 }
@@ -450,8 +485,8 @@ sub getKohaVersion {
     return $kohaversion;
 }
 
-sub insertIntoPref{
-    my ( $self, $data, $branchcode) = @_;
+sub insertIntoPref {
+    my ( $self, $data, $branchcode, $lang) = @_;
 
     # we select the current version of Koha
     my $kohaversion = getKohaVersion();
@@ -546,7 +581,7 @@ sub insertIntoPref{
         my $location = 'OpacMainUserBlock';
         my $published_on = dt_from_string()->ymd();
         my $code = undef;
-        my $lang = "default";
+        #my $lang = "fr-CA";
         my $expirationdate = undef;
         my $number = undef;
         my $title = 'OpacMainUserBlock_Carrousel';
@@ -972,3 +1007,4 @@ sub retrieve_template {
 }
 
 1;
+

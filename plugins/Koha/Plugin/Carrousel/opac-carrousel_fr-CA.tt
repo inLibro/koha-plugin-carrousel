@@ -8,8 +8,8 @@
             <p class="special-title">[% carrousel.title || carrousel.name %]</p>
             <div class="loadingDiv"></div>
             <div id="carrousel-[% loop.index %]" class="carrousel">
-                <a class="left carousel-control" aria-label="previous" tabindex="0">&lsaquo;</a>
-                <a class="right carousel-control" aria-label="next" tabindex="0">&rsaquo;</a>
+                <a class="left carousel-control" aria-label="précédent" tabindex="0">&lsaquo;</a>
+                <a class="right carousel-control" aria-label="suivant" tabindex="0">&rsaquo;</a>
                 [% FOREACH item IN carrousel.documents %]
                     <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                 [% END %]
@@ -33,8 +33,8 @@
                     </div>
                 </div>
                 <div class="controls">
-                    <button class="[% carrousel.title || carrousel.name %]" aria-label="previous" style="float:left" onclick="Right(this)" type="button">&lt;</button>
-                    <button class="[% carrousel.title || carrousel.name %]" aria-label="next" style="float:right" onclick="Left(this)" type="button">&gt;</button>
+                    <button class="[% carrousel.title || carrousel.name %]" aria-label="précédent" style="float:left" onclick="Right(this)" type="button">&lt;</button>
+                    <button class="[% carrousel.title || carrousel.name %]" aria-label="suivant" style="float:right" onclick="Left(this)" type="button">&gt;</button>
                 </div>
             [% END %]
         </div>
@@ -401,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 );
             });
+
         [% ELSE %]
             [% IF carrousel.autorotate %]
                 setInterval(
@@ -470,4 +471,5 @@ window.addEventListener('load', function() {
 });
 */
 </script>
+
 
