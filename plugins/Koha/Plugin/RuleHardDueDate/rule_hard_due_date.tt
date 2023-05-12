@@ -37,7 +37,7 @@
                 <option value="cancel"> Cancel hard due date</option>
             </select></p>
             <div id="addharddate">
-                <p><label id='labelduedate'> Set hard due date to: ALLOOOOO</label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>  
+                <p><label id='labelduedate'> Set hard due date to: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>  
                 <div>
                     <p><span id="forbranch"> Library: </span>
                     <select id="branchs">
