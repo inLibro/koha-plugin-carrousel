@@ -37,9 +37,9 @@
                 <option value="cancel"> Cancel hard due date</option>
             </select></p>
             <div id="addharddate">
-                <p><label id='labelduedate'> Set hard due date to: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>  
+                <p><label id='labelduedate'> Set hard due date to: ALLOOOOO</label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>  
                 <div>
-                    <p><span id="forbranch"> branch: </span>
+                    <p><span id="forbranch"> Library: </span>
                     <select id="branchs">
                         <option value="all">All</option>
                         <option value="*">Default</option>
@@ -47,7 +47,7 @@
                             <option value="[% branch.branchcode %]">[% branch.branchname %]</option>
                         [% END %]
                     </select>
-                    <br><span id="forbranch"> patron category: </span>
+                    <br><span id="forbranch"> Patron category: </span>
                     <select id="categories">
                         <option value="all">All</option>
                         <option value="*">Default</option>
@@ -55,7 +55,7 @@
                             <option value="[% category.categorycode %]">[% category.description %]</option>
                         [% END %]
                     </select>
-                    <br><span id="forbranch"> item type: </span>
+                    <br><span id="forbranch"> Item type: </span>
                     <select id="itemtypes">
                         <option value="all">All</option>
                         <option value="*">Default</option>
@@ -79,8 +79,11 @@
     }
 </style>
 <script type="text/javascript">
+
     $( function() {
-        $( "#duedate" ).datepicker({ dateFormat: 'yy-mm-dd' });
+        $( "#duedate" ).flatpickr({
+            dateFormat: 'Y-m-d'
+        });
         if ([% confirmation %]) {
             alert ("Modification correctly applied");
             document.getElementById('formTraitement').submit();
@@ -114,12 +117,12 @@
         var operation = document.getElementById('typeoperation').value;
         if (operation == 'cancel') {
             document.getElementById('labelduedate').setAttribute('class','cacher');
-            document.getElementById('duedate').setAttribute('class','cacher');
-            document.getElementById('forbranch').firstChild.data = 'For branch: '
+            document.getElementById('duedate').parentElement.setAttribute('class','cacher');
+            document.getElementById('forbranch').firstChild.data = 'Library: '
         } else {
             document.getElementById('labelduedate').setAttribute('class','');
-            document.getElementById('duedate').setAttribute('class','');
-            document.getElementById('forbranch').firstChild.data = 'for branch:'
+            document.getElementById('duedate').parentElement.setAttribute('class','');
+            document.getElementById('forbranch').firstChild.data = 'Library:'
         }
     }
 
@@ -130,5 +133,7 @@
             document.getElementById('duedate').value = '';
         }
     }
+
 </script>
 [% INCLUDE 'intranet-bottom.inc' %]
+[% INCLUDE 'calendar.inc' %]
