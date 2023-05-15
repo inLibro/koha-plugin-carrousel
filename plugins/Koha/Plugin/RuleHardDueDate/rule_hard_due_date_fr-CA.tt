@@ -39,7 +39,7 @@
             <div id="addharddate">
                 <p><label id='labelduedate'> Paramétrer la date d'échéance à: </label><input type="text" name='duedate' id="duedate" onchange="checkDate()"></p>
                 <div>
-                    <p><span id="forbranch"> site : </span>
+                    <p><span id="forbranch"> Bibliothèque : </span>
                     <select id="branchs">
                         <option value="all">Tous</option>
                         <option value="*">Par défaut</option>
@@ -47,7 +47,7 @@
                             <option value="[% branch.branchcode %]">[% branch.branchname %]</option>
                         [% END %]
                     </select>
-                    <br><span id="forbranch"> catégorie d'adhérent : </span>
+                    <br><span id="forbranch"> Catégorie d'utilisateurs : </span>
                     <select id="categories">
                         <option value="all">Toutes</option>
                         <option value="*">Par défaut</option>
@@ -55,7 +55,7 @@
                             <option value="[% category.categorycode %]">[% category.description %]</option>
                         [% END %]
                     </select>
-                    <br><span id="forbranch"> type de document : </span>
+                    <br><span id="forbranch"> Type de document : </span>
                     <select id="itemtypes">
                         <option value="all">Tous</option>
                         <option value="*">Par défaut</option>
@@ -80,7 +80,9 @@
 </style>
 <script type="text/javascript">
     $( function() {
-        $( "#duedate" ).datepicker({ dateFormat: 'yy-mm-dd' });
+        $( "#duedate" ).flatpickr({
+            dateFormat: 'Y-m-d'
+        });
         if ([% confirmation %]) {
             alert ("La modification a été faite correctement");
             document.getElementById('formTraitement').submit();
@@ -114,12 +116,12 @@
         var operation = document.getElementById('typeoperation').value;
         if (operation == 'cancel') {
             document.getElementById('labelduedate').setAttribute('class','cacher');
-            document.getElementById('duedate').setAttribute('class','cacher');
-            document.getElementById('forbranch').firstChild.data = ' Pour la branche : ';
+            document.getElementById('duedate').parentElement.setAttribute('class','cacher');
+            document.getElementById('forbranch').firstChild.data = ' Bibliothèque : ';
         } else {
             document.getElementById('labelduedate').setAttribute('class','');
-            document.getElementById('duedate').setAttribute('class','');
-            document.getElementById('forbranch').firstChild.data = ' pour la branche : '
+            document.getElementById('duedate').parentElement.setAttribute('class','');
+            document.getElementById('forbranch').firstChild.data = ' Bibliothèque : '
         }
     }
 
@@ -132,3 +134,4 @@
     }
 </script>
 [% INCLUDE 'intranet-bottom.inc' %]
+[% INCLUDE 'calendar.inc' %]
