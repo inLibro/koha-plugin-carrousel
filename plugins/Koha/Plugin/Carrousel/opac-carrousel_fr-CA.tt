@@ -5,13 +5,17 @@
 [% FOREACH carrousel IN carrousels %]
     [% IF carrousel.type == "carrousel" %]
         <div class="carrouselFrame">
-            <p class="special-title">[% carrousel.title || carrousel.name %]</p>
+            <p class="special-title">[% carrousel.title || carrousel.name %] </p>
             <div class="loadingDiv"></div>
             <div id="carrousel-[% loop.index %]" class="carrousel">
                 <a class="left carousel-control" aria-label="précédent" tabindex="0">&lsaquo;</a>
                 <a class="right carousel-control" aria-label="suivant" tabindex="0">&rsaquo;</a>
                 [% FOREACH item IN carrousel.documents %]
-                    <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                    [% IF carrousel.external %]
+                        <a href="[% item.externalUrl %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                    [% ELSE %]
+                        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                    [% END %]                
                 [% END %]
                 <div class="carousel-caption">
                     <p class="title-text"></p>
@@ -26,9 +30,11 @@
                 <div id="[% carrousel.title || carrousel.name %]">
                     <div class="images">
                         [% FOREACH item IN carrousel.documents %]
-                            <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]">
-                                <img class="cloudcarousel" src="[% item.url %]" title="[% item.title %]" alt="[% item.title %]"/>
-                            </a>
+                            [% IF carrousel.external %]
+                                <a href="[% item.externalUrl %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                            [% ELSE %]
+                                <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                            [% END %]   
                         [% END %]
                     </div>
                 </div>
