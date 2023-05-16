@@ -59,7 +59,7 @@ our $metadata = {
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2022-11-11',
+    date_updated    => '2023-03-22',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -317,7 +317,8 @@ sub generateCarrousels{
                 { binmode => ':utf8' }
             ) || warn "Unable to generate Carrousel, " . $tt->error();
 
-            $self->insertIntoPref($data, $branchcode, "en");
+            #$self->insertIntoPref($data, $branchcode, "en");
+            $self->insertIntoPref($data, $branchcode, "default");
             $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
 
             $tt->process(
@@ -354,7 +355,8 @@ sub generateCarrousels{
             { binmode => ':utf8' }
         ) || warn "Unable to generate Carrousel, " . $tt->error();
 
-        $self->insertIntoPref($data, undef, "en");
+        #$self->insertIntoPref($data, undef, "en");
+        $self->insertIntoPref($data, undef, "default");
         $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
         
         $data = "";        
