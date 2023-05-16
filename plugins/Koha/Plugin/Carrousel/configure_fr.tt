@@ -40,6 +40,7 @@
                             <th>Type</th>
                             <th>Auto rotation</th>
                             <th>Ordre</th>
+                            <th>URL externe</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -90,6 +91,9 @@
                                     <i class="fa fa-angle-double-up"></i>
                                     <i class="fa fa-angle-double-down"></i>
                                     <i class="fa fa-times-circle error"></i>
+                                </td>
+                                <td class="center">
+                                    <input type="checkbox" name="external-[% carrousel.module %]-[% carrousel.id %]" [% IF carrousel.external %]checked="checked"[% END %] title="Utilisera la valeur dans 856$u si disponible"/>
                                 </td>
                             </tr>
                         [% END %]
@@ -355,7 +359,8 @@ $("#doc3 form").submit(function (){
             module : id[0],
             title : carrousel.find("[name^='title']").val(),
             type : carrousel.find("[name^='type']:checked").val(),
-            autorotate : carrousel.find("[name^='autorotate']").prop('checked') ? 1 : 0
+            autorotate : carrousel.find("[name^='autorotate']").prop('checked') ? 1 : 0,
+            external : carrousel.find("[name^='external']").prop('checked') ? 1 : 0
         };
         enablings.push(data);
     });
@@ -432,6 +437,9 @@ function addLine (module, id, name) {
       + "        <i class=\"fa fa-angle-double-up\"></i>"
       + "        <i class=\"fa fa-angle-double-down\"></i>"
       + "        <i class=\"fa fa-times-circle error\"></i>"
+      + "    </td>"
+      + "    <td class=\"center\">"
+      + "        <input type=\"checkbox\" name=\"external-" + module + "-" + id + "\" value=\"" + id + "\" title=\"Utilisera la valeur dans 856$u si disponible\"/>"
       + "    </td>"
       + "</tr>";
 

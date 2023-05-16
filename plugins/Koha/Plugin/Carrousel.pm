@@ -40,6 +40,7 @@ use Koha::Reports;
 use C4::Reports::Guided;
 use Koha::Uploader;
 use Koha::DateUtils qw( dt_from_string );
+use Data::Dumper;
 
 BEGIN {
     my $kohaversion = Koha::version;
@@ -52,9 +53,9 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.1.0";
+our $VERSION = "4.1.2";
 our $metadata = {
-    name            => 'Carrousel 4.1.0',
+    name            => 'Carrousel 4.1.2',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
@@ -383,11 +384,12 @@ sub generateJSONFile {
         my @documents;
         foreach my $document (@{$carrousel->{documents}}) {
             my $url = C4::Context->preference('OPACBaseURL') . "/cgi-bin/koha/opac-detail.pl?biblionumber=" . $document->{biblionumber};
+            
             push @documents, {
-                title  => $document->{title},
-                author => $document->{author},
-                image  => $document->{url},
-                url    => $url,
+                title       => $document->{title},
+                author      => $document->{author},
+                image       => $document->{url},
+                url         => $url,
             };
         }
         push @json, {
@@ -457,9 +459,14 @@ sub getCarrouselContent {
         }
         $title =~ s/[,:\/\s]+$//;
 
+        my $externalUrl = $self->getExternalUrl($biblionumber);
+        if (!$externalUrl) {
+            $externalUrl = "/cgi-bin/koha/opac-detail.pl?biblionumber=" . $biblionumber;
+        }
+
         my $url = getThumbnailUrl( $biblionumber, $record );
         if ( $url ){
-            my %image = ( url => $url, title => $title, author => $author, biblionumber => $biblionumber );
+            my %image = ( url => $url, title => $title, author => $author, biblionumber => $biblionumber, externalUrl => $externalUrl );
             push @images, \%image;
             $index++;
         }else{
@@ -475,6 +482,17 @@ sub getCarrouselContent {
     }
 
     return \@images;
+}
+
+sub getExternalUrl {
+    my ($self, $biblionumber) = @_;
+    
+    my $query = qq {SELECT url FROM biblioitems WHERE biblionumber = ? };
+    my $sth = $dbh->prepare($query);
+    $sth->execute($biblionumber);
+    my $url = $sth->fetchrow;
+
+    return $url;
 }
 
 sub getKohaVersion {
