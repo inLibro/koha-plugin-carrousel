@@ -317,8 +317,8 @@ sub generateCarrousels{
                 { binmode => ':utf8' }
             ) || warn "Unable to generate Carrousel, " . $tt->error();
 
-            #$self->insertIntoPref($data, $branchcode, "en");
-            $self->insertIntoPref($data, $branchcode, "default");
+            $self->insertIntoPref($data, $branchcode, "en");
+            #$self->insertIntoPref($data, $branchcode, "default");
             $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
 
             $tt->process(
@@ -355,8 +355,8 @@ sub generateCarrousels{
             { binmode => ':utf8' }
         ) || warn "Unable to generate Carrousel, " . $tt->error();
 
-        #$self->insertIntoPref($data, undef, "en");
-        $self->insertIntoPref($data, undef, "default");
+        $self->insertIntoPref($data, undef, "en");
+        #$self->insertIntoPref($data, undef, "default");
         $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
         
         $data = "";        

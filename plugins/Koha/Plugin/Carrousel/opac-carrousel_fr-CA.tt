@@ -15,7 +15,8 @@
                         <a href="[% item.externalUrl %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                     [% ELSE %]
                         <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
-                    [% END %]                [% END %]
+                    [% END %]                
+                [% END %]
                 <div class="carousel-caption">
                     <p class="title-text"></p>
                 </div>
