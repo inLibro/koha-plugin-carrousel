@@ -324,6 +324,11 @@ div.images>a:focus{
 a:focus>img{
     border: 2px solid #[%bgColor%];
 }
+
+.cloudcarousel {
+    max-width: 300px;
+    max-height: 160px;
+}
 </style>
 
 <!-- This is the cloud carousel javascript(cloud-carousel.1.0.0.js) -->
@@ -459,6 +464,19 @@ function Right (button){
     });
 };
 
+
+window.addEventListener('load', function() {
+    $('.carrousel .cloudcarousel').each( function() {
+
+        if( $(this).length > 0 ){
+            
+            if( (this.complete != null) && (!this.complete) || this.naturalHeight == 0 ){
+                $(this).parent().remove();
+            } 
+        }
+    });
+
+});
 /*
 window.addEventListener('load', function() {
     function setPosition() {

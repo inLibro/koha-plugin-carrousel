@@ -53,13 +53,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.1.2";
+our $VERSION = "4.1.3";
 our $metadata = {
-    name            => 'Carrousel 4.1.2',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali',
+    name            => 'Carrousel 4.1.3',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2023-03-22',
+    date_updated    => '2023-07-19',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -866,6 +866,72 @@ sub getThumbnailUrl
     if ( $stm->fetchrow_hashref()->{count} > 0 ) {
         return "/cgi-bin/koha/opac-image.pl?thumbnail=1&biblionumber=$biblionumber";
     }
+
+    # If there is not local cover image, check if there is custom cover image
+    my $url = C4::Context->preference('CustomCoverImagesURL');
+    if ( $url ) {
+
+        my $biblioitem = Koha::Biblioitems->find( { biblionumber => $biblionumber } );
+        if ( $url =~ m|{isbn}| ) {
+            if ( my $isbn = $biblioitem->isbn ) {
+                $url =~ s|{isbn}|$isbn|g;
+            }
+            else {
+                $url = undef();
+            }
+        }
+        if ( $url =~ m|{normalized_isbn}| ) {
+            if ( my $normalized_isbn = GetNormalizedISBN($biblioitem->isbn)) {
+                $url =~ s|{normalized_isbn}|$normalized_isbn|g;
+            }
+            else {
+                $url = undef();
+            }
+        }
+        if ( $url =~ m|{issn}| ) {
+            if ( my $issn = $biblioitem->issn ) {
+                $url =~ s|{issn}|$issn|g;
+            }
+            else {
+                $url = undef();
+            }
+        }
+
+        my $re = qr|{(?<field>\d{3})(\$(?<subfield>.))?}|;
+        if ( $url =~ $re ) {
+            my $field = $+{field};
+            my $subfield = $+{subfield};
+            my $marc_record = $record;
+            my $value;
+            if ( $subfield ) {
+                $value = $marc_record->subfield( $field, $subfield );
+            }else {
+                my $controlfield = $marc_record->field($field);
+                $value = $controlfield->data() if $controlfield;
+            }
+
+            if ($value) {
+                $url =~ s|$re|$value|;
+            }
+            else {
+                $url = undef();
+            }
+        }
+
+        if ($url) {
+            my $ua = LWP::UserAgent->new;
+            my $req = HTTP::Request->new( GET => $url );
+            my $res = $ua->request( $req );
+            
+            if ($res->is_success) {
+                return $url;
+            }
+        }
+    }
+
+
+    
+
 
     #If there is not local thumbnail, we look for one on Amazon, Google and Openlibrary in this order and we will exit when a thumbnail is found.
     foreach my $field ( @isbns )
