@@ -4,8 +4,8 @@
 <title>Koha:Carrousel Plugin: Configuration</title>
 [% INCLUDE 'doc-head-close.inc' %]
 <script src=[%PLUGIN_PATH%]/js/jscolor.js></script>
-<script type="text/javascript" src="[% interface %]/lib/jquery/plugins/multiple-select/jquery.multiple.select.js"></script>
-<link rel="stylesheet" type="text/css" href="[% interface %]/lib/jquery/plugins/multiple-select/multiple-select.css" />
+<script type="text/javascript" src="[% PLUGIN_PATH %]/js/multiple-select.min.js"></script>
+<link rel="stylesheet" type="text/css" href="[% PLUGIN_PATH %]/_css/multiple-select.min.css" />
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
