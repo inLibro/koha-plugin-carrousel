@@ -26,6 +26,7 @@
         <div id="carrousel-[% loop.index %]" class="slider">
             <H2>[% carrousel.title || carrousel.name %]</H2>
             <hr>
+            
             [% IF (carrousel.documents.size() > 0) %]
                 <div id="[% carrousel.title || carrousel.name %]">
                     <div class="images">
@@ -36,11 +37,10 @@
                                 <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                             [% END %]   
                         [% END %]
+
+                        <button class="[% carrousel.title || carrousel.name %]" aria-label="previous" style="float:left; height:175px" onclick="Right(this)" type="button">&lt;</button>
+                        <button class="[% carrousel.title || carrousel.name %]" aria-label="next" style="float:right; height:175px" onclick="Left(this)" type="button">&gt;</button>    
                     </div>
-                </div>
-                <div class="controls">
-                    <button class="[% carrousel.title || carrousel.name %]" aria-label="précédent" style="float:left" onclick="Right(this)" type="button">&lt;</button>
-                    <button class="[% carrousel.title || carrousel.name %]" aria-label="suivant" style="float:right" onclick="Left(this)" type="button">&gt;</button>
                 </div>
             [% END %]
         </div>
@@ -296,11 +296,6 @@
     position: relative;
     white-space: nowrap;
 
-}
-
-#inlibro-carrousel .controls{
-    margin-bottom: 116px;
-    margin-top: 20px;
 }
 
 #inlibro-carrousel button{
