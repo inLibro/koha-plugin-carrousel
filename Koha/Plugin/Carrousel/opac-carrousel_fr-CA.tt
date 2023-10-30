@@ -26,7 +26,6 @@
         <div id="carrousel-[% loop.index %]" class="slider">
             <H2>[% carrousel.title || carrousel.name %]</H2>
             <hr>
-            
             [% IF (carrousel.documents.size() > 0) %]
                 <div id="[% carrousel.title || carrousel.name %]">
                     <div class="images">
@@ -37,10 +36,11 @@
                                 <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                             [% END %]   
                         [% END %]
-
-                        <button class="[% carrousel.title || carrousel.name %]" aria-label="previous" style="float:left; height:175px" onclick="Right(this)" type="button">&lt;</button>
-                        <button class="[% carrousel.title || carrousel.name %]" aria-label="next" style="float:right; height:175px" onclick="Left(this)" type="button">&gt;</button>    
                     </div>
+                </div>
+                <div class="controls">
+                    <button class="[% carrousel.title || carrousel.name %]" aria-label="précédent" style="left:0" onclick="Right(this)" type="button">&lt;</button>
+                    <button class="[% carrousel.title || carrousel.name %]" aria-label="suivant" style="right:0" onclick="Left(this)" type="button">&gt;</button>
                 </div>
             [% END %]
         </div>
@@ -262,10 +262,18 @@
 
 #inlibro-carrousel .slider {
     overflow: hidden;
+    position: relative;
 }
 
 #inlibro-carrousel .slider img {
     height: 175px;
+}
+
+#inlibro-carrousel .slider button {
+    position:absolute;
+    top: 70%;
+    transform: translateY(-70%);
+    height:160px
 }
 
 #inlibro-carrousel .slider hr + div {
@@ -296,6 +304,10 @@
     position: relative;
     white-space: nowrap;
 
+}
+
+#inlibro-carrousel .controls{
+    margin-top: 20px;
 }
 
 #inlibro-carrousel button{
