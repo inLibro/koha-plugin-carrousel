@@ -580,11 +580,11 @@ sub insertIntoPref {
 
         #TODO: verify if it has to be applied to individual branches
         #2.1 check if opacmainuserblock exists
-        my $additional_content = Koha::AdditionalContents->find({
-        location   => $location,
-        branchcode => $branchcode,
-        title      => $title,
-        });
+        my $additional_content = Koha::AdditionalContents->search({
+            location   => $location,
+            branchcode => $branchcode,
+            title      => $title,
+        })->next;
         if( $additional_content ) {
             $code = $additional_content->code;
         }
