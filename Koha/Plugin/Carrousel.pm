@@ -469,6 +469,10 @@ sub getKohaVersion {
 sub insertIntoPref {
     my ( $self, $data, $branchcode, $lang) = @_;
 
+    # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
+    my $first_line = "<!-- Debut du carrousel -->";
+    my $second_line ="<!-- Fin du carrousel -->";
+
     # we select the current version of Koha
     my $kohaversion = getKohaVersion();
     my $version_line ="<!-- Carrousel $VERSION -->";
@@ -485,10 +489,6 @@ sub insertIntoPref {
             $value =$row->{'value'};
         }
         $stmt->finish();
-
-        # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
-        my $first_line = "<!-- Debut du carrousel -->";
-        my $second_line ="<!-- Fin du carrousel -->";
 
         #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
         if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
@@ -515,10 +515,6 @@ sub insertIntoPref {
             my $mainblock = "OpacMainUserBlock_".$language;
             my $rs = Koha::News->search({ branchcode => $branchcode, lang => $mainblock });
             my $c_lang = $rs->count;
-
-            # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
-            my $first_line = "<!-- Debut du carrousel -->";
-            my $second_line ="<!-- Fin du carrousel -->";
 
             #2.1.1 if not - add
             if ($c_lang == 0){
@@ -568,19 +564,7 @@ sub insertIntoPref {
         my $title = 'OpacMainUserBlock_Carrousel';
         my $category = 'html_customizations';
         my $borrowernumber = undef;
-        my $content = '';
-
-        # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
-        my $first_line = "<!-- Debut du carrousel -->";
-        my $second_line ="<!-- Fin du carrousel -->";
-
-        #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
-        if(index($content, $first_line) == -1 && index($content, $second_line) == -1  ){
-            $content = $content."\n".$first_line.$data.$second_line;
-        } else{
-            $data = $first_line.$data.$second_line;
-            $content =~ s/$first_line.*?$second_line/$data/s;
-        }
+        my $content = $first_line.$data.$second_line;
 
         # Enlever les carrousels spécifiques à chaque langue qui était là auparavant
         # dans les versions précédentes de Koha
