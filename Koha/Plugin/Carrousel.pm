@@ -289,93 +289,54 @@ sub generateCarrousels{
     my $carrousels = $self->getCarrousels();
     my $tt = Template->new(
         INCLUDE_PATH => C4::Context->config("pluginsdir"),
+        RELATIVE     => 1,
         ENCODING     => 'utf8',
     );
+
+    my $generate_json = $self->retrieve_data('generateJSON');
+    my $template_data = {
+        bgColor  => $self->retrieve_data('bgColor'),
+        txtColor => $self->retrieve_data('txtColor'),
+        autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
+        autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
+        ENCODING => 'utf8',
+    };
+
     # Si IndependentBranches on doit trier les carrousels par branches et faire une boucle par branche
+    my %branchcodes;
     if (C4::Context->preference("IndependentBranches")) {
-        my %branchcodes;
         foreach my $carrousel (@{ $carrousels }) {
             # Si le branchcode est undef c'est qu'il n'y a pas de branche de précisée
             next unless defined $carrousel->{branchcode};
             push @{ $branchcodes{$carrousel->{branchcode}} }, $carrousel;
         }
+    } else {
+        # Aucune branche, on utilise tous les carrousels
+        $branchcodes{0} = $carrousels;
+    }
+
+    my $opaclanguages = C4::Context->preference('opaclanguages');   #expected ex opaclanguages = "fr-CA,en"
+    my @languages = split /,/, $opaclanguages;
+    foreach my $language (@languages) {
         foreach my $branchcode (keys %branchcodes) {
-            my $t_carrousels = $branchcodes{$branchcode};
             my $data = "";
+            my $t_carrousels = $branchcodes{$branchcode};
+
             binmode( STDOUT, ":utf8" );
             $tt->process(
                 'Koha/Plugin/Carrousel/opac-carrousel.tt',
                 {
                     carrousels => $t_carrousels,
-                    bgColor  => $self->retrieve_data('bgColor'),
-                    txtColor => $self->retrieve_data('txtColor'),
-                    autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-                    autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-                    ENCODING => 'utf8',
+                    lang => $language,
+                    %$template_data
                 },
                 \$data,
                 { binmode => ':utf8' }
             ) || warn "Unable to generate Carrousel, " . $tt->error();
 
-            #$self->insertIntoPref($data, $branchcode, "en");
-            $self->insertIntoPref($data, $branchcode, "default");
-            $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
-
-            $tt->process(
-                'Koha/Plugin/Carrousel/opac-carrousel_fr-CA.tt',
-                {
-                    carrousels => $carrousels,
-                    bgColor  => $self->retrieve_data('bgColor'),
-                    txtColor => $self->retrieve_data('txtColor'),
-                    autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-                    autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-                    ENCODING => 'utf8',
-                },
-                \$data,
-                { binmode => ':utf8' }
-            ) || warn "Unable to generate Carrousel, " . $tt->error();
-
-            $self->insertIntoPref($data, $branchcode, "fr-CA");
-            $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
+            $self->insertIntoPref($data, $branchcode || undef, ($language eq 'en' ? 'default' : $language));
+            $self->generateJSONFile($carrousels) if ($generate_json);
         }
-    } else {
-        my $data = "";
-        binmode( STDOUT, ":utf8" );
-        $tt->process(
-            'Koha/Plugin/Carrousel/opac-carrousel.tt',
-            {
-                carrousels => $carrousels,
-                bgColor  => $self->retrieve_data('bgColor'),
-                txtColor => $self->retrieve_data('txtColor'),
-                autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-                autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-                ENCODING => 'utf8',
-            },
-            \$data,
-            { binmode => ':utf8' }
-        ) || warn "Unable to generate Carrousel, " . $tt->error();
-
-        #$self->insertIntoPref($data, undef, "en");
-        $self->insertIntoPref($data, undef, "default");
-        $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
-        
-        $data = "";        
-        $tt->process(
-            'Koha/Plugin/Carrousel/opac-carrousel_fr-CA.tt',
-            {
-                carrousels => $carrousels,
-                bgColor  => $self->retrieve_data('bgColor'),
-                txtColor => $self->retrieve_data('txtColor'),
-                autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-                autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-                ENCODING => 'utf8',
-            },
-            \$data,
-            { binmode => ':utf8' }
-        ) || warn "Unable to generate Carrousel, " . $tt->error();
-
-        $self->insertIntoPref($data, undef, "fr-CA");
-        $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
     }
 }
 
