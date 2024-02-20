@@ -1037,5 +1037,10 @@ sub retrieve_template {
     return $template;
 }
 
+sub cronjob_nightly {
+    my $p = Koha::Plugin::Carrousel->new( { enable_plugins => 1 } );
+    $p->generateCarrousels();
+}
+
 1;
 
