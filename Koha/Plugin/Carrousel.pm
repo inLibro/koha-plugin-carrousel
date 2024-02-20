@@ -53,13 +53,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.1.5";
+our $VERSION = "4.1.6";
 our $metadata = {
-    name            => 'Carrousel 4.1.5',
+    name            => 'Carrousel 4.1.6',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2023-10-27',
+    date_updated    => '2024-01-10',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -289,93 +289,54 @@ sub generateCarrousels{
     my $carrousels = $self->getCarrousels();
     my $tt = Template->new(
         INCLUDE_PATH => C4::Context->config("pluginsdir"),
+        RELATIVE     => 1,
         ENCODING     => 'utf8',
     );
+
+    my $generate_json = $self->retrieve_data('generateJSON');
+    my $template_data = {
+        bgColor  => $self->retrieve_data('bgColor'),
+        txtColor => $self->retrieve_data('txtColor'),
+        autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
+        autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
+        ENCODING => 'utf8',
+    };
+
     # Si IndependentBranches on doit trier les carrousels par branches et faire une boucle par branche
+    my %branchcodes;
     if (C4::Context->preference("IndependentBranches")) {
-        my %branchcodes;
         foreach my $carrousel (@{ $carrousels }) {
             # Si le branchcode est undef c'est qu'il n'y a pas de branche de précisée
             next unless defined $carrousel->{branchcode};
             push @{ $branchcodes{$carrousel->{branchcode}} }, $carrousel;
         }
+    } else {
+        # Aucune branche, on utilise tous les carrousels
+        $branchcodes{0} = $carrousels;
+    }
+
+    my $opaclanguages = C4::Context->preference('opaclanguages');   #expected ex opaclanguages = "fr-CA,en"
+    my @languages = split /,/, $opaclanguages;
+    foreach my $language (@languages) {
         foreach my $branchcode (keys %branchcodes) {
-            my $t_carrousels = $branchcodes{$branchcode};
             my $data = "";
+            my $t_carrousels = $branchcodes{$branchcode};
+
             binmode( STDOUT, ":utf8" );
             $tt->process(
                 'Koha/Plugin/Carrousel/opac-carrousel.tt',
                 {
                     carrousels => $t_carrousels,
-                    bgColor  => $self->retrieve_data('bgColor'),
-                    txtColor => $self->retrieve_data('txtColor'),
-                    autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-                    autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-                    ENCODING => 'utf8',
+                    lang => $language,
+                    %$template_data
                 },
                 \$data,
                 { binmode => ':utf8' }
             ) || warn "Unable to generate Carrousel, " . $tt->error();
 
-            #$self->insertIntoPref($data, $branchcode, "en");
-            $self->insertIntoPref($data, $branchcode, "default");
-            $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
-
-            $tt->process(
-                'Koha/Plugin/Carrousel/opac-carrousel_fr-CA.tt',
-                {
-                    carrousels => $carrousels,
-                    bgColor  => $self->retrieve_data('bgColor'),
-                    txtColor => $self->retrieve_data('txtColor'),
-                    autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-                    autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-                    ENCODING => 'utf8',
-                },
-                \$data,
-                { binmode => ':utf8' }
-            ) || warn "Unable to generate Carrousel, " . $tt->error();
-
-            $self->insertIntoPref($data, $branchcode, "fr-CA");
-            $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
+            $self->insertIntoPref($data, $branchcode || undef, ($language eq 'en' ? 'default' : $language));
+            $self->generateJSONFile($carrousels) if ($generate_json);
         }
-    } else {
-        my $data = "";
-        binmode( STDOUT, ":utf8" );
-        $tt->process(
-            'Koha/Plugin/Carrousel/opac-carrousel.tt',
-            {
-                carrousels => $carrousels,
-                bgColor  => $self->retrieve_data('bgColor'),
-                txtColor => $self->retrieve_data('txtColor'),
-                autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-                autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-                ENCODING => 'utf8',
-            },
-            \$data,
-            { binmode => ':utf8' }
-        ) || warn "Unable to generate Carrousel, " . $tt->error();
-
-        #$self->insertIntoPref($data, undef, "en");
-        $self->insertIntoPref($data, undef, "default");
-        $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
-        
-        $data = "";        
-        $tt->process(
-            'Koha/Plugin/Carrousel/opac-carrousel_fr-CA.tt',
-            {
-                carrousels => $carrousels,
-                bgColor  => $self->retrieve_data('bgColor'),
-                txtColor => $self->retrieve_data('txtColor'),
-                autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-                autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-                ENCODING => 'utf8',
-            },
-            \$data,
-            { binmode => ':utf8' }
-        ) || warn "Unable to generate Carrousel, " . $tt->error();
-
-        $self->insertIntoPref($data, undef, "fr-CA");
-        $self->generateJSONFile($carrousels) if ($self->retrieve_data('generateJSON'));
     }
 }
 
@@ -508,6 +469,10 @@ sub getKohaVersion {
 sub insertIntoPref {
     my ( $self, $data, $branchcode, $lang) = @_;
 
+    # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
+    my $first_line = "<!-- Debut du carrousel -->";
+    my $second_line ="<!-- Fin du carrousel -->";
+
     # we select the current version of Koha
     my $kohaversion = getKohaVersion();
     my $version_line ="<!-- Carrousel $VERSION -->";
@@ -524,10 +489,6 @@ sub insertIntoPref {
             $value =$row->{'value'};
         }
         $stmt->finish();
-
-        # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
-        my $first_line = "<!-- Debut du carrousel -->";
-        my $second_line ="<!-- Fin du carrousel -->";
 
         #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
         if(index($value, $first_line) == -1 && index($value, $second_line) == -1  ){
@@ -554,10 +515,6 @@ sub insertIntoPref {
             my $mainblock = "OpacMainUserBlock_".$language;
             my $rs = Koha::News->search({ branchcode => $branchcode, lang => $mainblock });
             my $c_lang = $rs->count;
-
-            # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
-            my $first_line = "<!-- Debut du carrousel -->";
-            my $second_line ="<!-- Fin du carrousel -->";
 
             #2.1.1 if not - add
             if ($c_lang == 0){
@@ -607,19 +564,7 @@ sub insertIntoPref {
         my $title = 'OpacMainUserBlock_Carrousel';
         my $category = 'html_customizations';
         my $borrowernumber = undef;
-        my $content = '';
-
-        # Le code de le carrousel est entre $first_line et $second_line, donc je m'assure que c'est uniquement ce code qui est modifié
-        my $first_line = "<!-- Debut du carrousel -->";
-        my $second_line ="<!-- Fin du carrousel -->";
-
-        #Si c'est la première utilisation, ca crée les tags $first_line et $second_line qui englobent la template
-        if(index($content, $first_line) == -1 && index($content, $second_line) == -1  ){
-            $content = $content."\n".$first_line.$data.$second_line;
-        } else{
-            $data = $first_line.$data.$second_line;
-            $content =~ s/$first_line.*?$second_line/$data/s;
-        }
+        my $content = $first_line.$data.$second_line;
 
         # Enlever les carrousels spécifiques à chaque langue qui était là auparavant
         # dans les versions précédentes de Koha
@@ -635,11 +580,11 @@ sub insertIntoPref {
 
         #TODO: verify if it has to be applied to individual branches
         #2.1 check if opacmainuserblock exists
-        my $additional_content = Koha::AdditionalContents->find({
-        location   => $location,
-        branchcode => $branchcode,
-        title      => $title,
-        });
+        my $additional_content = Koha::AdditionalContents->search({
+            location   => $location,
+            branchcode => $branchcode,
+            title      => $title,
+        })->next;
         if( $additional_content ) {
             $code = $additional_content->code;
         }
