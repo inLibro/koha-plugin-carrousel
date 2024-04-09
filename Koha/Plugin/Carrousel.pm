@@ -41,6 +41,7 @@ use C4::Reports::Guided;
 use Koha::Uploader;
 use Koha::DateUtils qw( dt_from_string );
 use Data::Dumper;
+use Koha::Plugin::Carrousel::Spec;
 
 BEGIN {
     my $kohaversion = Koha::version;
@@ -83,6 +84,34 @@ sub new {
     return $self;
 }
 
+=head3 api_namespace
+
+Définit le namespace utilisé dans l'api pour ce plugin
+
+=cut
+
+sub api_namespace {
+    my ( $self ) = $_;
+
+    return 'carrousel-api';
+}
+
+=head3 static_routes
+
+Ajoute à l'api les routes statiques définies dans le fichier staticapi.json
+
+=cut
+
+sub static_routes {
+   my ( $self, $args ) = @_;
+
+   my $spec_str = $self->mbf_read('api/staticapi.json');
+   my $spec = decode_json($spec_str);
+   $spec = Koha::Plugin::Carrousel::Spec->json_parse_refs( { json_object => $spec } );
+
+   return $spec;
+}
+
 sub tool {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
@@ -100,7 +129,10 @@ sub step_1 {
     my $cgi = $self->{'cgi'};
     my $template = $self->retrieve_template("step_1");
     my $carrousels = (!defined $self->retrieve_data('carrousels')) ? () : decode_json(encode_utf8($self->retrieve_data('carrousels')));
-    $template->param(carrousels => $carrousels);
+    $template->param(
+        carrousels => $carrousels,
+        api_namespace => $self->api_namespace,
+    );
     print $cgi->header(-type => 'text/html',-charset => 'utf-8');
     print $template->output();
 }
@@ -933,6 +965,7 @@ sub configure {
             autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
             generateJSON   => $self->retrieve_data('generateJSON'),
             ENCODING       => 'utf8',
+            api_namespace  => $self->api_namespace,
         );
         print $cgi->header(-type => 'text/html',-charset => 'utf-8');
         print $template->output();

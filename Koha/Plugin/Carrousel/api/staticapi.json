@@ -1,0 +1,177 @@
+{
+  "/js/jscolor.js": {
+    "get": {
+      "x-mojo-to": "Static#get",
+      "operationId": "KohaPluginCarrousel_staticGetJSjscolor",
+      "tags": [
+        "pluginStatic"
+      ],
+      "responses": {
+        "200": {
+          "description": "File found",
+          "schema": {
+            "type": "file"
+          }
+        },
+        "400": {
+          "description": "Bad request",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "404": {
+          "description": "File not found",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "500": {
+          "description": "Internal server error",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        }
+      }
+    }
+  },
+  "/js/multiple-select.min.js": {
+    "get": {
+      "x-mojo-to": "Static#get",
+      "operationId": "KohaPluginCarrousel_staticGetJSmultipleSelect",
+      "tags": [
+        "pluginStatic"
+      ],
+      "responses": {
+        "200": {
+          "description": "File found",
+          "schema": {
+            "type": "file"
+          }
+        },
+        "400": {
+          "description": "Bad request",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "404": {
+          "description": "File not found",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "500": {
+          "description": "Internal server error",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        }
+      }
+    }
+  },
+  "/css/multiple-select.min.css": {
+    "get": {
+      "x-mojo-to": "Static#get",
+      "operationId": "KohaPluginCarrousel_staticGetCSSmultipleSelect",
+      "tags": [
+        "pluginStatic"
+      ],
+      "responses": {
+        "200": {
+          "description": "File found",
+          "schema": {
+            "type": "file"
+          }
+        },
+        "400": {
+          "description": "Bad request",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "404": {
+          "description": "File not found",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "500": {
+          "description": "Internal server error",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        }
+      }
+    }
+  },
+  "/images/inLibro_en.svg": {
+    "get": {
+      "x-mojo-to": "Static#get",
+      "operationId": "KohaPluginCarrousel_staticGetImageInlibro_en",
+      "tags": [
+        "pluginStatic"
+      ],
+      "responses": {
+        "200": {
+          "description": "File found",
+          "schema": {
+            "type": "file"
+          }
+        },
+        "400": {
+          "description": "Bad request",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "404": {
+          "description": "File not found",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "500": {
+          "description": "Internal server error",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        }
+      }
+    }
+  },
+  "/images/inLibro_fr.svg": {
+    "get": {
+      "x-mojo-to": "Static#get",
+      "operationId": "KohaPluginCarrousel_staticGetImageInlibro_fr",
+      "tags": [
+        "pluginStatic"
+      ],
+      "responses": {
+        "200": {
+          "description": "File found",
+          "schema": {
+            "type": "file"
+          }
+        },
+        "400": {
+          "description": "Bad request",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "404": {
+          "description": "File not found",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        },
+        "500": {
+          "description": "Internal server error",
+          "schema": {
+            "$ref": "api/includes/error-schema.json"
+          }
+        }
+      }
+    }
+  }
+}
