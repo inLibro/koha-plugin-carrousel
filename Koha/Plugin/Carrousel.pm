@@ -41,7 +41,6 @@ use C4::Reports::Guided;
 use Koha::Uploader;
 use Koha::DateUtils qw( dt_from_string );
 use Data::Dumper;
-use Koha::Plugin::Carrousel::Spec;
 
 BEGIN {
     my $kohaversion = Koha::version;
@@ -107,7 +106,6 @@ sub static_routes {
 
    my $spec_str = $self->mbf_read('api/staticapi.json');
    my $spec = decode_json($spec_str);
-   $spec = Koha::Plugin::Carrousel::Spec->json_parse_refs( { json_object => $spec } );
 
    return $spec;
 }

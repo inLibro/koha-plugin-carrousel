@@ -16,19 +16,37 @@
         "400": {
           "description": "Bad request",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "404": {
           "description": "File not found",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "500": {
           "description": "Internal server error",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -51,19 +69,37 @@
         "400": {
           "description": "Bad request",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "404": {
           "description": "File not found",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "500": {
           "description": "Internal server error",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -86,19 +122,37 @@
         "400": {
           "description": "Bad request",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "404": {
           "description": "File not found",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "500": {
           "description": "Internal server error",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -121,19 +175,37 @@
         "400": {
           "description": "Bad request",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "404": {
           "description": "File not found",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "500": {
           "description": "Internal server error",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -156,19 +228,37 @@
         "400": {
           "description": "Bad request",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "404": {
           "description": "File not found",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         },
         "500": {
           "description": "Internal server error",
           "schema": {
-            "$ref": "api/includes/error-schema.json"
+            "type": "object",
+            "properties": {
+              "error": {
+                "description": "Error message",
+                "type": "string"
+              }
+            }
           }
         }
       }
