@@ -178,6 +178,14 @@
             </div>
 
             <div class="infos">
+                Couleur du titre: <input name="titleColor" onchange="update(this.value, 'title')" id="colors" class="jscolor alignment" value="[% titleColor || '000000' %]" />
+            </div>
+
+            <div id="div_title" class="infos">
+                <p id="title"> Ceci est un exemple de titre </p>
+            </div>
+
+            <div class="infos">
                 Couleur du texte : <input name="txtColor" onchange="update(this.value, 'text')" id="colors" class="jscolor alignment" value="[% txtColor || '000000' %]" />
             </div>
 
@@ -289,6 +297,17 @@
     color: #[% txtColor %];
 }
 
+#inlibro-carrousel #div_title {
+    background-color : #FFFFFF;
+    border :0;
+}
+
+#inlibro-carrousel #div_title p {
+    font-size: 30px;
+    padding: 25px 10px;
+    color: #[% titleColor %];
+}
+
 #inlibro-carrousel .fa{
     cursor: pointer;
     display: inherit;
@@ -372,7 +391,9 @@ function update(jscolor, object) {
     // 'jscolor' instance can be used as a string
     if(object == "background"){
         document.getElementById('background').style.backgroundColor = '#' + jscolor;
-    }else{
+    }else if(object == "title"){
+        document.getElementById('title').style.color = '#' + jscolor;
+    }else if(object == "text"){
         document.getElementById('text').style.color = '#' + jscolor;
     }
 }
