@@ -53,10 +53,10 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.2.0";
+our $VERSION = "4.2.1";
 our $metadata = {
-    name            => 'Carrousel 4.2.0',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda',
+    name            => 'Carrousel 4.2.1',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda, Matthias Le Gac',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
     date_updated    => '2024-04-09',
@@ -327,6 +327,7 @@ sub generateCarrousels{
     my $template_data = {
         bgColor  => $self->retrieve_data('bgColor'),
         txtColor => $self->retrieve_data('txtColor'),
+        titleColor => $self->retrieve_data('titleColor'),
         autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
         autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
         ENCODING => 'utf8',
@@ -929,6 +930,7 @@ sub configure {
         my $shelvesOrder       = $cgi->param('shelvesOrder');
         my $bgColor            = $cgi->param('bgColor');
         my $txtColor           = $cgi->param('txtColor');
+        my $titleColor           = $cgi->param('titleColor');
         my $autoRotateDirection = $cgi->param('autorotate-direction');
         my $autoRotateDelay    = $cgi->param('autorotate-delay') || undef;
         my $last_configured_by = C4::Context->userenv->{'number'};
@@ -939,6 +941,7 @@ sub configure {
                 carrousels         => $carrousels,
                 bgColor            => $bgColor,
                 txtColor           => $txtColor,
+                titleColor           => $titleColor,
                 autoRotateDirection => $autoRotateDirection,
                 autoRotateDelay    => $autoRotateDelay,
                 last_configured_by => $last_configured_by,
@@ -959,6 +962,7 @@ sub configure {
             collections    => $modules->{collections},
             bgColor        => $self->retrieve_data('bgColor'),
             txtColor       => $self->retrieve_data('txtColor'),
+            titleColor       => $self->retrieve_data('titleColor'),
             autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
             autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
             generateJSON   => $self->retrieve_data('generateJSON'),

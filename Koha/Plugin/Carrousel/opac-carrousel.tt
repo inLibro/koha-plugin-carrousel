@@ -293,7 +293,7 @@
     font-weight: bold;
     font-style: italic;
     font-size: 25px;
-    color:black;
+    color: #[%titleColor%];
 }
 
 #inlibro-carrousel hr{
