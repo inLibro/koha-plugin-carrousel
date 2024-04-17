@@ -301,7 +301,7 @@
 }
 
 #inlibro-carrousel h2 {
-    color: black;
+    color: #[%titleColor%];
 }
 
 #inlibro-carrousel .images {
