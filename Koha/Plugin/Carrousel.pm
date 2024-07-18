@@ -53,13 +53,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.2.3";
+our $VERSION = "4.2.4";
 our $metadata = {
-    name            => 'Carrousel 4.2.3',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda, Matthias Le Gac',
+    name            => 'Carrousel 4.2.4',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2024-04-17',
+    date_updated    => '2024-07-18',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -583,7 +583,7 @@ sub insertIntoPref {
             }
         }
     }
-    elsif ( defined $kohaversion ) {  # sinon, utiliser le système de contenu additionnel
+    elsif ( $kohaversion < 23.11 ) {  # sinon, utiliser le système de contenu additionnel
         # Plus besoin de regarder les langues. Le carrousel généré et le même pour les deux langues.
 
         my $location = 'OpacMainUserBlock';
@@ -675,6 +675,147 @@ sub insertIntoPref {
                     $additional_content->code($code)->store;
                 }
             };
+        }
+    }
+    elsif ( defined $kohaversion ) { # la structure dans la BD du système de contenu additionnel à changé à partir de la version 23.11
+        my $location = 'OpacMainUserBlock';
+        my $published_on = dt_from_string()->ymd();
+        my $code = undef;
+        my $expirationdate = undef;
+        my $number = undef;
+        my $title = 'OpacMainUserBlock_Carrousel';
+        my $category = 'html_customizations';
+        my $borrowernumber = undef;
+        my $content = $first_line.$data.$second_line;
+
+        # Enlever les carrousels spécifiques à chaque langue qui était là auparavant
+        # dans les versions précédentes de Koha
+        Koha::AdditionalContents->search({
+            'me.category' => $category,
+            'me.location' => $location,
+            'me.branchcode' => $branchcode,
+            'additional_contents_localizations.title' => {
+                '!=', 'OpacMainUserBlock_Carrousel',
+                -like => 'OpacMainUserBlock\_%' # pour match OpacMainUserBlock_fr-CA, OpacMainUserBlock_en, etc.
+            }
+        },
+        {
+            join => 'additional_contents_localizations',  # Join with the additional_contents table
+        })->delete;
+
+        #2.1 check if opacmainuserblock exists
+        my $additional_content = Koha::AdditionalContents->search({
+            'me.location'   => $location,
+            'me.branchcode' => $branchcode,
+            'additional_contents_localizations.title'      => $title,
+        },
+        {
+            join => 'additional_contents_localizations',  # Join with the additional_contents table
+        })->next;
+        if( $additional_content ) {
+            $code = $additional_content->code;
+        }
+
+        # get entry for this specific lang
+        $additional_content = Koha::AdditionalContents->find({
+            'me.code'       => $code || 'tmp_code',
+            'me.category'   => $category,
+            'me.branchcode' => $branchcode,
+            'additional_contents_localizations.lang'       => $lang,
+            'additional_contents_localizations.title'      => $title,
+        },
+        {
+            join => 'additional_contents_localizations',  # Join with the additional_contents table
+        });
+        #2.1.2 if lang exists update
+        if ( $additional_content ) {
+            my $updated;
+            eval {
+                $additional_content->update({
+                    category       => $category,
+                    code           => $code || 'tmp_code',
+                    location       => $location,
+                    branchcode     => $branchcode,
+                    expirationdate => $expirationdate,
+                    published_on   => $published_on,
+                    number         => $number,
+                    borrowernumber => $borrowernumber,
+                });
+                $updated = $additional_content->_result->get_dirty_columns;
+                $additional_content->store;
+                my $localizations = Koha::AdditionalContentsLocalizations->find({
+                    additional_content_id => $additional_content->id,
+                    lang                  => $lang,
+                });
+                # Update the localization entry
+                if ($localizations) {
+                    $localizations->update({
+                        title   => $title,
+                        content => $content,
+                        lang    => $lang,
+                    });
+                } else {
+                    # Create a new localization entry if it does not exist
+                    Koha::AdditionalContentsLocalization->new({
+                        title   => $title,
+                        content => $content,
+                        lang    => $lang,
+                        additional_content_id => $additional_content->id,
+                    })->store;
+                }
+            };
+        }
+        #2.1.3 else add new
+        else {
+            $additional_content = Koha::AdditionalContents->find({
+                'me.code'       => $code || 'tmp_code',
+                'me.category'   => $category,
+                'me.branchcode' => $branchcode,
+                'additional_contents_localizations.title'      => $title,
+            },
+            {
+                join => 'additional_contents_localizations',  # Join with the additional_contents table
+            });
+            if ( $additional_content ) {
+                 # on ajoute une ligne pour la langue dans localizations
+                Koha::AdditionalContentsLocalization->new({
+                    title   => $title,
+                    content => $content,
+                    lang    => $lang,
+                    additional_content_id => $additional_content->id,
+                })->store;
+            }
+            else {
+                warn "Ajout de l'entrée";
+                eval {
+                    my $additional_content = Koha::AdditionalContent->new({
+                        category       => $category,
+                        code           => $code || 'tmp_code',
+                        location       => $location,
+                        branchcode     => $branchcode,
+                        expirationdate => $expirationdate,
+                        published_on   => $published_on,
+                        number         => $number,
+                        borrowernumber => $borrowernumber,
+                    })->store;
+                    eval {
+                        $additional_content->store;
+                        unless ($code) {
+                            $additional_content->discard_changes;
+                            $code = $category eq 'news'
+                            ? 'News_' . $additional_content->id
+                            : $location . '_' . $additional_content->id;
+                            $additional_content->code($code)->store;
+                        }
+                    };
+                    Koha::AdditionalContentsLocalization->new({
+                        title   => $title,
+                        content => $content,
+                        lang    => $lang,
+                        additional_content_id => $additional_content->id,
+                    })->store;
+                };
+            }
         }
     } else {
         #somewhere else
