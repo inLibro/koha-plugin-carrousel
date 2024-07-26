@@ -370,7 +370,7 @@ $("#doc3 form").submit(function (){
     var form = $("form").serializeArray();
 
     var enablings = [];
-    $("tbody tr").each(function (){
+    $("tbody:first tr").each(function (){
         var carrousel = $(this);
         var id = carrousel.attr("id").split("-");
         var data = {
