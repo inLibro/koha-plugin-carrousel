@@ -41,6 +41,7 @@
                             <th>Auto rotate</th>
                             <th>Order</th>
                             <th>External URL</th>
+                            <th>URL suffix</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -94,6 +95,9 @@
                                 </td>
                                 <td class="center">
                                     <input type="checkbox" name="external-[% carrousel.module %]-[% carrousel.id %]" [% IF carrousel.external %]checked="checked"[% END %] title="Will use the value in 856$u if available"/>
+                                </td>
+                                <td class="center">
+                                    <input type="text" name="suffix-[% carrousel.module %]-[% carrousel.id %]" value="[% carrousel.suffix %]" />
                                 </td>
                             </tr>
                         [% END %]
@@ -377,6 +381,7 @@ $("#doc3 form").submit(function (){
             id : id[1],
             module : id[0],
             title : carrousel.find("[name^='title']").val(),
+            suffix : carrousel.find("[name^='suffix']").val(),
             type : carrousel.find("[name^='type']:checked").val(),
             autorotate : carrousel.find("[name^='autorotate']").prop('checked') ? 1 : 0,
             external : carrousel.find("[name^='external']").prop('checked') ? 1 : 0
@@ -461,6 +466,9 @@ function addLine (module, id, name) {
       + "    </td>"
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"external-" + module + "-" + id + "\" value=\"" + id + "\" title=\"Will use the value in 856$u if available\"/>"
+      + "    </td>"
+      + "    <td class=\"center\">"
+      + "        <input type=\"text\" name=\"suffix-" + module + "-" + id + "\" value=\"\" />"
       + "    </td>"
       + "</tr>";
 

@@ -17,9 +17,9 @@
                 <a class="right carousel-control" aria-label="[% T.next %]" tabindex="0">&rsaquo;</a>
                 [% FOREACH item IN carrousel.documents %]
                     [% IF carrousel.external %]
-                        <a href="[% item.externalUrl %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                        <a href="[% item.externalUrl %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                     [% ELSE %]
-                        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                     [% END %]
                 [% END %]
                 <div class="carousel-caption">
@@ -36,9 +36,9 @@
                     <div class="images">
                         [% FOREACH item IN carrousel.documents %]
                             [% IF carrousel.external %]
-                                <a href="[% item.externalUrl %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                                <a href="[% item.externalUrl %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                             [% ELSE %]
-                                <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                                <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
                             [% END %]   
                         [% END %]
                     </div>
