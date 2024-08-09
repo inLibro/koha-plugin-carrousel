@@ -365,11 +365,11 @@ $(function() {
             addLine(module, $(this).val(), $(this).parent().text());
         } else {
             $("#" + module + "-" + $(this).val()).remove();
-            if ($("tbody tr").length === 0) $(".noCarrousel").show();
+            if ($("#inlibro-carrousel tbody tr").length === 0) $(".noCarrousel").show();
         }
     });
 
-    $("tbody tr").each(function (){
+    $("#inlibro-carrousel tbody tr").each(function (){
         actionButtons(this);
     });
 });
@@ -378,7 +378,7 @@ $("#doc3 form").submit(function (){
     var form = $("form").serializeArray();
 
     var enablings = [];
-    $("tbody tr").each(function (){
+    $("#inlibro-carrousel tbody tr").each(function (){
         var carrousel = $(this);
         var id = carrousel.attr("id").split("-");
         var data = {
@@ -424,7 +424,7 @@ function actionButtons (tr) {
         var id = $(tr).attr("id").split("-");
         $("[name='selectItem" + id[0] + "'][value='" + id[1] + "']").click();
         $(tr).remove();
-        if ($("tbody tr").length === 0) $(".noCarrousel").show();
+        if ($("#inlibro-carrousel tbody tr").length === 0) $(".noCarrousel").show();
     });
 }
 
@@ -478,7 +478,7 @@ function addLine (module, id, name) {
 
     var line = $(html);
     actionButtons(line);
-    $("tbody").append(line);
+    $("#inlibro-carrousel tbody").append(line);
     $(".noCarrousel").hide();
 }
 </script>
