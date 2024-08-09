@@ -82,6 +82,10 @@
                                         <label for="scrolling">À défilement</label>
                                         <input id="scrolling" type="radio" name="type-[% carrousel.module %]-[% carrousel.id %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
                                     </div>
+                                    </div>
+                                        <label for="scrolling-title">À défilement avec titre</label>
+                                        <input id="scrolling-title" type="radio" name="type-[% carrousel.module %]-[% carrousel.id %]" value="scrolling-title" [% IF carrousel.type == "scrolling-title" %]checked="checked"[% END %] />
+                                    </div>
                                 </td>
                                 <td class="center">
                                     <input type="checkbox" name="autorotate-[% carrousel.module %]-[% carrousel.id %]" value="[% carrousel.id %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />

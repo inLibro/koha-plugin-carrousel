@@ -28,7 +28,11 @@
             </div>
         </div>
     [% ELSE %]
+        [% IF carrousel.type == "scrolling" %]
         <div id="carrousel-[% loop.index %]" class="slider">
+        [% ELSE %]
+        <div id="carrousel-[% loop.index %]" class="slider-title">
+        [% END %]
             <H2>[% carrousel.title || carrousel.name %]</H2>
             <hr>
             [% IF (carrousel.documents.size() > 0) %]
@@ -36,9 +40,9 @@
                     <div class="images">
                         [% FOREACH item IN carrousel.documents %]
                             [% IF carrousel.external %]
-                                <a href="[% item.externalUrl %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                                <a href="[% item.externalUrl %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" >[% IF carrousel.type == "scrolling-title" %]<h3>[% item.title %]</h3>[% END %]</a>
                             [% ELSE %]
-                                <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                                <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" >[% IF carrousel.type == "scrolling-title" %]<h3>[% item.title %]</h3>[% END %]</a>
                             [% END %]   
                         [% END %]
                     </div>
@@ -265,7 +269,7 @@
     width:100px;
 }
 
-#inlibro-carrousel .slider {
+#inlibro-carrousel .slider, .slider-title {
     overflow: hidden;
     position: relative;
 }
@@ -274,9 +278,21 @@
     height: 175px;
 }
 
+#inlibro-carrousel .slider-title img {
+    height: 175px;
+    margin-bottom: 4px;
+}
+
 #inlibro-carrousel .slider button {
     position:absolute;
     top: 70%;
+    transform: translateY(-70%);
+    height:160px
+}
+
+#inlibro-carrousel .slider-title button {
+    position:absolute;
+    top: 58%;
     transform: translateY(-70%);
     height:160px
 }
@@ -324,9 +340,21 @@
     border-radius : 3px;
 }
 
-#inlibro-carrousel .images a {
+#inlibro-carrousel .slider .images a {
     display: inline-block;
     margin-right: 3px;
+}
+
+#inlibro-carrousel .slider-title .images a {
+    display: inline-grid;
+    margin-right: 10px;
+}
+
+#inlibro-carrousel .slider-title .images h3 {
+    font-size: 0.9em;
+    text-wrap: wrap;
+    max-width: 100px;
+    text-align: center;
 }
 
 div.images>a:focus{
@@ -453,7 +481,7 @@ function Left (button){
     let livres = container.children;
 
     var last = $(container).find("a img").last();
-    if ($(last).position().left + $(last)[0].clientWidth < $(".slider")[0].clientWidth) return;
+    if ($(last).position().left + $(last)[0].clientWidth < $("div[class^='slider']")[0].clientWidth) return;
     $(container).animate({
         left: $(container).find("a img").eq(1).position().left * -1,
     }, scrolling_duration, function() {
@@ -466,7 +494,7 @@ function Right (button){
     let livres = container.children;
 
     var last = $(container).find("a img").last();
-    if ($(last).position().left + $(last)[0].clientWidth < $(".slider")[0].clientWidth) return;
+    if ($(last).position().left + $(last)[0].clientWidth < $("div[class^='slider']")[0].clientWidth) return;
     $(container).animate({
         left: $(container).find("a img").eq(1).position().left,
     }, scrolling_duration, function() {
