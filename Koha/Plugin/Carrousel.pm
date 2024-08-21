@@ -304,7 +304,7 @@ sub getEnabledCarrousels {
         }
         elsif ($carrousel->{module} eq "reports") {
             if (C4::Context->preference("IndependentBranches")) {
-                my $borrowernumber = Koha::Reports->find($carrousel->{id})->id;
+                my $borrowernumber = Koha::Reports->find($carrousel->{id})->borrowernumber;
                 my $patron = Koha::Patrons->find($borrowernumber);
                 $branchcode = $patron->branchcode if defined $patron;
             }
