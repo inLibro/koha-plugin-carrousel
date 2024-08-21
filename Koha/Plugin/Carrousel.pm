@@ -53,9 +53,9 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.2.5";
+our $VERSION = "4.2.6";
 our $metadata = {
-    name            => 'Carrousel 4.2.5',
+    name            => 'Carrousel 4.2.6',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
@@ -304,7 +304,7 @@ sub getEnabledCarrousels {
         }
         elsif ($carrousel->{module} eq "reports") {
             if (C4::Context->preference("IndependentBranches")) {
-                my $borrowernumber = Koha::Reports->find($carrousel->{id})->id;
+                my $borrowernumber = Koha::Reports->find($carrousel->{id})->borrowernumber;
                 my $patron = Koha::Patrons->find($borrowernumber);
                 $branchcode = $patron->branchcode if defined $patron;
             }
