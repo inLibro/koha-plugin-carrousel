@@ -32,6 +32,7 @@ use Template;
 use utf8;
 use base qw(Koha::Plugins::Base);
 use Koha::Biblio;
+use Koha::Libraries;
 use C4::Context;
 use C4::Koha qw(GetNormalizedISBN);
 use C4::Output;
@@ -53,13 +54,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.2.6";
+our $VERSION = "4.3.0";
 our $metadata = {
-    name            => 'Carrousel 4.2.6',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël',
+    name            => 'Carrousel 4.3.0',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2024-08-07',
+    date_updated    => '2024-10-03',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -278,7 +279,7 @@ sub getEnabledCarrousels {
     $shelves = decode_json(encode_utf8($self->retrieve_data('carrousels'))) if ($self->retrieve_data('carrousels'));
     foreach my $carrousel (@{$shelves}) {
         $carrousel->{name} = $self->getDisplayName($carrousel->{module}, $carrousel->{id});
-        my $branchcode;
+        my $branchcode = $carrousel->{branchcode} || undef;
         if ($carrousel->{module} eq "lists") {
             my $shelf = Koha::Virtualshelves->find($carrousel->{id});
             my $borrowernumber = $shelf->owner if defined $shelf;
@@ -333,17 +334,14 @@ sub generateCarrousels{
         ENCODING => 'utf8',
     };
 
-    # Si IndependentBranches on doit trier les carrousels par branches et faire une boucle par branche
     my %branchcodes;
-    if (C4::Context->preference("IndependentBranches")) {
-        foreach my $carrousel (@{ $carrousels }) {
-            # Si le branchcode est undef c'est qu'il n'y a pas de branche de précisée
-            next unless defined $carrousel->{branchcode};
+    foreach my $carrousel (@{ $carrousels }) {
+        # Si le branchcode est undef c'est qu'il n'y a pas de branche de précisée
+        if (defined $carrousel->{branchcode}) {
             push @{ $branchcodes{$carrousel->{branchcode}} }, $carrousel;
+        } else {
+            push @{ $branchcodes{0} }, $carrousel;
         }
-    } else {
-        # Aucune branche, on utilise tous les carrousels
-        $branchcodes{0} = $carrousels;
     }
 
     my $opaclanguages = C4::Context->preference('opaclanguages');   #expected ex opaclanguages = "fr-CA,en"
@@ -378,7 +376,7 @@ sub generateJSONFile {
         my @documents;
         foreach my $document (@{$carrousel->{documents}}) {
             my $url = C4::Context->preference('OPACBaseURL') . "/cgi-bin/koha/opac-detail.pl?biblionumber=" . $document->{biblionumber};
-            
+
             push @documents, {
                 title       => $document->{title},
                 author      => $document->{author},
@@ -481,7 +479,7 @@ sub getCarrouselContent {
 
 sub getExternalUrl {
     my ($self, $biblionumber) = @_;
-    
+
     my $query = qq {SELECT url FROM biblioitems WHERE biblionumber = ? };
     my $sth = $dbh->prepare($query);
     $sth->execute($biblionumber);
@@ -537,7 +535,7 @@ sub insertIntoPref {
     elsif ( $kohaversion < 21.11 ) {
         #1. check installed languages
         my $opaclanguages = C4::Context->preference('opaclanguages');
-        
+
         #expected ex opaclanguages = "fr-CA,en"
         my @languages = split /,/, $opaclanguages;
         #2. for each installed language
@@ -822,7 +820,7 @@ sub insertIntoPref {
         #somewhere else
         print "Error! Please check your configuration\n";
     }
-    
+
 }
 
 # routines pour récupérer les images
@@ -1040,7 +1038,7 @@ sub getThumbnailUrl
             my $ua = LWP::UserAgent->new;
             my $req = HTTP::Request->new( GET => $url );
             my $res = $ua->request( $req );
-            
+
             if ($res->is_success) {
                 return $url;
             }
@@ -1048,7 +1046,7 @@ sub getThumbnailUrl
     }
 
 
-    
+
 
 
     #If there is not local thumbnail, we look for one on Amazon, Google and Openlibrary in this order and we will exit when a thumbnail is found.
@@ -1096,8 +1094,20 @@ sub configure {
         my $carrousels = $self->getEnabledCarrousels();
         my $modules = $self->getModules();
 
+        my @branches;
+        if (!C4::Context->preference("IndependentBranches")) {
+            my $branch_list = Koha::Libraries->search->unblessed;
+            foreach my $branch (@$branch_list) {
+                push @branches, {
+                    branchcode => $branch->{branchcode},
+                    branchname => $branch->{branchname},
+                };
+            }
+        }
+
         my $template = $self->retrieve_template("configure");
         $template->param(
+            branches       => \@branches,
             carrousels     => $carrousels,
             lists          => $modules->{lists},
             reports        => $modules->{reports},
