@@ -54,13 +54,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.3.0";
+our $VERSION = "4.3.1";
 our $metadata = {
-    name            => 'Carrousel 4.3.0',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, HammatWele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang',
+    name            => 'Carrousel 4.3.1',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2024-10-03',
+    date_updated    => '2024-10-04',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -73,7 +73,6 @@ our $useSql = 0;
 if (!(eval("use Koha::Virtualshelves") || !(eval("use Koha::Virtualshelfcontents")))) {
     $useSql =1;
 }
-our $dbh = C4::Context->dbh();
 
 sub new {
     my ( $class, $args ) = @_;
@@ -144,6 +143,7 @@ sub getDisplayName {
         my $table = ($module eq "reports") ? "saved_sql" : (($module eq "collections") ? "authorised_values" : "virtualshelves");
         my $column_id = ($module eq "reports") ? "id" : (($module eq "collections") ? "authorised_value" : "shelfnumber");
         my $column_name = ($module eq "reports") ? "report_name" : (($module eq "collections") ? "lib" : "shelfname");
+        my $dbh = C4::Context->dbh;
 
         my $stmt = $dbh->prepare("SELECT * FROM $table WHERE $column_id = ?");
         $stmt->execute($id);
@@ -169,6 +169,7 @@ sub getModules {
     my $modules;
 
     if ($useSql) {
+        my $dbh = C4::Context->dbh;
         my $stmt = $dbh->prepare("SELECT * FROM virtualshelves WHERE category = 2 ORDER BY shelfname");
         $stmt->execute();
         while (my $row = $stmt->fetchrow_hashref()) {
@@ -205,6 +206,7 @@ sub getModules {
 sub loadContent {
     my ( $self, $module, $id ) = @_;
     my @content;
+    my $dbh = C4::Context->dbh;
 
     if ($module eq "reports") {
         my $sql = "";
@@ -276,6 +278,7 @@ sub loadContent {
 sub getEnabledCarrousels {
     my ( $self ) = @_;
     my $shelves = ();
+    my $dbh = C4::Context->dbh;
     $shelves = decode_json(encode_utf8($self->retrieve_data('carrousels'))) if ($self->retrieve_data('carrousels'));
     foreach my $carrousel (@{$shelves}) {
         $carrousel->{name} = $self->getDisplayName($carrousel->{module}, $carrousel->{id});
@@ -479,6 +482,7 @@ sub getCarrouselContent {
 
 sub getExternalUrl {
     my ($self, $biblionumber) = @_;
+    my $dbh = C4::Context->dbh;
 
     my $query = qq {SELECT url FROM biblioitems WHERE biblionumber = ? };
     my $sth = $dbh->prepare($query);
@@ -511,6 +515,7 @@ sub insertIntoPref {
 
     # si la version de koha est < 19.12 on utilise la préférence système "OpacMainUserBlock"
     if ( $kohaversion < 19.1200082 ) {
+        my $dbh = C4::Context->dbh;
         my $stmt = $dbh->prepare("select * from systempreferences where variable='OpacMainUserBlock'");
         $stmt->execute();
 
@@ -965,6 +970,7 @@ sub getThumbnailUrl
     return if ! $record;
     my $marcflavour = C4::Context->preference("marcflavour");
     my @isbns;
+    my $dbh = C4::Context->dbh;
     if ($marcflavour eq 'MARC21' ){
         @isbns = $record->field('020');
     }elsif($marcflavour eq 'UNIMARC'){
@@ -1143,6 +1149,7 @@ sub upgrade {
         my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))} if (defined $self->retrieve_data('shelvesOrder'));
         my @enabledShelves = @{decode_json($self->retrieve_data('enabledShelves'))} if (defined $self->retrieve_data('enabledShelves'));
         my $type = $self->retrieve_data('type');
+        my $dbh = C4::Context->dbh;
 
         my @carrousels;
         foreach my $id (@shelvesOrder) {
@@ -1172,6 +1179,7 @@ sub upgrade {
 sub uninstall() {
     my ( $self, $args ) = @_;
 
+    my $dbh = C4::Context->dbh;
     my $stmt = $dbh->prepare("select * from systempreferences where variable='OpacMainUserBlock'");
     $stmt->execute();
 
