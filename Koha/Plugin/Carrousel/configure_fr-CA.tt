@@ -38,6 +38,9 @@
                             <th>Nom</th>
                             <th>Titre</th>
                             <th>Type</th>
+                            [% IF !Koha.Preference('IndependentBranches') %]
+                            <th>Bibliothèque</th>
+                            [% END %]
                             <th>Auto rotation</th>
                             <th>Ordre</th>
                             <th>URL externe</th>
@@ -87,6 +90,16 @@
                                         <input id="scrolling-title" type="radio" name="type-[% carrousel.module %]-[% carrousel.id %]" value="scrolling-title" [% IF carrousel.type == "scrolling-title" %]checked="checked"[% END %] />
                                     </div>
                                 </td>
+                                [% IF !Koha.Preference('IndependentBranches') %]
+                                <td>
+                                    <select name="library-[% carrousel.module %]-[% carrousel.id %]">
+                                        <option value="">Toutes les bibliothèques</option>
+                                        [% FOREACH branch IN branches %]
+                                        <option value="[% branch.branchcode %]" [% IF branch.branchcode == carrousel.branchcode %]selected[% END %]>[% branch.branchname %]</option>
+                                        [% END %]
+                                    </select>
+                                </td>
+                                [% END %]
                                 <td class="center">
                                     <input type="checkbox" name="autorotate-[% carrousel.module %]-[% carrousel.id %]" value="[% carrousel.id %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
                                 </td>
@@ -387,8 +400,11 @@ $("#doc3 form").submit(function (){
             title : carrousel.find("[name^='title']").val(),
             suffix : carrousel.find("[name^='suffix']").val(),
             type : carrousel.find("[name^='type']:checked").val(),
+        [% IF !Koha.Preference('IndependentBranches') %]
+            branchcode : carrousel.find("[name^='library']").val(),
+        [% END %]
             autorotate : carrousel.find("[name^='autorotate']").prop('checked') ? 1 : 0,
-            external : carrousel.find("[name^='external']").prop('checked') ? 1 : 0 
+            external : carrousel.find("[name^='external']").prop('checked') ? 1 : 0
         };
         enablings.push(data);
     });
@@ -462,6 +478,16 @@ function addLine (module, id, name) {
       + "            <input id=\"scrolling-title\" type=\"radio\" name=\"type-" + module + "-" + id + "\" value=\"scrolling-title\" />"
       + "        </div>"
       + "    </td>"
+[% IF !Koha.Preference('IndependentBranches') %]
+      + "    <td>"
+      + "    <select name=\"library-" + module + "-" + id + "\">"
+      + "        <option value=\"\">Toutes les bibliothèques</option>"
+    [% FOREACH branch IN branches %]
+      + "        <option value=\"[% branch.branchcode %]\">[% branch.branchname %]</option>"
+    [% END %]
+      + "    </select>"
+      + "    </td>"
+[% END %]
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"autorotate-" + module + "-" + id + "\" value=\"" + id + "\" />"
       + "    </td>"
