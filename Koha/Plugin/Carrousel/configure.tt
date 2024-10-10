@@ -486,6 +486,7 @@ function addLine (module, id, name) {
       + "        <option value=\"[% branch.branchcode %]\">[% branch.branchname %]</option>"
     [% END %]
       + "    </select>"
+      + "    </td>"
 [% END %]
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"autorotate-" + module + "-" + id + "\" value=\"" + id + "\" />"
