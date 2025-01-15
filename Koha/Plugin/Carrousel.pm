@@ -1215,7 +1215,7 @@ sub retrieve_template {
     my $template = undef;
     return $template unless $template_prefix eq 'step_1' || $template_prefix eq 'configure';
 
-    my $preferedLanguage = $cgi->cookie('KohaOpacLanguage');
+    my $preferedLanguage = C4::Languages::getlanguage();
     if ($preferedLanguage) {
         eval {
             $template = $self->get_template({ file => $template_prefix . '_' . $preferedLanguage . ".tt" })
