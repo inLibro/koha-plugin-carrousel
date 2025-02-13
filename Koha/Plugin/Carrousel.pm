@@ -395,6 +395,9 @@ sub generateJSONFile {
     }
 
     # save file
+    my $current_mask = umask();
+    umask 002;
+
     my $hash = "carrousel";
     my $filename = "$hash.json";
     my $path = File::Spec->catdir( C4::Context->config('upload_path'), "${hash}_${filename}" );
@@ -405,6 +408,7 @@ sub generateJSONFile {
     } else {
         warn "Unable to open file at $path";
     }
+    umask $current_mask;
 
     unless (Koha::UploadedFiles->search({ hashvalue => $hash, filename => $filename })->count ) {
         my $rec = Koha::UploadedFile->new({
