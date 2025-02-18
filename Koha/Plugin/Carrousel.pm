@@ -42,6 +42,8 @@ use C4::Reports::Guided;
 use Koha::Uploader;
 use Koha::DateUtils qw( dt_from_string );
 use Data::Dumper;
+use URI::Escape;
+use constant ENDPOINT_IMAGES    => '/images/';
 
 BEGIN {
     my $kohaversion = Koha::version;
@@ -54,7 +56,7 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.3.3";
+our $VERSION = "4.3.4";
 our $metadata = {
     name            => 'Carrousel 4.3.3',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang',
@@ -451,12 +453,18 @@ sub getCarrouselContent {
         next if ! $record;
         my $title;
         my $author;
+        my $year;
         my $marcflavour = C4::Context->preference("marcflavour");
         if ($marcflavour eq 'MARC21'){
             $title = $record->subfield('245', 'a');
             $author = $record->subfield( '100', 'a' );
             $author = $record->subfield( '110', 'a' ) unless $author;
             $author = $record->subfield( '111', 'a' ) unless $author;
+            my $date = substr( $record->field('008')->data, 7, 4 );
+            $year = $date;
+            $year = $record->subfield("260", "c") unless $year;
+            $year = $record->subfield("264", "c") unless $year;
+            $year =~ s/^\s+//;
         }elsif ($marcflavour eq 'UNIMARC'){
             $title = $record->subfield('200', 'a');
             $author = $record->subfield( '200', 'f' );
@@ -467,8 +475,24 @@ sub getCarrouselContent {
         if (!$externalUrl) {
             $externalUrl = "/cgi-bin/koha/opac-detail.pl?biblionumber=" . $biblionumber;
         }
+        my $tmdb_info = "";
+        if(substr( $record->leader(), 6, 1 ) eq 'g'){
+            my @fields = $record->field('024');
+            my $t = Encode::encode( 'UTF-8', $title ) if Encode::is_utf8($title);
+            $t =~ s/^\s+|\s+$//g;
+            $t = uri_escape( $t );
+            my $title_year = "&title=$t|$biblionumber&year=$year|$biblionumber";
+            foreach my $field (@fields) {
+                my $external_id = $field->subfield('a');
+                my $external_source = $field->subfield('2');
+                next if(!$external_source || !$external_id);
+                $external_source .= "_id" if ($external_source);
+                $tmdb_info.= "&external_id=$external_id|$biblionumber&external_source=$external_source|$biblionumber".$title_year;
+            }
+            $tmdb_info.= "&external_id=|$biblionumber&external_source=|$biblionumber".$title_year unless($tmdb_info);
+        }
 
-        my $url = getThumbnailUrl( $biblionumber, $record );
+        my $url = getThumbnailUrl( $biblionumber, $tmdb_info, $record );
         if ( $url ){
             my %image = ( url => $url, title => $title, author => $author, biblionumber => $biblionumber, externalUrl => $externalUrl );
             push @images, \%image;
@@ -889,54 +913,65 @@ sub retrieveUrlFromBourriquetJson {
 
 sub getUrlFromExternalSources {
     my $isbn = shift;
+    my $tmdb_info = shift;
     my $biblionumber = shift;
 
     # les clefs sont les systempreferences du même nom
     my $es = {};
+    my $bourriquet_plugin = Koha::Plugin::Com::Inlibro::Bourriquet->new;
+    my $bourriquet_pref = $bourriquet_plugin->get_bourriquet_pref || q{};
 
-    if (C4::Context->preference('BourriquetOpac') && C4::Context->preference('BourriquetToken') && C4::Context->preference('BourriquetProviders')) {
+    if ($bourriquet_pref->{BourriquetOpac} && $bourriquet_pref->{BourriquetToken} && $bourriquet_pref->{BourriquetProviders}){
         $es->{BourriquetOpac} = {
             'priority' => 1,
             'retrieval' => \&retrieveUrlFromBourriquetJson,
-            'url' => C4::Context->preference('OPACBaseURL')."/cgi-bin/koha/svc/bourriquet/images/?stdnos=$isbn|$biblionumber&providers=".C4::Context->preference('BourriquetProviders'),
+            'url' => $bourriquet_pref->{BourriquetURL}.ENDPOINT_IMAGES."?stdnos=$isbn|$biblionumber&providers=".$bourriquet_pref->{BourriquetProviders}.$tmdb_info,
+            'authorization' =>'Token '.$bourriquet_pref->{BourriquetToken},
         };
     }
 
-    $es->{OpacCoce} = {
-        'priority' => 2,
-        'retrieval' => \&retrieveUrlFromCoceJson,
-        'url' => C4::Context->preference('CoceHost').'/cover'
-                ."?id=$isbn"
-                ."&bn=$biblionumber"
-                .'&provider='.join(',', C4::Context->preference('CoceProviders'))
-                .'&thumbnail=1',
-    };
+    if($isbn){
+        $es->{OpacCoce} = {
+            'priority' => 2,
+            'retrieval' => \&retrieveUrlFromCoceJson,
+            'url' => C4::Context->preference('CoceHost').'/cover'
+                    ."?id=$isbn"
+                    ."&bn=$biblionumber"
+                    .'&provider='.join(',', C4::Context->preference('CoceProviders'))
+                    .'&thumbnail=1',
+        };
 
-    $es->{OPACAmazonCoverImages} = {
-        'priority' => 3,
-        'url' => "https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg",
-        'content_length' => 500, # FIXME pourquoi seuil minimal de 500?
-    };
+        $es->{OPACAmazonCoverImages} = {
+            'priority' => 3,
+            'url' => "https://images-na.ssl-images-amazon.com/images/P/$isbn.01.MZZZZZZZ.jpg",
+            'content_length' => 500, # FIXME pourquoi seuil minimal de 500?
+        };
 
-    $es->{GoogleJackets} = {
-        'priority' => 4,
-        'retrieval' => \&retrieveUrlFromGoogleJson,
-        'url' => "https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA",
-    };
+        $es->{GoogleJackets} = {
+            'priority' => 4,
+            'retrieval' => \&retrieveUrlFromGoogleJson,
+            'url' => "https://www.googleapis.com/books/v1/volumes?q=isbn:$isbn&country=CA",
+        };
 
-    $es->{OpenLibraryCovers} = {
-        'priority' => 5,
-        'url' => "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg?default=false",
-    };
+        $es->{OpenLibraryCovers} = {
+            'priority' => 5,
+            'url' => "https://covers.openlibrary.org/b/isbn/$isbn-M.jpg?default=false",
+        };
+    }
 
     my $ua = LWP::UserAgent->new;
     $ua->timeout(2);
     $ua->ssl_opts(verify_hostname => 0);
     my @orderedProvidersByPriority = sort { $es->{$a}->{priority} <=> $es->{$b}->{priority} } keys %$es;
 
+    #warn Data::Dumper::Dumper(@orderedProvidersByPriority);
     for my $provider ( @orderedProvidersByPriority ) {
         my $url = $es->{$provider}->{url};
         my $req = HTTP::Request->new( GET => $url );
+        if ( exists $es->{$provider}->{authorization} ) {
+            my $header = ['Authorization' => $es->{$provider}->{authorization}];
+            $req =  HTTP::Request->new('GET', $url, $header);
+        }
         my $res = $ua->request( $req );
 
         next if !$res->is_success;
@@ -974,6 +1009,7 @@ sub getUrlFromExternalSources {
 sub getThumbnailUrl
 {
     my $biblionumber = shift;
+    my $tmdb_info = shift;
     my $record = shift;
     return if ! $record;
     my $marcflavour = C4::Context->preference("marcflavour");
@@ -1064,12 +1100,13 @@ sub getThumbnailUrl
 
 
     #If there is not local thumbnail, we look for one on Amazon, Google and Openlibrary in this order and we will exit when a thumbnail is found.
+    return getUrlFromExternalSources('', $tmdb_info, $biblionumber) unless( @isbns );
     foreach my $field ( @isbns )
     {
         my $isbn = GetNormalizedISBN( $field->subfield('a') );
         next if ! $isbn;
 
-        return getUrlFromExternalSources($isbn, $biblionumber);
+        return getUrlFromExternalSources($isbn, $tmdb_info, $biblionumber);
     }
 
     return;
