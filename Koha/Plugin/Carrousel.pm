@@ -403,6 +403,11 @@ sub generateJSONFile {
     my $hash = "carrousel";
     my $filename = "$hash.json";
     my $path = File::Spec->catdir( C4::Context->config('upload_path'), "${hash}_${filename}" );
+
+    if (-e $path) {
+        unlink $path or warn "Failed to delete existing file $path: $!";
+    }
+
     my $fh = FileHandle->new;
     if ($fh->open("> $path")) {
         print $fh encode_json(\@json);
