@@ -54,13 +54,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.3.5";
+our $VERSION = "4.3.6";
 our $metadata = {
-    name            => 'Carrousel 4.3.5',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang',
+    name            => 'Carrousel 4.3.6',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2025-02-06',
+    date_updated    => '2025-03-18',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -1147,12 +1147,28 @@ sub configure {
             }
         }
 
+        my @reports;
+        my $dbh = C4::Context->dbh;
+        my $sth = $dbh->prepare("SELECT * from saved_sql");
+        $sth->execute();
+        while (my $report = $sth->fetchrow_hashref()) {
+              my $sql = $report->{savedsql} if $report;
+               unless ($sql) {
+                   warn "Report $report->{id} was not found.";
+               } else {
+                   # Filter out reports with parameters or no biblionumber
+                   if (!($sql =~ /<<.*>>/) && $sql =~ /select.*biblionumber.*from/is)  {
+                       push(@reports, {id => $report->{id}, report_name => $report->{report_name}});
+                   }
+               }
+        }
+
         my $template = $self->retrieve_template("configure");
         $template->param(
             branches       => \@branches,
             carrousels     => $carrousels,
             lists          => $modules->{lists},
-            reports        => $modules->{reports},
+            reports        => \@reports,
             collections    => $modules->{collections},
             bgColor        => $self->retrieve_data('bgColor'),
             txtColor       => $self->retrieve_data('txtColor'),
@@ -1275,4 +1291,3 @@ sub cronjob_nightly {
 }
 
 1;
-

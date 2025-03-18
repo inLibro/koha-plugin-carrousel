@@ -142,7 +142,7 @@
                     [% END %]
 
                     <label>Rapports</label>
-                    [% IF reports.count %]
+                    [% IF reports.size %]
                         [% SET module = "reports" %]
                         <select name="[% module %]" multiple="multiple">
                             [% FOREACH report IN reports %]
@@ -153,7 +153,7 @@
                                 [% END %]
                             [% END %]
                         </select>
-                        <p><small>Le résultat des rapports doit inclure le biblionumber pour qu'il génère un carrousel.</small></p>
+                        <p><small>Le résultat des rapports doit inclure le biblionumber et ne pas avoir de paramètres pour qu'il génère un carrousel.</small></p>
                     [% ELSE %]
                         <p class="nolist">Vous n'avez aucun rapport. Cliquez <a href="/cgi-bin/koha/reports/reports-home.pl">ici</a> pour en créer un.</p>
                     [% END %]
