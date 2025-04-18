@@ -10,16 +10,16 @@
 [% FOREACH carrousel IN carrousels %]
     [% IF carrousel.type == "carrousel" %]
         <div class="carrouselFrame">
-            <p class="special-title">[% carrousel.title || carrousel.name %]</p>
+            <p class="special-title">[% carrousel.title || carrousel.name | html %]</p>
             <div class="loadingDiv"></div>
-            <div id="carrousel-[% loop.index %]" class="carrousel">
-                <a class="left carousel-control" aria-label="[% T.previous %]" tabindex="0">&lsaquo;</a>
-                <a class="right carousel-control" aria-label="[% T.next %]" tabindex="0">&rsaquo;</a>
+            <div id="carrousel-[% loop.index | html %]" class="carrousel">
+                <a class="left carousel-control" aria-label="[% T.previous | html %]" tabindex="0">&lsaquo;</a>
+                <a class="right carousel-control" aria-label="[% T.next | html %]" tabindex="0">&rsaquo;</a>
                 [% FOREACH item IN carrousel.documents %]
                     [% IF carrousel.external %]
-                        <a href="[% item.externalUrl %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                        <a href="[% item.externalUrl | url %][% carrousel.suffix | uri %]" title="[% item.title | html %]"><img class="cloudcarousel" src="[% item.url | url %]" alt="[% item.title | html %]" ></a>
                     [% ELSE %]
-                        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" ></a>
+                        <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber | uri %][% carrousel.suffix | uri %]" title="[% item.title | html %]"><img class="cloudcarousel" src="[% item.url | url %]" alt="[% item.title | html %]" ></a>
                     [% END %]
                 [% END %]
                 <div class="carousel-caption">
@@ -29,27 +29,27 @@
         </div>
     [% ELSE %]
         [% IF carrousel.type == "scrolling" %]
-        <div id="carrousel-[% loop.index %]" class="slider">
+        <div id="carrousel-[% loop.index | html %]" class="slider">
         [% ELSE %]
-        <div id="carrousel-[% loop.index %]" class="slider-title">
+        <div id="carrousel-[% loop.index | html %]" class="slider-title">
         [% END %]
-            <H2>[% carrousel.title || carrousel.name %]</H2>
+            <h2>[% carrousel.title || carrousel.name | html %]</h2>
             <hr>
             [% IF (carrousel.documents.size() > 0) %]
-                <div id="[% carrousel.title || carrousel.name %]">
+                <div id="[% carrousel.title || carrousel.name | html %]">
                     <div class="images">
                         [% FOREACH item IN carrousel.documents %]
                             [% IF carrousel.external %]
-                                <a href="[% item.externalUrl %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" >[% IF carrousel.type == "scrolling-title" %]<h3>[% item.title %]</h3>[% END %]</a>
+                                <a href="[% item.externalUrl | url %][% carrousel.suffix | uri %]" title="[% item.title | html %]"><img class="cloudcarousel" src="[% item.url | url %]" alt="[% item.title | html %]" >[% IF carrousel.type == "scrolling-title" %]<h3>[% item.title | html %]</h3>[% END %]</a>
                             [% ELSE %]
-                                <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber %][% carrousel.suffix %]" title="[% item.title %]"><img class="cloudcarousel" src="[% item.url %]" alt="[% item.title %]" >[% IF carrousel.type == "scrolling-title" %]<h3>[% item.title %]</h3>[% END %]</a>
+                                <a href="/cgi-bin/koha/opac-detail.pl?biblionumber=[% item.biblionumber | uri %][% carrousel.suffix | uri %]" title="[% item.title | html %]"><img class="cloudcarousel" src="[% item.url | url %]" alt="[% item.title | html %]" >[% IF carrousel.type == "scrolling-title" %]<h3>[% item.title | html %]</h3>[% END %]</a>
                             [% END %]
                         [% END %]
                     </div>
                 </div>
                 <div class="controls">
-                    <button class="[% carrousel.title || carrousel.name %]" aria-label="[% T.previous %]" style="left: 0;" onclick="Right(this)" type="button">&lt;</button>
-                    <button class="[% carrousel.title || carrousel.name %]" aria-label="[% T.next %]" style="right: 0;" onclick="Left(this)" type="button">&gt;</button>
+                    <button class="[% carrousel.title || carrousel.name | html %]" aria-label="[% T.previous | html %]" style="left: 0;" onclick="Right(this)" type="button">&lt;</button>
+                    <button class="[% carrousel.title || carrousel.name | html %]" aria-label="[% T.next | html %]" style="right: 0;" onclick="Left(this)" type="button">&gt;</button>
                 </div>
             [% END %]
         </div>
@@ -429,13 +429,13 @@ document.addEventListener('DOMContentLoaded', function() {
     //This initialises carousels on the container elements specified.
     [% FOREACH carrousel IN carrousels %]
         [% IF carrousel.type == "carrousel" %]
-            $("#carrousel-[% loop.index %]").each(function (){
+            $("#carrousel-[% loop.index | html %]").each(function (){
                 var controls = $(this).find(".carousel-control");
                 $(this).CloudCarousel(
                 {
                     [% IF carrousel.autorotate %]
-                        autoRotate: "[% autoRotateDirection || 'left' %]",
-                        [% IF autoRotateDelay %]autoRotateDelay: [% autoRotateDelay %],[% END %]
+                        autoRotate: "[%  autoRotateDirection || 'left' | html %]",
+                        [% IF autoRotateDelay %]autoRotateDelay: "[% autoRotateDelay | html %]",[% END %]
                     [% END %]
                     xPos : $(this).parent().width() * 0.5,
                     yPos : 10,
@@ -455,8 +455,8 @@ document.addEventListener('DOMContentLoaded', function() {
             [% IF carrousel.autorotate %]
                 setInterval(
                     function() {
-                        let buttonLeft = $("#carrousel-[% loop.index %] .controls button")[0];
-                        let buttonRight = $("#carrousel-[% loop.index %] .controls button")[1];
+                        let buttonLeft = $("#carrousel-[% loop.index | html %] .controls button")[0];
+                        let buttonRight = $("#carrousel-[% loop.index | html %] .controls button")[1];
                         [% IF !autoRotateDirection || autoRotateDirection == "left" %]Right(buttonLeft)[% ELSIF autoRotateDirection == "right" %]Left(buttonRight)[% END %];
                     }, [% autoRotateDelay || 1500 %]
                 );

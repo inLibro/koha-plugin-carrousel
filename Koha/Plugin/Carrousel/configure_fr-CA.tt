@@ -3,9 +3,9 @@
 <!-- Head-->
 <title>Koha:Carrousel Plugin: Configuration</title>
 [% INCLUDE 'doc-head-close.inc' %]
-<script src="/api/v1/contrib/[% api_namespace %]/static/js/jscolor.js"></script>
-<script type="text/javascript" src="/api/v1/contrib/[% api_namespace %]/static/js/multiple-select.min.js"></script>
-<link rel="stylesheet" type="text/css" href="/api/v1/contrib/[% api_namespace %]/static/css/multiple-select.min.css" />
+<script src="/api/v1/contrib/[% api_namespace | uri %]/static/js/jscolor.js"></script>
+<script type="text/javascript" src="/api/v1/contrib/[% api_namespace | uri %]/static/js/multiple-select.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/api/v1/contrib/[% api_namespace | uri %]/static/css/multiple-select.min.css" />
 <!-- Body-->
 [% INCLUDE 'header.inc' %]
 [% INCLUDE 'cat-search.inc' %]
@@ -16,14 +16,14 @@
 
         <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
             <p style="text-align: left;">Cette extension a été créée par</p>
-            <img width='450px' src='/api/v1/contrib/[% api_namespace %]/static/images/inLibro_fr.svg' alt="inLibro" />
+            <img width='450px' src='/api/v1/contrib/[% api_namespace | uri %]/static/images/inLibro_fr.svg' alt="inLibro" />
             <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
         </div>
 
         <h3>Configuration des carrousels</h3>
         <form method="get" id="inlibro-carrousel">
-            <input type="hidden" name="class" value="[% CLASS %]"/>
-            <input type="hidden" name="method" value="[% METHOD %]"/>
+            <input type="hidden" name="class" value="[% CLASS | html %]"/>
+            <input type="hidden" name="method" value="[% METHOD | html %]"/>
             <input type="hidden" name="action" value="configure"/>
 
             <input type="hidden" name="carrousels" />
@@ -53,7 +53,7 @@
                             [% SET module = carrousel.module %]
                             [% UNLESS enabled.defined("$module") %][% SET enabled.$module = [] %][% END %]
                             [% enabled.$module.push(carrousel.id) %]
-                            <tr id="[% carrousel.module %]-[% carrousel.id %]">
+                            <tr id="[% carrousel.module | html %]-[% carrousel.id | html %]">
                                 <td class="center">
                                     [% SWITCH carrousel.module %]
                                     [% CASE "reports" %]
@@ -66,42 +66,42 @@
                                 </td>
                                 <td>
                                     [% IF carrousel.module == "reports" %]
-                                        <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id %]&phase=Show SQL">
+                                        <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id | uri %]&phase=Show SQL">
                                     [% ELSIF carrousel.module == "collections" %]
-                                        <a href="/cgi-bin/koha/catalogue/search.pl?advsearch=1&limit=mc-ccode%3A[% carrousel.id %]">
+                                        <a href="/cgi-bin/koha/catalogue/search.pl?advsearch=1&limit=mc-ccode%3A[% carrousel.id | uri %]">
                                     [% ELSE %]
-                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id %]">
+                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id | uri %]">
                                     [% END %]
                                         [% carrousel.name %]
                                     </a>
                                 </td>
-                                <td><input type="text" name="title-[% carrousel.module %]-[% carrousel.id %]" value="[% carrousel.title %]" /></td>
+                                <td><input type="text" name="title-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% carrousel.title | html %]" /></td>
                                 <td class="radio-group">
                                     <div>
                                         <label for="carrousel">Carrousel</label>
-                                        <input id="carrousel" type="radio" name="type-[% carrousel.module %]-[% carrousel.id %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] />
+                                        <input id="carrousel" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] />
                                     <div>
                                     </div>
                                         <label for="scrolling">À défilement</label>
-                                        <input id="scrolling" type="radio" name="type-[% carrousel.module %]-[% carrousel.id %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
+                                        <input id="scrolling" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
                                     </div>
                                     </div>
                                         <label for="scrolling-title">À défilement avec titre</label>
-                                        <input id="scrolling-title" type="radio" name="type-[% carrousel.module %]-[% carrousel.id %]" value="scrolling-title" [% IF carrousel.type == "scrolling-title" %]checked="checked"[% END %] />
+                                        <input id="scrolling-title" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="scrolling-title" [% IF carrousel.type == "scrolling-title" %]checked="checked"[% END %] />
                                     </div>
                                 </td>
                                 [% IF !Koha.Preference('IndependentBranches') %]
                                 <td>
-                                    <select name="library-[% carrousel.module %]-[% carrousel.id %]">
+                                    <select name="library-[% carrousel.module | html %]-[% carrousel.id | html %]">
                                         <option value="">Toutes les bibliothèques</option>
                                         [% FOREACH branch IN branches %]
-                                        <option value="[% branch.branchcode %]" [% IF branch.branchcode == carrousel.branchcode %]selected[% END %]>[% branch.branchname %]</option>
+                                        <option value="[% branch.branchcode | html %]" [% IF branch.branchcode == carrousel.branchcode %]selected[% END %]>[% branch.branchname | html %]</option>
                                         [% END %]
                                     </select>
                                 </td>
                                 [% END %]
                                 <td class="center">
-                                    <input type="checkbox" name="autorotate-[% carrousel.module %]-[% carrousel.id %]" value="[% carrousel.id %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
+                                    <input type="checkbox" name="autorotate-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% carrousel.id | html %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
                                 </td>
                                 <td>
                                     <i class="fa fa-angle-up"></i>
@@ -111,10 +111,10 @@
                                     <i class="fa fa-times-circle error"></i>
                                 </td>
                                 <td class="center">
-                                    <input type="checkbox" name="external-[% carrousel.module %]-[% carrousel.id %]" [% IF carrousel.external %]checked="checked"[% END %] title="Utilisera la valeur dans 856$u si disponible"/>
+                                    <input type="checkbox" name="external-[% carrousel.module | html %]-[% carrousel.id | html %]" [% IF carrousel.external %]checked="checked"[% END %] title="Utilisera la valeur dans 856$u si disponible"/>
                                 </td>
                                 <td class="center">
-                                    <input type="text" name="suffix-[% carrousel.module %]-[% carrousel.id %]" value="[% carrousel.suffix %]" />
+                                    <input type="text" name="suffix-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% carrousel.suffix | html %]" />
                                 </td>
                             </tr>
                         [% END %]
@@ -128,12 +128,12 @@
                     <label>Listes</label>
                     [% IF lists.count %]
                         [% SET module = "lists" %]
-                        <select name="[% module %]" multiple="multiple">
+                        <select name="[% module | html %]" multiple="multiple">
                             [% FOREACH list IN lists %]
                                 [% IF enabled.$module.grep("^$list.shelfnumber\$").size %]
-                                    <option value="[% list.shelfnumber %]" selected="selected">[% list.shelfname %]</option>
+                                    <option value="[% list.shelfnumber | html %]" selected="selected">[% list.shelfname | html %]</option>
                                 [% ELSE %]
-                                    <option value="[% list.shelfnumber %]">[% list.shelfname %]</option>
+                                    <option value="[% list.shelfnumber | html %]">[% list.shelfname | html %]</option>
                                 [% END %]
                             [% END %]
                         </select>
@@ -144,12 +144,12 @@
                     <label>Rapports</label>
                     [% IF reports.size %]
                         [% SET module = "reports" %]
-                        <select name="[% module %]" multiple="multiple">
+                        <select name="[% module | html %]" multiple="multiple">
                             [% FOREACH report IN reports %]
                                 [% IF enabled.$module.grep("^$report.id\$").size %]
-                                    <option value="[% report.id %]" selected="selected">[% report.report_name %]</option>
+                                    <option value="[% report.id | html %]" selected="selected">[% report.report_name | html %]</option>
                                 [% ELSE %]
-                                    <option value="[% report.id %]">[% report.report_name %]</option>
+                                    <option value="[% report.id | html %]">[% report.report_name | html %]</option>
                                 [% END %]
                             [% END %]
                         </select>
@@ -164,9 +164,9 @@
                         <select name="[% module %]" multiple="multiple">
                             [% FOREACH collection IN collections %]
                                 [% IF enabled.$module.grep("^$collection.value\$").size %]
-                                    <option value="[% collection.value %]" selected="selected">[% collection.description %]</option>
+                                    <option value="[% collection.value | html %]" selected="selected">[% collection.description | html %]</option>
                                 [% ELSE %]
-                                    <option value="[% collection.value %]">[% collection.description %]</option>
+                                    <option value="[% collection.value | html %]">[% collection.description | html %]</option>
                                 [% END %]
                             [% END %]
                         </select>
@@ -199,7 +199,7 @@
             </div>
 
             <div class="infos">
-                Couleur du titre: <input name="titleColor" onchange="update(this.value, 'title')" id="colors" class="jscolor alignment" value="[% titleColor || '000000' %]" />
+                Couleur du titre: <input name="titleColor" onchange="update(this.value, 'title')" id="colors" class="jscolor alignment" value="[% titleColor || '000000' | html %]" />
             </div>
 
             <div id="div_title" class="infos">
@@ -207,11 +207,11 @@
             </div>
 
             <div class="infos">
-                Couleur du texte : <input name="txtColor" onchange="update(this.value, 'text')" id="colors" class="jscolor alignment" value="[% txtColor || '000000' %]" />
+                Couleur du texte : <input name="txtColor" onchange="update(this.value, 'text')" id="colors" class="jscolor alignment" value="[% txtColor || '000000' | html %]" />
             </div>
 
             <div class="infos">
-                Couleur de l'arrière-plan : <input name="bgColor" onchange="update(this.value, 'background')" id="colors" class="jscolor alignment" value="[% bgColor %]" />
+                Couleur de l'arrière-plan : <input name="bgColor" onchange="update(this.value, 'background')" id="colors" class="jscolor alignment" value="[% bgColor | html %]" />
             </div>
 
             <div id="background" class="infos">
@@ -224,7 +224,7 @@
                 <label for="generateJSON">
                     <small>Lors de la génération des carrousels, aussi créer un fichier JSON contenant les informations concernant les éléments de chaque carrousels.</small>
                 </label>
-                <p><small>Le fichier est ensuite disponible à l'adresse : <a href="[% Koha.Preference('OPACBaseURL') %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel">[% Koha.Preference('OPACBaseURL') || "&lt;opac_url&gt;" %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel</a></small></p>
+                <p><small>Le fichier est ensuite disponible à l'adresse : <a href="[% Koha.Preference('OPACBaseURL') | url %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel">[% Koha.Preference('OPACBaseURL') || "&lt;opac_url&gt;" | uri %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel</a></small></p>
             </div>
 
             <input id="submit" type="submit" value="Appliquer la configuration">
@@ -483,7 +483,7 @@ function addLine (module, id, name) {
       + "    <select name=\"library-" + module + "-" + id + "\">"
       + "        <option value=\"\">Toutes les bibliothèques</option>"
     [% FOREACH branch IN branches %]
-      + "        <option value=\"[% branch.branchcode %]\">[% branch.branchname %]</option>"
+      + "        <option value=\"[% branch.branchcode | html %]\">[% branch.branchname | html %]</option>"
     [% END %]
       + "    </select>"
       + "    </td>"
