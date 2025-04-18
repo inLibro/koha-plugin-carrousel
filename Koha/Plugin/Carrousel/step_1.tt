@@ -11,15 +11,15 @@
 
         <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
             <p style="text-align: left;">Plugin created by</p>
-            <img width='450px' src='/api/v1/contrib/[% api_namespace %]/static/images/inLibro_en.svg' alt="inLibro" />
+            <img width='450px' src='/api/v1/contrib/[% api_namespace | uri %]/static/images/inLibro_en.svg' alt="inLibro" />
             <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
         </div>
 
         <h2>Generate carousel </h2>
         <form method="get">
             <!-- Necessary for the plugin to run, do not remove  -->
-            <input type="hidden" name="class" value="[% CLASS %]"/>
-            <input type="hidden" name="method" value="[% METHOD %]"/>
+            <input type="hidden" name="class" value="[% CLASS | html %]"/>
+            <input type="hidden" name="method" value="[% METHOD | html %]"/>
             <input type="hidden" name="action" value="configure"/>
             <!-- end of plugin necessary inputs  -->
             [% IF carrousels && (carrousels.size() > 0) %]
