@@ -660,7 +660,6 @@ sub insertIntoPref {
                     lang           => $lang,
                     expirationdate => $expirationdate,
                     published_on   => $published_on,
-                    number         => $number,
                     borrowernumber => $borrowernumber,
                 });
                 $updated = $additional_content->_result->get_dirty_columns;
@@ -755,7 +754,6 @@ sub insertIntoPref {
                     branchcode     => $branchcode,
                     expirationdate => $expirationdate,
                     published_on   => $published_on,
-                    number         => $number,
                     borrowernumber => $borrowernumber,
                 });
                 $updated = $additional_content->_result->get_dirty_columns;
