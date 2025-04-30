@@ -153,7 +153,7 @@
                                 [% END %]
                             [% END %]
                         </select>
-                        <p><small>Reports results must include biblionumber and have no parameters for it to generate a carrousel.</small></p>
+                        <p><small> The report must have a "biblionumber" column and no drop-down menus when run. Without these criteria, the report will not appear in the list above.</small></p>
                     [% ELSE %]
                         <p class="nolist">You have no reports. Click <a href="/cgi-bin/koha/reports/reports-home.pl">here</a> to create one.</p>
                     [% END %]
