@@ -36,7 +36,7 @@
                         <tr>
                             <th>Module</th>
                             <th>Name</th>
-                            <th>Custom title</th>
+                            <th>Custom titles</th>
                             <th>Type</th>
                             [% IF !Koha.Preference('IndependentBranches') %]
                             <th>Library</th>
@@ -75,7 +75,20 @@
                                         [% carrousel.name %]
                                     </a>
                                 </td>
-                                <td><input type="text" name="title-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% carrousel.title | html %]" /></td>
+                                <td class="title-inputs">
+                                    <label class="title-input">
+                                        <span>English</span>
+                                        <input type="text" name="title-en-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.en || carrousel.title) | html %]" />
+                                    </label>
+                                    <label class="title-input">
+                                        <span>French</span>
+                                        <input type="text" name="title-fr-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.fr || carrousel.title) | html %]" />
+                                    </label>
+                                    <label class="title-input">
+                                        <span>French (Canada)</span>
+                                        <input type="text" name="title-fr-CA-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.${'fr-CA'} || carrousel.title) | html %]" />
+                                    </label>
+                                </td>
                                 <td class="radio-group">
                                     <div>
                                         <label for="carrousel">Carrousel</label>
@@ -245,6 +258,25 @@
     vertical-align: middle;
 }
 
+#inlibro-carrousel td.title-inputs {
+    min-width: 220px;
+}
+
+#inlibro-carrousel .title-input {
+    display: block;
+    margin-bottom: 6px;
+}
+
+#inlibro-carrousel .title-input span {
+    display: block;
+    font-size: 0.75em;
+    font-weight: 600;
+}
+
+#inlibro-carrousel .title-input input[type="text"] {
+    width: 100%;
+}
+
 #inlibro-carrousel td.center {
     text-align: center;
 }
@@ -394,10 +426,25 @@ $("#doc3 form").submit(function (){
     $("#inlibro-carrousel tbody tr").each(function (){
         var carrousel = $(this);
         var id = carrousel.attr("id").split("-");
+        var module = id[0];
+        var moduleId = id[1];
+        var getTitleValue = function(selector) {
+            var value = carrousel.find(selector).val() || "";
+            return value.replace(/^\s+|\s+$/g, "");
+        };
+        var titleEn = getTitleValue("[name='title-en-" + module + "-" + moduleId + "']");
+        var titleFr = getTitleValue("[name='title-fr-" + module + "-" + moduleId + "']");
+        var titleFrCa = getTitleValue("[name='title-fr-CA-" + module + "-" + moduleId + "']");
+        var titles = {};
+        if (titleEn) { titles["en"] = titleEn; }
+        if (titleFr) { titles["fr"] = titleFr; }
+        if (titleFrCa) { titles["fr-CA"] = titleFrCa; }
+        var legacyTitle = titleEn || titleFr || titleFrCa || "";
         var data = {
-            id : id[1],
-            module : id[0],
-            title : carrousel.find("[name^='title']").val(),
+            id : moduleId,
+            module : module,
+            title : legacyTitle,
+            titles : titles,
             suffix : carrousel.find("[name^='suffix']").val(),
             type : carrousel.find("[name^='type']:checked").val(),
         [% IF !Koha.Preference('IndependentBranches') %]
@@ -463,7 +510,20 @@ function addLine (module, id, name) {
       +              name
       + "        </a>"
       + "    </td>"
-      + "    <td><input type=\"text\" name=\"title-" + module + "-" + id + "\" value=\"\" /></td>"
+      + "    <td class=\"title-inputs\">"
+      + "        <label class=\"title-input\">"
+      + "            <span>English</span>"
+      + "            <input type=\"text\" name=\"title-en-" + module + "-" + id + "\" value=\"\" />"
+      + "        </label>"
+      + "        <label class=\"title-input\">"
+      + "            <span>French</span>"
+      + "            <input type=\"text\" name=\"title-fr-" + module + "-" + id + "\" value=\"\" />"
+      + "        </label>"
+      + "        <label class=\"title-input\">"
+      + "            <span>French (Canada)</span>"
+      + "            <input type=\"text\" name=\"title-fr-CA-" + module + "-" + id + "\" value=\"\" />"
+      + "        </label>"
+      + "    </td>"
       + "    <td class=\"radio-group\">"
       + "        <div>"
       + "            <label for=\"carrousel\">Carousel</label>"
