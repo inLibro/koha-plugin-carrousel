@@ -78,15 +78,15 @@
                                 <td class="title-inputs">
                                     <label class="title-input">
                                         <span>Anglais</span>
-                                        <input type="text" name="title-en-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.en || carrousel.title) | html %]" />
+                                        <input type="text" name="title-en-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.en) | html %]" />
                                     </label>
                                     <label class="title-input">
                                         <span>Français</span>
-                                        <input type="text" name="title-fr-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.fr || carrousel.title) | html %]" />
+                                        <input type="text" name="title-fr-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.fr) | html %]" />
                                     </label>
                                     <label class="title-input">
                                         <span>Français (Canadien)</span>
-                                        <input type="text" name="title-fr-CA-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.${'fr-CA'} || carrousel.title) | html %]" />
+                                        <input type="text" name="title-fr-CA-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% (carrousel.titles.${'fr-CA'}) | html %]" />
                                     </label>
                                 </td>
                                 <td class="radio-group">
