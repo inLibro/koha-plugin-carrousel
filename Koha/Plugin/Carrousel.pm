@@ -54,10 +54,10 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.3.6";
+our $VERSION = "4.3.7";
 our $metadata = {
-    name            => 'Carrousel 4.3.6',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie',
+    name            => 'Carrousel 4.3.7',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie, Noah Tremblay',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
     date_updated    => '2025-03-18',
@@ -202,6 +202,47 @@ sub getModules {
     return $modules;
 }
 
+# Algorithme prenant le meilleur titre de carrousel selon la langue OPAC
+# lookup order is:
+#   - Exact match for the normalized language code (en, fr, fr-CA)
+#   - Fallback from fr-CA to fr (and vice-versa)
+#   - English title
+sub _get_carrousel_title_for_language {
+    my ($self, $carrousel, $language) = @_;
+
+    my $titles = $carrousel->{titles} // {};
+    return '' unless %$titles;
+
+    if (exists $titles->{$language}) {
+        return $titles->{$language};
+    }
+
+    if (exists $titles->{fr} && $language eq 'fr-CA') {
+        return $titles->{fr};
+    }
+
+    if (exists $titles->{'fr-CA'} && $language eq 'fr') {
+        return $titles->{'fr-CA'};
+    }
+
+    if (exists $titles->{en}) {
+        return $titles->{en};
+    }
+
+    return $titles->{en};
+}
+
+# produit une version "locale" du carrousel
+sub _localize_carrousel_for_language {
+    my ($self, $carrousel, $language) = @_;
+
+    my %copy = %$carrousel;
+    $copy{title} = $self->_get_carrousel_title_for_language($carrousel, $language) // '';
+
+    return \%copy;
+}
+
+
 #Charger le contenus des listes en utilisant sql si le module virtualshelfcontents n'est pas disponible
 sub loadContent {
     my ( $self, $module, $id ) = @_;
@@ -301,7 +342,7 @@ sub getEnabledCarrousels {
             $sth->execute($authorised_value_id);
             my $data = $sth->fetchrow_hashref;
 
-            # Si aucun CCODE n'est spécifique à une branche on va le skip plus tard
+            # Si aucun CODE n'est spécifique à une branche on va le skip plus tard
             if (C4::Context->preference("IndependentBranches") && $data->{branchcode}) {
                 $branchcode = $data->{branchcode};
             }
@@ -329,12 +370,12 @@ sub generateCarrousels{
 
     my $generate_json = $self->retrieve_data('generateJSON');
     my $template_data = {
-        bgColor  => $self->retrieve_data('bgColor'),
-        txtColor => $self->retrieve_data('txtColor'),
-        titleColor => $self->retrieve_data('titleColor'),
+        bgColor             => $self->retrieve_data('bgColor'),
+        txtColor            => $self->retrieve_data('txtColor'),
+        titleColor          => $self->retrieve_data('titleColor'),
         autoRotateDirection => $self->retrieve_data('autoRotateDirection'),
-        autoRotateDelay => $self->retrieve_data('autoRotateDelay'),
-        ENCODING => 'utf8',
+        autoRotateDelay     => $self->retrieve_data('autoRotateDelay'),
+        ENCODING            => 'utf8',
     };
 
     my %branchcodes;
@@ -349,17 +390,23 @@ sub generateCarrousels{
 
     my $opaclanguages = C4::Context->preference('opaclanguages');   #expected ex opaclanguages = "fr-CA,en"
     my @languages = split /,/, $opaclanguages;
+
+    # Pour chaque langue et chaque branche, génère une version localisée des carrousels
     foreach my $language (@languages) {
         foreach my $branchcode (keys %branchcodes) {
             my $data = "";
-            my $t_carrousels = $branchcodes{$branchcode};
+            #mappe a chaque carrousel de la branche un titre local selon la langue courante
+            my $t_carrousels = [
+                map {$self->_localize_carrousel_for_language($_, $language)}
+                    @{$branchcodes{$branchcode}}
+            ];
+            binmode(STDOUT, ":utf8");
 
-            binmode( STDOUT, ":utf8" );
             $tt->process(
                 'Koha/Plugin/Carrousel/opac-carrousel.tt',
                 {
                     carrousels => $t_carrousels,
-                    lang => $language,
+                    lang       => $language,
                     %$template_data
                 },
                 \$data,
@@ -388,7 +435,7 @@ sub generateJSONFile {
             };
         }
         push @json, {
-            title => $carrousel->{title} || $carrousel->{name},
+            title     => $self->_get_carrousel_title_for_language($carrousel, 'en') || $carrousel->{name},
             documents => \@documents,
             suffixUrl => $carrousel->{suffixUrl},
         };
@@ -426,7 +473,8 @@ sub generateJSONFile {
 }
 
 sub getCarrousels {
-    my ( $self ) = @_;
+    # Récupère les carrousels activés avec leurs documents associés.
+    my ($self) = @_;
     my $enabled_carrousels = $self->getEnabledCarrousels();
     my @carrousels;
 
