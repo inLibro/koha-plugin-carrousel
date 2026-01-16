@@ -15,7 +15,7 @@
             <p style="text-align: right;">Visit our <a href="https://inlibro.com/en/">website</a> for more Koha plugins</p>
         </div>
 
-        <h2>Generate carousel </h2>
+        <h2>Generate carrousel </h2>
         <form method="get">
             <!-- Necessary for the plugin to run, do not remove  -->
             <input type="hidden" name="class" value="[% CLASS | html %]"/>

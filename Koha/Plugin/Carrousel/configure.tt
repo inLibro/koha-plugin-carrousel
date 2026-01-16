@@ -526,7 +526,7 @@ function addLine (module, id, name) {
       + "    </td>"
       + "    <td class=\"radio-group\">"
       + "        <div>"
-      + "            <label for=\"carrousel\">Carousel</label>"
+      + "            <label for=\"carrousel\">Carrousel</label>"
       + "            <input id=\"carrousel\" type=\"radio\" name=\"type-" + module + "-" + id + "\" value=\"carrousel\" checked=\"checked\" />"
       + "        <div>"
       + "        </div>"
