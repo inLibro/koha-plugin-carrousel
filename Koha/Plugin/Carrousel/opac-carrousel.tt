@@ -243,7 +243,7 @@
 #inlibro-carrousel .carousel-control,
 #inlibro-carrousel .carousel-caption{
     background-color : #[%bgColor%];
-    z-index:1000;
+    z-index:500;
     cursor : pointer;
 }
 
@@ -257,7 +257,7 @@
 #inlibro-carrousel .carousel-control,
 #inlibro-carrousel .carousel-caption{
     background-color : #[%bgColor%];
-    z-index:1000;
+    z-index:500;
 }
 
 #inlibro-carrousel .carousel-caption{
