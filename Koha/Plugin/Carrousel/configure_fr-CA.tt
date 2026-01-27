@@ -36,7 +36,7 @@
                         <tr>
                             <th>Module</th>
                             <th>Nom</th>
-                            <th>Titre</th>
+                            <th>Titre personnalisé</th>
                             <th>Type</th>
                             [% IF !Koha.Preference('IndependentBranches') %]
                             <th>Bibliothèque</th>
@@ -383,10 +383,10 @@ $(function() {
     $("select[multiple='multiple']").multipleSelect(
         {
             placeholder: _("Merci de sélectionner ..."),
-            selectAllText: _("Tout sélectionner"),
-            allSelected: _("Tous"),
-            countSelected: _("# de % selectionné(e)s"),
-            noMatchesFound: _("Aucune correspondances trouvées")
+            formatSelectAll: () => _("[Tout sélectionner]"),
+            formatAllSelected: () =>  _("Tous"),
+            formatCountSelected: (count,total) => count + _("de") + total + _("selectionné(e)s"),
+            formatNoMatchesFound: () => _("Aucune correspondances trouvées")
         }
     );
 
@@ -510,10 +510,23 @@ function addLine (module, id, name) {
       +              name
       + "        </a>"
       + "    </td>"
-      + "    <td><input type=\"text\" name=\"title-" + module + "-" + id + "\" value=\"\" /></td>"
+      + "    <td class=\"title-inputs\">"
+      + "        <label class=\"title-input\">"
+      + "            <span>English</span>"
+      + "            <input type=\"text\" name=\"title-en-" + module + "-" + id + "\" value=\"\" />" 
+      + "        </label>"
+      + "        <label class=\"title-input\">"
+      + "            <span>French</span>"
+      + "            <input type=\"text\" name=\"title-fr-" + module + "-" + id + "\" value=\"\" />" 
+      + "        </label>"
+      + "        <label class=\"title-input\">"
+      + "            <span>French (Canada)</span>"
+      + "            <input type=\"text\" name=\"title-fr-CA-" + module + "-" + id + "\" value=\"\" />" 
+      + "        </label>"
+      + "    </td>"
       + "    <td class=\"radio-group\">"
       + "        <div>"
-      + "            <label for=\"carrousel\">Carousel</label>"
+      + "            <label for=\"carrousel\">Carrousel</label>"
       + "            <input id=\"carrousel\" type=\"radio\" name=\"type-" + module + "-" + id + "\" value=\"carrousel\" checked=\"checked\" />"
       + "        <div>"
       + "        </div>"
