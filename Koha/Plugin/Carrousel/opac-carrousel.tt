@@ -368,6 +368,13 @@ a:focus>img{
     max-width: 300px;
     max-height: 160px;
 }
+
+.controls button[type="button"] {
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0.2em 0.5em;
+}
 </style>
 
 <!-- This is the cloud carousel javascript(cloud-carousel.1.0.0.js) -->
