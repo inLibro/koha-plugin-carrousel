@@ -1064,8 +1064,7 @@ sub getUrlFromExternalSources {
     return $url;
 }
 
-sub getThumbnailUrl
-{
+sub getThumbnailUrl {
     my $biblionumber = shift;
     my $record = shift;
     return if ! $record;
@@ -1119,14 +1118,16 @@ sub getThumbnailUrl
             my $subfield = $+{subfield};
             my $marc_record = $record;
             my $value;
+
             if ( $subfield ) {
-                $value = $marc_record->subfield( $field, $subfield );
+                $value = $marc_record ? $marc_record->subfield( $field, $subfield ) : undef;
             }else {
                 my $controlfield = $marc_record->field($field);
-                $value = $controlfield->data() if $controlfield;
+                $value = $controlfield ? $controlfield->data() : undef;
             }
 
-            if ($value) {
+            $value = '' unless defined $value;
+            if (defined $value && $value ne '') {
                 $url =~ s|$re|$value|;
             }
             else {
@@ -1136,7 +1137,14 @@ sub getThumbnailUrl
 
         if ($url) {
             my $ua = LWP::UserAgent->new;
-            my $req = HTTP::Request->new( GET => $url );
+            my $req = HTTP::Request->new( 
+                GET => $url, 
+                [
+                    'Referer'    => 'https://www.google.com/',
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept'     => 'image/webp,image/apng,image/*,*/*;q=0.8'
+                ]
+            );
             my $res = $ua->request( $req );
 
             if ($res->is_success) {
