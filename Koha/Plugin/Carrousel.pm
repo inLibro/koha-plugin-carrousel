@@ -1019,12 +1019,17 @@ sub getUrlFromExternalSources {
     }
 
     my $ua = LWP::UserAgent->new;
-    $ua->timeout(2);
     $ua->ssl_opts(verify_hostname => 0);
     my @orderedProvidersByPriority = sort { $es->{$a}->{priority} <=> $es->{$b}->{priority} } keys %$es;
 
     for my $provider ( @orderedProvidersByPriority ) {
         my $url = $es->{$provider}->{url};
+        if ($url =~ m{/api/v1/contrib/}) {
+            $ua->timeout(5);
+        }
+        else{
+            $ua->timeout(2);
+        }
         my $req = HTTP::Request->new( GET => $url );
         if ( exists $es->{$provider}->{authorization} ) {
             my $header = ['Authorization' => $es->{$provider}->{authorization}];
