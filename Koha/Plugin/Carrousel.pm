@@ -54,7 +54,7 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.3.7";
+our $VERSION = "4.3.8";
 our $metadata = {
     name            => 'Carrousel 4.3.7',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie, Noah Tremblay',
