@@ -158,63 +158,10 @@
       }
     }
   },
-  "/images/inLibro_en.svg": {
+  "/images/inLibro.svg": {
     "get": {
       "x-mojo-to": "Static#get",
-      "operationId": "KohaPluginCarrousel_staticGetImageInlibro_en",
-      "tags": [
-        "pluginStatic"
-      ],
-      "responses": {
-        "200": {
-          "description": "File found",
-          "schema": {
-            "type": "file"
-          }
-        },
-        "400": {
-          "description": "Bad request",
-          "schema": {
-            "type": "object",
-            "properties": {
-              "error": {
-                "description": "Error message",
-                "type": "string"
-              }
-            }
-          }
-        },
-        "404": {
-          "description": "File not found",
-          "schema": {
-            "type": "object",
-            "properties": {
-              "error": {
-                "description": "Error message",
-                "type": "string"
-              }
-            }
-          }
-        },
-        "500": {
-          "description": "Internal server error",
-          "schema": {
-            "type": "object",
-            "properties": {
-              "error": {
-                "description": "Error message",
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "/images/inLibro_fr.svg": {
-    "get": {
-      "x-mojo-to": "Static#get",
-      "operationId": "KohaPluginCarrousel_staticGetImageInlibro_fr",
+      "operationId": "KohaPluginCarrousel_staticGetImageInlibro",
       "tags": [
         "pluginStatic"
       ],

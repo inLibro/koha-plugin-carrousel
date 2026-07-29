@@ -34,9 +34,8 @@
         <div id="carrousel-[% loop.index | html %]" class="slider-title">
         [% END %]
             <h2>[% carrousel.title || carrousel.name | html %]</h2>
-            <hr>
             [% IF (carrousel.documents.size() > 0) %]
-                <div id="[% carrousel.title || carrousel.name | html %]">
+                <div id="[% carrousel.title || carrousel.name | html %]" class="carrousel-viewport">
                     <div class="images">
                         [% FOREACH item IN carrousel.documents %]
                             [% IF carrousel.external %]
@@ -66,26 +65,40 @@
 [% END %]
 
 #inlibro-carrousel .carrouselFrame {
-    background: #DDDDDD;
+    background: transparent; /* le panneau se fond dans le fond de la section */
     border-radius: 8px;
     margin: 1em 0;
-    overflow: hidden;
+    overflow: visible; /* laisse déborder l'ombre des boutons au survol */
     padding: 1em 0;
     position: relative;
 }
+/* CloudCarousel pose overflow:hidden en JS sur le conteneur ; on le rouvre pour ne pas
+   rogner l'ombre des boutons au survol. Les couvertures restent dans les bornes du cadre. */
+#inlibro-carrousel .carrousel { overflow: visible !important; }
 
 #inlibro-carrousel .carrousel{
     height : 300px;
 }
 
+/* Voile de chargement rendu transparent : le coverflow n'apparaît plus depuis
+   un rectangle blanc (qui jure sur un fond non blanc) mais en fondu d'opacité
+   depuis le fond réel de la page (cf. @keyframes nf-carrousel-fadein). */
 #inlibro-carrousel .loadingDiv{
-    background : white;
+    background : transparent;
     position : absolute;
     height : 100%;
     width : 100%;
     z-index : 2000;
     top : 0;
+    pointer-events : none;
+}
 
+/* Fondu d'apparition du coverflow au chargement : opacité 0 → 1, il émerge donc
+   du fond réel (aucune couleur de départ à connaître). Le court délai laisse le
+   temps aux couvertures de se positionner avant de devenir visibles. */
+@keyframes nf-carrousel-fadein { from { opacity: 0; } to { opacity: 1; } }
+#inlibro-carrousel .carrouselFrame .carrousel {
+    animation: nf-carrousel-fadein .9s ease .3s both;
 }
 
  /*De bootstrap pour le carrousel*/
@@ -160,10 +173,10 @@
     font-size: 60px;
     font-weight: 100;
     line-height: 28px;
-    color: #[%txtColor%];
+    color: #[%txtColor | html%];
     text-align: center;
     background: #222222;
-    border: 2px solid #[%txtColor%];
+    border: 2px solid #[%txtColor | html%];
     -webkit-border-radius: 23px;
     -moz-border-radius: 23px;
     border-radius: 23px;
@@ -237,12 +250,12 @@
 
 
 #inlibro-carrousel .carousel-caption .title-text{
-    color : #[%txtColor%];
+    color : #[%txtColor | html%];
 }
 
 #inlibro-carrousel .carousel-control,
 #inlibro-carrousel .carousel-caption{
-    background-color : #[%bgColor%];
+    background-color : #[%bgColor | html%];
     z-index:500;
     cursor : pointer;
 }
@@ -256,7 +269,7 @@
 
 #inlibro-carrousel .carousel-control,
 #inlibro-carrousel .carousel-caption{
-    background-color : #[%bgColor%];
+    background-color : #[%bgColor | html%];
     z-index:500;
 }
 
@@ -296,27 +309,19 @@
     height:160px
 }
 
-#inlibro-carrousel .slider hr + div {
-    background-color: #d5e1df;
-}
-
 #inlibro-carrousel .special-title{
     text-align: center;
     margin: 0;
     margin-top: 10px;
     margin-bottom: 35px;
     font-weight: bold;
-    font-style: italic;
+    font-style: normal;
     font-size: 25px;
-    color: #[%titleColor%];
-}
-
-#inlibro-carrousel hr{
-    margin: -5px 0px 15px 0px;
+    color: #[%titleColor | html%];
 }
 
 #inlibro-carrousel h2 {
-    color: #[%titleColor%];
+    color: #[%titleColor | html%];
 }
 
 #inlibro-carrousel .images {
@@ -331,8 +336,8 @@
 }
 
 #inlibro-carrousel button{
-    color : #[%txtColor%];
-    background-color: #[%bgColor%];
+    color : #[%txtColor | html%];
+    background-color: #[%bgColor | html%];
     border: 0;
     height : 2em;
     font-size: 120%;
@@ -353,15 +358,15 @@
     font-size: 0.9em;
     text-wrap: wrap;
     max-width: 100px;
-    text-align: center;
+    text-align: left;
 }
 
 div.images>a:focus{
-    border: 1px solid #[%bgColor%];
+    border: 1px solid #[%bgColor | html%];
 }
 
 a:focus>img{
-    border: 2px solid #[%bgColor%];
+    border: 2px solid #[%bgColor | html%];
 }
 
 .cloudcarousel {
@@ -374,6 +379,110 @@ a:focus>img{
     height: auto;
     margin: 0;
     padding: 0.2em 0.5em;
+}
+
+/* ===================================================================== */
+/* Finitions rangée paginée (scrolling / scrolling-title)                */
+/* Couleurs pilotées par les réglages du plugin : bgColor, txtColor.     */
+/* ===================================================================== */
+
+/* Le .slider ne clippe plus (sinon l'ombre des boutons est coupée) ;
+   le clip de la rangée passe sur le conteneur intérieur. */
+#inlibro-carrousel .slider,
+#inlibro-carrousel .slider-title { position: relative; overflow: visible; }
+#inlibro-carrousel .slider .carrousel-viewport,
+#inlibro-carrousel .slider-title .carrousel-viewport { overflow: hidden; padding: 8px 0; background-color: transparent; }
+
+/* Boutons ronds en "verre teinté" + chevrons SVG centrés (toujours visibles).
+   Fond bgColor translucide (alpha 8c ≈ 55 %) + léger flou d'arrière-plan ;
+   au survol, le fond devient opaque (voir plus bas). */
+#inlibro-carrousel .slider button,
+#inlibro-carrousel .slider-title button {
+    top: 62%; transform: translateY(-50%); transform-origin: center center;
+    height: 44px; width: 44px; border-radius: 50%;
+    background-color: #[% bgColor | html %]8c;
+    -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
+    background-repeat: no-repeat; background-position: center center; background-size: 22px 22px;
+    color: transparent; font-size: 0; border: 0; padding: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.22); opacity: 1;
+    transition: background-color .2s, box-shadow .2s; z-index: 600;
+}
+#inlibro-carrousel .slider button[style*="left"],
+#inlibro-carrousel .slider-title button[style*="left"] {
+    left: 6px !important; /* !important : bat le style inline left:0 posé par le plugin */
+    background-position: calc(50% - 2px) center; /* recentre visuellement le chevron gauche */
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'%23[% txtColor | uri %]'%20stroke-width%3D'3'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M15%205%20L8%2012%20L15%2019'%2F%3E%3C%2Fsvg%3E");
+}
+#inlibro-carrousel .slider button[style*="right"],
+#inlibro-carrousel .slider-title button[style*="right"] {
+    right: 6px !important; /* !important : bat le style inline right:0 posé par le plugin */
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'%23[% txtColor | uri %]'%20stroke-width%3D'3'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M9%205%20L16%2012%20L9%2019'%2F%3E%3C%2Fsvg%3E");
+}
+#inlibro-carrousel .slider button:hover,
+#inlibro-carrousel .slider-title button:hover {
+    background-color: #[% bgColor | html %]; /* opaque au survol (plus de transparence), sans agrandissement */
+    box-shadow: 0 4px 14px rgba(0,0,0,.30);
+}
+
+/* Couvertures : coins arrondis + ombre douce (largeur naturelle) */
+#inlibro-carrousel .slider .images a,
+#inlibro-carrousel .slider-title .images a { margin-right: 6px; }
+#inlibro-carrousel .slider .images img,
+#inlibro-carrousel .slider-title .images img { border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.15); }
+
+/* Plus de séparateur sous le titre : le <hr> a été retiré du markup ; la
+   décoration éventuelle sous le titre relève désormais du thème OPAC. */
+
+/* Plus de fondu aux extrémités : le conteneur reste en overflow:hidden (défini
+   plus haut), donc la dernière couverture est tronquée par le bord droit — ce
+   "peek" signale à lui seul qu'il y a une suite à faire défiler. */
+
+/* Coverflow : bandeau tronqué proprement (pas de décoration sous le titre :
+   même logique que les rangées, c'est au thème de la gérer). */
+#inlibro-carrousel .carousel-caption .title-text {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; padding: 0 12px;
+}
+
+/* Coverflow : couvertures arrondies + ombre douce (cohérence mode rangée) */
+#inlibro-carrousel .carrouselFrame img.cloudcarousel {
+    border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.18);
+}
+
+/* Reflet (canvas) : coins hauts arrondis pour épouser le bas de la couverture */
+#inlibro-carrousel .carrouselFrame canvas.reflection {
+    border-top-left-radius: 6px; border-top-right-radius: 6px;
+}
+
+/* Coverflow : barre de titre en pilule flottante (détachée des bords) */
+#inlibro-carrousel .carrouselFrame .carousel-caption {
+    left: 16px; right: 16px; bottom: 12px;
+    border-radius: 10px; padding: 10px 15px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.28);
+}
+
+/* Coverflow : boutons identiques à ceux des rangées (verre teinté, opaque au survol). */
+#inlibro-carrousel .carrouselFrame .carousel-control {
+    width: 44px; height: 44px; margin-top: -22px; border-radius: 50%;
+    background-color: #[% bgColor | html %]8c; border: 0;
+    -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
+    color: transparent; font-size: 0;
+    background-repeat: no-repeat; background-position: center center; background-size: 22px 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.22); opacity: 1;
+    transition: background-color .2s, box-shadow .2s;
+}
+#inlibro-carrousel .carrouselFrame .carousel-control.left {
+    left: 6px; /* aligné sur les boutons des rangées */
+    background-position: calc(50% - 2px) center; /* recentre visuellement le chevron gauche */
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'%23[% txtColor | uri %]'%20stroke-width%3D'3'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M15%205%20L8%2012%20L15%2019'%2F%3E%3C%2Fsvg%3E");
+}
+#inlibro-carrousel .carrouselFrame .carousel-control.right {
+    right: 6px; left: auto; /* aligné sur les boutons des rangées */
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'%23[% txtColor | uri %]'%20stroke-width%3D'3'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M9%205%20L16%2012%20L9%2019'%2F%3E%3C%2Fsvg%3E");
+}
+#inlibro-carrousel .carrouselFrame .carousel-control:hover,
+#inlibro-carrousel .carrouselFrame .carousel-control:focus {
+    background-color: #[% bgColor | html %]; /* opaque au survol, sans agrandissement */
+    box-shadow: 0 4px 14px rgba(0,0,0,.30);
 }
 </style>
 
@@ -389,14 +498,19 @@ a:focus>img{
 // Please retain this copyright header in all versions of the software
 //////////////////////////////////////////////////////////////////////////////////
 document.addEventListener('DOMContentLoaded', function() {
-    (function($){function Reflection(img,reflHeight,opacity){var reflection,cntx,imageWidth=img.width,imageHeight=img.width,gradient,parent;parent=$(img.parentNode);this.element=reflection=parent.append("<canvas class='reflection' style='position:absolute'/>").find(':last')[0];if(!reflection.getContext&&$.support.msie){this.element=reflection=parent.append("<img class='reflection' style='position:absolute'/>").find(':last')[0];reflection.src=img.src;reflection.style.filter="flipv progid:DXImageTransform.Microsoft.Alpha(opacity="+(opacity*100)+", style=1, finishOpacity=0, startx=0, starty=0, finishx=0, finishy="+(reflHeight/imageHeight*100)+")"}else{cntx=reflection.getContext("2d");try{$(reflection).attr({width:imageWidth,height:reflHeight});cntx.save();cntx.translate(0,imageHeight-1);cntx.scale(1,-1);cntx.drawImage(img,0,0,imageWidth,imageHeight);cntx.restore();cntx.globalCompositeOperation="destination-out";gradient=cntx.createLinearGradient(0,0,0,reflHeight);gradient.addColorStop(0,"rgba(255, 255, 255, "+(1-opacity)+")");gradient.addColorStop(1,"rgba(255, 255, 255, 1.0)");cntx.fillStyle=gradient;cntx.fillRect(0,0,imageWidth,reflHeight)}catch(e){return}}$(reflection).attr({'alt':$(img).attr('alt'),title:$(img).attr('title')})}var Item=function(imgIn,options){this.orgWidth=imgIn.width;this.orgHeight=imgIn.height;this.image=imgIn;this.reflection=null;this.alt=imgIn.alt;this.title=imgIn.alt;this.imageOK=false;this.options=options;this.imageOK=true;if(this.options.reflHeight>0){this.reflection=new Reflection(this.image,this.options.reflHeight,this.options.reflOpacity)}$(this.image).css('position','absolute')};var Controller=function(container,images,options){var items=[],funcSin=Math.sin,funcCos=Math.cos,ctx=this;this.controlTimer=0;this.stopped=false;this.container=container;this.xRadius=options.xRadius;this.yRadius=options.yRadius;this.showFrontTextTimer=0;this.autoRotateTimer=0;if(options.xRadius===0){this.xRadius=($(container).width()/2.3)}if(options.yRadius===0){this.yRadius=($(container).height()/6)}this.xCentre=options.xPos;this.yCentre=options.yPos;this.frontIndex=0;this.rotation=this.destRotation=Math.PI/2;this.timeDelay=1000/options.FPS;if(options.altBox!==null){$(options.altBox).css('display','block');$(options.titleBox).css('display','block')}$(container).css({position:'relative',overflow:'hidden'});$(options.buttonLeft).css('display','inline');$(options.buttonRight).css('display','inline');$(options.buttonLeft).bind('mouseup',this,function(event){event.data.rotate(-1);return false});$(options.buttonRight).bind('mouseup',this,function(event){event.data.rotate(1);return false});if(options.mouseWheel){$(container).bind('mousewheel',this,function(event,delta){event.data.rotate(delta);return false})}$(container).bind('mouseover click',this,function(event){clearInterval(event.data.autoRotateTimer);var text=$(event.target).attr('alt');if(text!==undefined&&text!==null){clearTimeout(event.data.showFrontTextTimer);$(options.altBox).html(($(event.target).attr('alt')));$(options.titleBox).html(($(event.target).attr('alt')));if(options.bringToFront&&event.type=='click'){var idx=$(event.target).data('itemIndex');var frontIndex=event.data.frontIndex;var diff=(idx-frontIndex)%images.length;if(Math.abs(diff)>images.length/2){diff+=(diff>0?-images.length:images.length)}event.data.rotate(-diff)}}});$(container).bind('mouseout',this,function(event){var context=event.data;clearTimeout(context.showFrontTextTimer);context.showFrontTextTimer=setTimeout(function(){context.showFrontText()},1000);context.autoRotate()});$(container).bind('mousedown',this,function(event){event.data.container.focus();return false});container.onselectstart=function(){return false};this.innerWrapper=$(container).wrapInner('<div style="position:absolute;width:100%;height:100%;"/>').children()[0];this.showFrontText=function(){if(items[this.frontIndex]===undefined){return}$(options.titleBox).html($(items[this.frontIndex].image).attr('alt'));$(options.altBox).html($(items[this.frontIndex].image).attr('alt'))};this.go=function(){if(this.controlTimer!==0){return}var context=this;this.controlTimer=setTimeout(function(){context.updateAll()},this.timeDelay)};this.stop=function(){clearTimeout(this.controlTimer);this.controlTimer=0};
+    (function($){function Reflection(img,reflHeight,opacity){var reflection,cntx,imageWidth=img.width,imageHeight=img.width,gradient,parent;parent=$(img.parentNode);this.element=reflection=parent.append("<canvas class='reflection' style='position:absolute'/>").find(':last')[0];if(!reflection.getContext&&$.support.msie){this.element=reflection=parent.append("<img class='reflection' style='position:absolute'/>").find(':last')[0];reflection.src=img.src;reflection.style.filter="flipv progid:DXImageTransform.Microsoft.Alpha(opacity="+(opacity*100)+", style=1, finishOpacity=0, startx=0, starty=0, finishx=0, finishy="+(reflHeight/imageHeight*100)+")"}else{cntx=reflection.getContext("2d");try{$(reflection).attr({width:imageWidth,height:reflHeight});cntx.save();cntx.translate(0,imageHeight-1);cntx.scale(1,-1);cntx.drawImage(img,0,0,imageWidth,imageHeight);cntx.restore();cntx.globalCompositeOperation="destination-out";gradient=cntx.createLinearGradient(0,0,0,reflHeight);gradient.addColorStop(0,"rgba(255, 255, 255, "+(1-opacity)+")");gradient.addColorStop(1,"rgba(255, 255, 255, 1.0)");cntx.fillStyle=gradient;cntx.fillRect(0,0,imageWidth,reflHeight)}catch(e){return}}$(reflection).attr({'alt':$(img).attr('alt'),title:$(img).attr('title')})}var Item=function(imgIn,options){this.orgWidth=imgIn.width;this.orgHeight=imgIn.height;this.image=imgIn;this.reflection=null;this.alt=imgIn.alt;this.title=imgIn.alt;this.imageOK=false;this.options=options;this.imageOK=true;if(this.options.reflHeight>0){this.reflection=new Reflection(this.image,this.options.reflHeight,this.options.reflOpacity)}$(this.image).css('position','absolute')};var Controller=function(container,images,options){var items=[],funcSin=Math.sin,funcCos=Math.cos,ctx=this;this.controlTimer=0;this.stopped=false;this.container=container;this.xRadius=options.xRadius;this.yRadius=options.yRadius;this.showFrontTextTimer=0;this.autoRotateTimer=0;if(options.xRadius===0){this.xRadius=($(container).width()/2.3)}if(options.yRadius===0){this.yRadius=($(container).height()/6)}this.xCentre=options.xPos;this.yCentre=options.yPos;this.frontIndex=0;this.rotation=this.destRotation=Math.PI/2;this.timeDelay=1000/options.FPS;if(options.altBox!==null){$(options.altBox).css('display','block');$(options.titleBox).css('display','block')}$(container).css({position:'relative',overflow:'hidden'});$(options.buttonLeft).css('display','inline');$(options.buttonRight).css('display','inline');$(options.buttonLeft).bind('mouseup',this,function(event){event.data.rotate(-1);return false});$(options.buttonRight).bind('mouseup',this,function(event){event.data.rotate(1);return false});if(options.mouseWheel){$(container).bind('mousewheel',this,function(event,delta){event.data.rotate(delta);return false})}$(container).bind('mouseover click',this,function(event){clearInterval(event.data.autoRotateTimer);var text=$(event.target).attr('alt');if(text!==undefined&&text!==null){clearTimeout(event.data.showFrontTextTimer);$(options.altBox).html(($(event.target).attr('alt')));$(options.titleBox).css('opacity',1).html(($(event.target).attr('alt')));if(options.bringToFront&&event.type=='click'){var idx=$(event.target).data('itemIndex');var frontIndex=event.data.frontIndex;var diff=(idx-frontIndex)%images.length;if(Math.abs(diff)>images.length/2){diff+=(diff>0?-images.length:images.length)}event.data.rotate(-diff)}}});$(container).bind('mouseout',this,function(event){var context=event.data;clearTimeout(context.showFrontTextTimer);context.showFrontTextTimer=setTimeout(function(){context.showFrontText()},1000);context.autoRotate()});$(container).bind('mousedown',this,function(event){event.data.container.focus();return false});container.onselectstart=function(){return false};this.innerWrapper=$(container).wrapInner('<div style="position:absolute;width:100%;height:100%;"/>').children()[0];this.showFrontText=function(){if(items[this.frontIndex]===undefined){return}$(options.titleBox).html($(items[this.frontIndex].image).attr('alt'));$(options.altBox).html($(items[this.frontIndex].image).attr('alt'))};this.updateTitleFade=function(){if(!this._animDur){return}var OUT=0.3,p=Math.min(1,(Date.now()-this._animT0)/this._animDur),tb=$(options.titleBox);if(p<OUT){tb.css('opacity',1-p/OUT)}else{if(!this._swapped){this.showFrontText();this._swapped=true}tb.css('opacity',(p-OUT)/(1-OUT))}};this.go=function(){if(this.controlTimer!==0){return}var context=this;this.controlTimer=setTimeout(function(){context.updateAll()},this.timeDelay)};this.stop=function(){clearTimeout(this.controlTimer);this.controlTimer=0};
 
     this.rotate=function(direction){
         this.frontIndex-=direction;
         while (this.frontIndex<0) { this.frontIndex += items.length; }
         this.frontIndex%=items.length;
         this.destRotation+=(Math.PI/items.length)*(2*direction);
-        this.showFrontText();
+        /* durée estimée de la rotation (easing) pour répartir le fondu du titre :
+           sortant sur la 1re moitié du temps, entrant sur la 2e (voir updateTitleFade) */
+        var _span=Math.abs(this.destRotation-this.rotation);
+        this._animT0=Date.now();
+        this._animDur=Math.max(1,(Math.log(0.001/_span)/Math.log(1-options.speed))*(1000/options.FPS));
+        this._swapped=false;
         this.go()
     };
 
@@ -431,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
             style=item.reflection.element.style;style.left=x+px;
             style.top=y+h+options.reflGap*scale+px;
             style.width=w+px;
-            if(isMSIE){style.filter.finishy=(reflHeight/h*100)}else{style.height=reflHeight+px}}}radians+=spacing}this.innerWrapper.style.display='block';if(absChange>=0.001){this.controlTimer=setTimeout(function(){context.updateAll()},this.timeDelay)}else{this.stop()}};this.checkImagesLoaded=function(){var i;for(i=0;i<images.length;i++){if((images[i].width===undefined)||((images[i].complete!==undefined)&&(!images[i].complete))){return}}for(i=0;i<images.length;i++){items.push(new Item(images[i],options));$(images[i]).data('itemIndex',i)}clearInterval(this.tt);this.showFrontText();this.autoRotate();this.updateAll()};this.tt=setInterval(function(){ctx.checkImagesLoaded()},50)};$.fn.CloudCarousel=function(options){this.each(function(){options=$.extend({},{reflHeight:0,reflOpacity:0.5,reflGap:0,minScale:0.5,xPos:0,yPos:0,xRadius:0,yRadius:0,altBox:null,titleBox:null,FPS:30,autoRotate:'no',autoRotateDelay:1500,speed:0.2,mouseWheel:false,bringToFront:false},options);$(this).data('cloudcarousel',new Controller(this,$('.cloudcarousel',$(this)),options))});return this}})(jQuery);
+            if(isMSIE){style.filter.finishy=(reflHeight/h*100)}else{style.height=reflHeight+px}}}radians+=spacing}this.innerWrapper.style.display='block';context.updateTitleFade();if(absChange>=0.001){this.controlTimer=setTimeout(function(){context.updateAll()},this.timeDelay)}else{if(!context._swapped){context.showFrontText();context._swapped=true}$(options.titleBox).css('opacity',1);this.stop()}};this.checkImagesLoaded=function(){var i;for(i=0;i<images.length;i++){if((images[i].width===undefined)||((images[i].complete!==undefined)&&(!images[i].complete))){return}}for(i=0;i<images.length;i++){items.push(new Item(images[i],options));$(images[i]).data('itemIndex',i)}clearInterval(this.tt);this.showFrontText();this.autoRotate();this.updateAll()};this.tt=setInterval(function(){ctx.checkImagesLoaded()},50)};$.fn.CloudCarousel=function(options){this.each(function(){options=$.extend({},{reflHeight:0,reflOpacity:0.5,reflGap:0,minScale:0.5,xPos:0,yPos:0,xRadius:0,yRadius:0,altBox:null,titleBox:null,FPS:30,autoRotate:'no',autoRotateDelay:1500,speed:0.2,mouseWheel:false,bringToFront:false},options);$(this).data('cloudcarousel',new Controller(this,$('.cloudcarousel',$(this)),options))});return this}})(jQuery);
 
     //This initialises carousels on the container elements specified.
     [% FOREACH carrousel IN carrousels %]
@@ -445,16 +559,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         [% IF autoRotateDelay %]autoRotateDelay: "[% autoRotateDelay | html %]",[% END %]
                     [% END %]
                     xPos : $(this).parent().width() * 0.5,
-                    yPos : 10,
-                    xRadius : $(this).parent().width() / 2,
-                    yRadius : $(this).parent().height() / 7,
+                    yPos : 35,
+                    xRadius : $(this).parent().width() / 1.95,
+                    yRadius : $(this).parent().height() / 8,
                     buttonLeft: $(controls).filter(".left"),
                     buttonRight: $(controls).filter(".right"),
                     titleBox: $(this).find(".title-text"),
-                    minScale: 0.25,
-                    reflHeight : 40,
+                    minScale: 0.5,
+                    reflHeight : 20,
                     reflGap : 4,
-                    reflOpacity : 0.75
+                    reflOpacity : 0.4
                 }
                 );
             });
@@ -465,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         let buttonLeft = $("#carrousel-[% loop.index | html %] .controls button")[0];
                         let buttonRight = $("#carrousel-[% loop.index | html %] .controls button")[1];
                         [% IF !autoRotateDirection || autoRotateDirection == "left" %]Right(buttonLeft)[% ELSIF autoRotateDirection == "right" %]Left(buttonRight)[% END %];
-                    }, [% autoRotateDelay || 1500 %]
+                    }, [% autoRotateDelay || 1500 | html %]
                 );
             [% END %]
         [% END %]
@@ -478,35 +592,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <script>
-var scrolling_duration = 250;
+var scrolling_duration = 400;
 var time_between_scrolling = 5000;
+var CHEV = 50; // largeur de la zone chevron/fondu exclue du comptage d'une page
 
+function _pageImages(button){
+    return document.getElementById(button.className).getElementsByClassName("images")[0];
+}
+// couvertures pleinement visibles depuis la gauche (dégagées du chevron droit)
+function _countLeft(container, view){
+    var kids = Array.prototype.slice.call(container.children), acc = 0, K = 0;
+    for (var i = 0; i < kids.length; i++){ var ow = $(kids[i]).outerWidth(true); if (acc + ow <= view - CHEV){ acc += ow; K++; } else break; }
+    return Math.max(1, K);
+}
+// idem depuis la droite (dégagées du chevron gauche)
+function _countRight(container, view){
+    var kids = Array.prototype.slice.call(container.children), acc = 0, K = 0;
+    for (var i = kids.length - 1; i >= 0; i--){ var ow = $(kids[i]).outerWidth(true); if (acc + ow <= view - CHEV){ acc += ow; K++; } else break; }
+    return Math.max(1, K);
+}
 
+// Bouton "suivant" (>) : avance d'une page (moins une couverture de recouvrement),
+// pour que la couverture masquée sous le chevron droit devienne la 2e à gauche.
 function Left (button){
-    let container =  document.getElementById(button.className).getElementsByClassName("images")[0];
-    let livres = container.children;
-
-    var last = $(container).find("a img").last();
-    if ($(last).position().left + $(last)[0].clientWidth < $("div[class^='slider']")[0].clientWidth) return;
-    $(container).animate({
-        left: $(container).find("a img").eq(1).position().left * -1,
-    }, scrolling_duration, function() {
-        $(container).css("left", "0");
-        $(container).append($(container).find("a").first());
+    var container = _pageImages(button), c = $(container);
+    if (c.is(':animated')) return;
+    var view = container.parentElement.clientWidth;
+    var kids = Array.prototype.slice.call(container.children);
+    if (kids.reduce(function(s,a){ return s + $(a).outerWidth(true); }, 0) <= view) return; // tout tient
+    var step = Math.max(1, _countLeft(container, view) - 1);
+    var dist = 0; for (var i = 0; i < step; i++) dist += $(kids[i]).outerWidth(true);
+    c.animate({ left: -dist }, scrolling_duration, function(){
+        for (var i = 0; i < step; i++) container.appendChild(container.firstElementChild); // paquet visible -> fin
+        c.css("left", 0);
     });
 };
-function Right (button){
-    let container =  document.getElementById(button.className).getElementsByClassName("images")[0];
-    let livres = container.children;
 
-    var last = $(container).find("a img").last();
-    if ($(last).position().left + $(last)[0].clientWidth < $("div[class^='slider']")[0].clientWidth) return;
-    $(container).animate({
-        left: $(container).find("a img").eq(1).position().left,
-    }, scrolling_duration, function() {
-        $(container).css("left", "0");
-        $(container).prepend($(container).find("a").last());
-    });
+// Bouton "précédent" (<) : recule d'une page ; on réordonne AVANT d'animer -> pas de trou à l'entrée.
+function Right (button){
+    var container = _pageImages(button), c = $(container);
+    if (c.is(':animated')) return;
+    var view = container.parentElement.clientWidth;
+    var kids = Array.prototype.slice.call(container.children);
+    if (kids.reduce(function(s,a){ return s + $(a).outerWidth(true); }, 0) <= view) return;
+    var step = Math.max(1, _countRight(container, view) - 1);
+    for (var i = 0; i < step; i++) container.insertBefore(container.lastElementChild, container.firstElementChild); // paquet de fin -> début
+    var D = 0; for (var i = 0; i < step; i++) D += $(container.children[i]).outerWidth(true);
+    c.css("left", -D); c.animate({ left: 0 }, scrolling_duration);
 };
 
 window.addEventListener('load', function() {
@@ -520,6 +652,24 @@ window.addEventListener('load', function() {
     });
 
 });
+
+/* Centre verticalement les boutons du mode scrolling-title sur les couvertures
+   (et non sur toute la hauteur du carrousel, titre <h3> inclus). */
+function centerSliderTitleButtons(){
+    $('.slider-title').each(function(){
+        var st = this.getBoundingClientRect();
+        var img = $(this).find('.images img').first();
+        if( !img.length ){ return; }
+        var im = img[0].getBoundingClientRect();
+        if( !im.height ){ return; }
+        /* boutons centrés verticalement sur les couvertures (le fondu, lui, est géré
+           par un masque d'opacité en CSS, indépendant de la hauteur des titres) */
+        var c = (im.top - st.top) + im.height / 2;
+        $(this).find('.controls button').css({ top: c + 'px', transform: 'translateY(-50%)' });
+    });
+}
+window.addEventListener('load', centerSliderTitleButtons);
+window.addEventListener('resize', centerSliderTitleButtons);
 
 /*
 window.addEventListener('load', function() {
