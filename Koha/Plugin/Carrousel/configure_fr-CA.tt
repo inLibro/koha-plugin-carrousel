@@ -14,10 +14,10 @@
 <div id="doc3">
     <div id="inlibro-content">
 
-        <div id="inlibro-header" style="font-size: 14px; color: #696969; width: 450px;">
-            <p style="text-align: left;">Cette extension a été créée par</p>
-            <img width='450px' src='/api/v1/contrib/[% api_namespace | uri %]/static/images/inLibro_fr.svg' alt="inLibro" />
-            <p style="text-align: right;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
+        <div id="inlibro-header" style="font-size: 13px; color: #696969; max-width: 340px;">
+            <p style="text-align: left; margin: 2px 0;">Cette extension a été créée par</p>
+            <img width='260px' style="display:block;margin:6px 0 8px;" src='/api/v1/contrib/[% api_namespace | uri %]/static/images/inLibro.svg' alt="inLibro" />
+            <p style="text-align: left; margin: 2px 0;">Visitez notre <a href="https://inlibro.com">site web</a> pour d'autres extension Koha</p>
         </div>
 
         <h3>Configuration des carrousels</h3>
@@ -237,7 +237,7 @@
                 <label for="generateJSON">
                     <small>Lors de la génération des carrousels, aussi créer un fichier JSON contenant les informations concernant les éléments de chaque carrousels.</small>
                 </label>
-                <p><small>Le fichier est ensuite disponible à l'adresse : <a href="[% Koha.Preference('OPACBaseURL') | url %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel">[% Koha.Preference('OPACBaseURL') || "&lt;opac_url&gt;" | uri %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel</a></small></p>
+                <p><small>Le fichier est ensuite disponible à l'adresse : <a href="[% Koha.Preference('OPACBaseURL') | url %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel">[% Koha.Preference('OPACBaseURL') || "<opac_url>" | html %]/cgi-bin/koha/opac-retrieve-file.pl?id=carrousel</a></small></p>
             </div>
 
             <input id="submit" type="submit" value="Appliquer la configuration">
