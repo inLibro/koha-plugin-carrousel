@@ -54,13 +54,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.4.0";
+our $VERSION = "4.4.1";
 our $metadata = {
-    name            => 'Carrousel 4.4.0',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie, Noah Tremblay, Eric Bégin',
+    name            => 'Carrousel 4.4.1',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie, Noah Tremblay, Eric Bégin, Chris Mathevet',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2026-07-28',
+    date_updated    => '2026-09-01',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -115,7 +115,7 @@ sub tool {
     my $cgi = $self->{'cgi'};
 
     if ($cgi->param('action')){
-        $self->generateCarrousels();
+        $self->generateCarrousels(0);
         $self->go_home();
     }else{
         $self->step_1();
@@ -359,9 +359,9 @@ sub getEnabledCarrousels {
     return $shelves;
 }
 
-sub generateCarrousels{
-    my ( $self ) = @_;
-    my $carrousels = $self->getCarrousels();
+sub generateCarrousels {
+    my ( $self, $is_nightly_cron ) = @_;
+    my $carrousels = $self->getCarrousels($is_nightly_cron);
     my $tt = Template->new(
         INCLUDE_PATH => C4::Context->config("pluginsdir"),
         RELATIVE     => 1,
@@ -474,13 +474,14 @@ sub generateJSONFile {
 
 sub getCarrousels {
     # Récupère les carrousels activés avec leurs documents associés.
-    my ($self) = @_;
+    # Si le paramètre "is_nightly_cron" est vrai, récupère uniquement les carrousels ayant la génération par nightly cron active.
+    my ($self, $is_nightly_cron) = @_;
     my $enabled_carrousels = $self->getEnabledCarrousels();
     my @carrousels;
 
     foreach my $carrousel (@{$enabled_carrousels}) {
         my $documents = $self->getCarrouselContent($carrousel->{module}, $carrousel->{id});
-        if ($documents) {
+        if ($documents && (! $is_nightly_cron || ($is_nightly_cron && $carrousel->{generate_on_nightly_cron}))) {
             $carrousel->{documents} = $documents;
             push @carrousels, $carrousel;
         }
@@ -1142,8 +1143,8 @@ sub getThumbnailUrl {
 
         if ($url) {
             my $ua = LWP::UserAgent->new;
-            my $req = HTTP::Request->new( 
-                GET => $url, 
+            my $req = HTTP::Request->new(
+                GET => $url,
                 [
                     'Referer'    => 'https://www.google.com/',
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -1344,9 +1345,16 @@ sub retrieve_template {
     return $template;
 }
 
+=head3 cronjob_nightly
+
+Hook appelé lors de l'éxécution du cronjob "plugins_nightly.pl"
+
+=cut
+
 sub cronjob_nightly {
-    my $p = Koha::Plugin::Carrousel->new( { enable_plugins => 1 } );
-    $p->generateCarrousels();
+    my ( $self ) = @_;
+
+    $self->generateCarrousels(1);
 }
 
 1;
