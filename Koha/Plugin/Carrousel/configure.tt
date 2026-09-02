@@ -45,6 +45,7 @@
                             <th>Order</th>
                             <th>External URL</th>
                             <th>URL suffix</th>
+                            <th>Cron label</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -128,6 +129,9 @@
                                 </td>
                                 <td class="center">
                                     <input type="text" name="suffix-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% carrousel.suffix | html %]" />
+                                </td>
+                                <td class="center">
+                                    <input type="checkbox" name="generate_on_nightly_cron-[% carrousel.module | html %]-[% carrousel.id | html %]" [% IF carrousel.generate_on_nightly_cron %]checked="checked"[% END %] title="Will regenerate the carousel when the 'plugins_nightly.pl' cron job runs."/>
                                 </td>
                             </tr>
                         [% END %]
@@ -451,7 +455,8 @@ $("#doc3 form").submit(function (){
             branchcode : carrousel.find("[name^='library']").val(),
         [% END %]
             autorotate : carrousel.find("[name^='autorotate']").prop('checked') ? 1 : 0,
-            external : carrousel.find("[name^='external']").prop('checked') ? 1 : 0
+            external : carrousel.find("[name^='external']").prop('checked') ? 1 : 0,
+            generate_on_nightly_cron : carrousel.find("[name^='generate_on_nightly_cron']").prop('checked') ? 1 : 0
         };
         enablings.push(data);
     });
@@ -563,6 +568,9 @@ function addLine (module, id, name) {
       + "    </td>"
       + "    <td class=\"center\">"
       + "        <input type=\"text\" name=\"suffix-" + module + "-" + id + "\" value=\"\" />"
+      + "    </td>"
+      + "    <td class=\"center\">"
+      + "        <input type=\"checkbox\" name=\"generate_on_nightly_cron-" + module + "-" + id + "\" value=\"" + 0 + "\" title=\"Will regenerate the carousel when the 'plugins_nightly.pl' cron job runs.\"/>"
       + "    </td>"
       + "</tr>";
 
