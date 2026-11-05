@@ -1,8 +1,10 @@
+[%# prettier-ignore-start %]
 [%- TRY %]
     [%- PROCESS "Koha/Plugin/Carrousel/i18n/${lang}.inc" %]
 [%- CATCH %]
-    [% PROCESS "Koha/Plugin/Carrousel/i18n/default.inc" %]
+    [%- PROCESS "Koha/Plugin/Carrousel/i18n/default.inc" %]
 [%- END %]
+[%# prettier-ignore-end %]
 
 <meta charset="utf-8"/>
 
@@ -28,11 +30,7 @@
             </div>
         </div>
     [% ELSE %]
-        [% IF carrousel.type == "scrolling" %]
-        <div id="carrousel-[% loop.index | html %]" class="slider">
-        [% ELSE %]
-        <div id="carrousel-[% loop.index | html %]" class="slider-title">
-        [% END %]
+        <div id="carrousel-[% loop.index | html %]" class="slider[% IF carrousel.type != "scrolling" %]-title[% END %]">
             <h2>[% carrousel.title || carrousel.name | html %]</h2>
             [% IF (carrousel.documents.size() > 0) %]
                 <div id="[% carrousel.title || carrousel.name | html %]" class="carrousel-viewport">
@@ -56,7 +54,7 @@
 [% END %]
 </div>
 
-<style>
+<style nonce="[% Koha.CSPNonce | html %]">
 [% UNLESS txtColor %]
    [% txtColor = 'ffffff' %]
 [% END %]
@@ -487,7 +485,7 @@ a:focus>img{
 </style>
 
 <!-- This is the cloud carousel javascript(cloud-carousel.1.0.0.js) -->
-<script>
+<script nonce="[% Koha.CSPNonce | html %]">
 //////////////////////////////////////////////////////////////////////////////////
 // CloudCarousel V1.0.5
 // (c) 2011 by R Cecco. <http://www.professorcloud.com>
@@ -591,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<script>
+<script nonce="[% Koha.CSPNonce | html %]">
 var scrolling_duration = 400;
 var time_between_scrolling = 5000;
 var CHEV = 50; // largeur de la zone chevron/fondu exclue du comptage d'une page

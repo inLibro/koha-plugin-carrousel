@@ -67,14 +67,12 @@
                                 </td>
                                 <td>
                                     [% IF carrousel.module == "reports" %]
-                                        <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id | uri %]&phase=Show SQL">
+                                        <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id | uri %]&phase=Show SQL">[% carrousel.name | html %]</a>
                                     [% ELSIF carrousel.module == "collections" %]
-                                        <a href="/cgi-bin/koha/catalogue/search.pl?advsearch=1&limit=mc-ccode%3A[% carrousel.id | uri %]">
+                                        <a href="/cgi-bin/koha/catalogue/search.pl?advsearch=1&limit=mc-ccode%3A[% carrousel.id | uri %]">[% carrousel.name | html %]</a>
                                     [% ELSE %]
-                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id | uri %]">
+                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id | uri %]">[% carrousel.name | html %]</a>
                                     [% END %]
-                                        [% carrousel.name %]
-                                    </a>
                                 </td>
                                 <td class="title-inputs">
                                     <label class="title-input">
@@ -94,12 +92,12 @@
                                     <div>
                                         <label for="carrousel">Carrousel</label>
                                         <input id="carrousel" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] />
-                                    <div>
                                     </div>
+                                    <div>
                                         <label for="scrolling">À défilement</label>
                                         <input id="scrolling" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
                                     </div>
-                                    </div>
+                                    <div>
                                         <label for="scrolling-title">À défilement avec titre</label>
                                         <input id="scrolling-title" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="scrolling-title" [% IF carrousel.type == "scrolling-title" %]checked="checked"[% END %] />
                                     </div>
@@ -252,7 +250,7 @@
 
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
-<style>
+<style nonce="[% Koha.CSPNonce | html %]">
 #inlibro-carrousel table,
 .ms-parent, .ms-drop {
     font-size: 0.8em;
@@ -344,14 +342,14 @@
 }
 
 #inlibro-carrousel #background{
-    background-color : #[% bgColor %];
+    background-color : #[% bgColor | html %];
     border :0;
 }
 
 #inlibro-carrousel #background p {
     font-size: 30px;
     padding: 25px 10px;
-    color: #[% txtColor %];
+    color: #[% txtColor | html %];
 }
 
 #inlibro-carrousel #div_title {
@@ -362,7 +360,7 @@
 #inlibro-carrousel #div_title p {
     font-size: 30px;
     padding: 25px 10px;
-    color: #[% titleColor %];
+    color: #[% titleColor | html %];
 }
 
 #inlibro-carrousel .fa{
@@ -381,7 +379,7 @@
 }
 </style>
 
-<script>
+<script nonce="[% Koha.CSPNonce | html %]">
 // Set configs
 $(function() {
     $("select[multiple='multiple']").multipleSelect(
@@ -390,7 +388,7 @@ $(function() {
             formatSelectAll: () => _("[Tout sélectionner]"),
             formatAllSelected: () =>  _("Tous"),
             formatCountSelected: (count,total) => count + _("de") + total + _("selectionné(e)s"),
-            formatNoMatchesFound: () => _("Aucune correspondances trouvées")
+            formatNoMatchesFound: () => _("Aucune correspondance trouvée")
         }
     );
 
