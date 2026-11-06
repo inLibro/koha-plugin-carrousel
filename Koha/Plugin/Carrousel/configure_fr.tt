@@ -42,10 +42,10 @@
                             <th>Bibliothèque</th>
                             [% END %]
                             <th>Auto rotation</th>
-                            <th>Ordre</th>
                             <th>URL externe</th>
                             <th>Suffixe d'URL</th>
                             <th>Étiquette de cron</th>
+                            <th>Ordre</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -115,13 +115,6 @@
                                 <td class="center">
                                     <input type="checkbox" name="autorotate-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% carrousel.id | html %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
                                 </td>
-                                <td>
-                                    <i class="fa fa-angle-up"></i>
-                                    <i class="fa fa-angle-down"></i>
-                                    <i class="fa fa-angle-double-up"></i>
-                                    <i class="fa fa-angle-double-down"></i>
-                                    <i class="fa fa-times-circle error"></i>
-                                </td>
                                 <td class="center">
                                     <input type="checkbox" name="external-[% carrousel.module | html %]-[% carrousel.id | html %]" [% IF carrousel.external %]checked="checked"[% END %] title="Utilisera la valeur dans 856$u si disponible"/>
                                 </td>
@@ -130,6 +123,13 @@
                                 </td>
                                 <td class="center">
                                     <input type="checkbox" name="generate_on_nightly_cron-[% carrousel.module | html %]-[% carrousel.id | html %]" [% IF carrousel.generate_on_nightly_cron %]checked="checked"[% END %] title="Régénérera le carrousel lors de l'exécution du cron 'plugins_nightly.pl'."/>
+                                </td>
+                                <td>
+                                    <i class="fa fa-angle-up"></i>
+                                    <i class="fa fa-angle-down"></i>
+                                    <i class="fa fa-angle-double-up"></i>
+                                    <i class="fa fa-angle-double-down"></i>
+                                    <i class="fa fa-times-circle error"></i>
                                 </td>
                             </tr>
                         [% END %]
@@ -385,28 +385,14 @@ $(function() {
     $("select[multiple='multiple']").multipleSelect(
         {
             placeholder: _("Merci de sélectionner ..."),
-            formatSelectAll: () => _("[Tout sélectionner]"),
+            selectAll: false,
             formatAllSelected: () =>  _("Tous"),
             formatCountSelected: (count,total) => count + _("de") + total + _("selectionné(e)s"),
             formatNoMatchesFound: () => _("Aucune correspondance trouvée")
         }
     );
 
-    $(".ms-drop [name^='selectAll']").on("click", function () {
-        var module = $(this).closest(".ms-parent").prev().prop("name");
-        var checked = $(this).prop("checked");
-        $(this).closest(".ms-drop").find("input[type='checkbox']").not("[name^='selectAll']").each(function () {
-            var id = $(this).val();
-            var tr = $("tr#" + module + "-" + id);
-            if (checked && tr.length === 0) {
-                addLine(module, id, $(this).parent().text());
-            } else if (!checked && tr.length === 1) {
-                tr.remove();
-            }
-        });
-    });
-
-    $(".ms-drop input[type='checkbox']").not("[name^='selectAll']").on("click", function () {
+    $(".ms-drop input[type='checkbox']").on("click", function () {
         var module = $(this).closest(".ms-parent").prev().prop("name");
         if ($(this).prop('checked')) {
             addLine(module, $(this).val(), $(this).parent().text());
@@ -554,13 +540,6 @@ function addLine (module, id, name) {
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"autorotate-" + module + "-" + id + "\" value=\"" + id + "\" />"
       + "    </td>"
-      + "    <td>"
-      + "        <i class=\"fa fa-angle-up\"></i>"
-      + "        <i class=\"fa fa-angle-down\"></i>"
-      + "        <i class=\"fa fa-angle-double-up\"></i>"
-      + "        <i class=\"fa fa-angle-double-down\"></i>"
-      + "        <i class=\"fa fa-times-circle error\"></i>"
-      + "    </td>"
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"external-" + module + "-" + id + "\" value=\"" + id + "\" title=\"Utilisera la valeur dans 856$u si disponible\"/>"
       + "    </td>"
@@ -569,6 +548,13 @@ function addLine (module, id, name) {
       + "    </td>"
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"generate_on_nightly_cron-" + module + "-" + id + "\" value=\"" + 0 + "\" title=\"Régénérera le carrousel lors de l'exécution du cron 'plugins_nightly.pl'.\"/>"
+      + "    </td>"
+      + "    <td>"
+      + "        <i class=\"fa fa-angle-up\"></i>"
+      + "        <i class=\"fa fa-angle-down\"></i>"
+      + "        <i class=\"fa fa-angle-double-up\"></i>"
+      + "        <i class=\"fa fa-angle-double-down\"></i>"
+      + "        <i class=\"fa fa-times-circle error\"></i>"
       + "    </td>"
       + "</tr>";
 
