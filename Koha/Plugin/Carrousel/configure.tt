@@ -42,10 +42,10 @@
                             <th>Library</th>
                             [% END %]
                             <th>Auto rotate</th>
-                            <th>Order</th>
                             <th>External URL</th>
                             <th>URL suffix</th>
                             <th>Cron label</th>
+                            <th>Order</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,14 +67,12 @@
                                 </td>
                                 <td>
                                     [% IF carrousel.module == "reports" %]
-                                        <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id | uri %]&phase=Show SQL">
+                                        <a href="/cgi-bin/koha/reports/guided_reports.pl?reports=[% carrousel.id | uri %]&phase=Show SQL">[% carrousel.name | html %]</a>
                                     [% ELSIF carrousel.module == "collections" %]
-                                        <a href="/cgi-bin/koha/catalogue/search.pl?advsearch=1&limit=mc-ccode%3A[% carrousel.id | uri %]">
+                                        <a href="/cgi-bin/koha/catalogue/search.pl?advsearch=1&limit=mc-ccode%3A[% carrousel.id | uri %]">[% carrousel.name | html %]</a>
                                     [% ELSE %]
-                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id | uri %]">
+                                        <a href="/cgi-bin/koha/virtualshelves/shelves.pl?op=view&shelfnumber=[% carrousel.id | uri %]">[% carrousel.name | html %]</a>
                                     [% END %]
-                                        [% carrousel.name %]
-                                    </a>
                                 </td>
                                 <td class="title-inputs">
                                     <label class="title-input">
@@ -94,12 +92,12 @@
                                     <div>
                                         <label for="carrousel">Carrousel</label>
                                         <input id="carrousel" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="carrousel" [% IF !carrousel.type OR carrousel.type == "carrousel" %]checked="checked"[% END %] />
-                                    <div>
                                     </div>
+                                    <div>
                                         <label for="scrolling">Scrolling</label>
                                         <input id="scrolling" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="scrolling" [% IF carrousel.type == "scrolling" %]checked="checked"[% END %] />
                                     </div>
-                                    </div>
+                                    <div>
                                         <label for="scrolling-title">Scrolling with title</label>
                                         <input id="scrolling-title" type="radio" name="type-[% carrousel.module | html %]-[% carrousel.id | html %]" value="scrolling-title" [% IF carrousel.type == "scrolling-title" %]checked="checked"[% END %] />
                                     </div>
@@ -117,13 +115,6 @@
                                 <td class="center">
                                     <input type="checkbox" name="autorotate-[% carrousel.module | html %]-[% carrousel.id | html %]" value="[% carrousel.id | html %]" [% IF carrousel.autorotate %]checked="checked"[% END %] />
                                 </td>
-                                <td>
-                                    <i class="fa fa-angle-up"></i>
-                                    <i class="fa fa-angle-down"></i>
-                                    <i class="fa fa-angle-double-up"></i>
-                                    <i class="fa fa-angle-double-down"></i>
-                                    <i class="fa fa-times-circle error"></i>
-                                </td>
                                 <td class="center">
                                     <input type="checkbox" name="external-[% carrousel.module | html %]-[% carrousel.id | html %]" [% IF carrousel.external %]checked="checked"[% END %] title="Will use the value in 856$u if available"/>
                                 </td>
@@ -132,6 +123,13 @@
                                 </td>
                                 <td class="center">
                                     <input type="checkbox" name="generate_on_nightly_cron-[% carrousel.module | html %]-[% carrousel.id | html %]" [% IF carrousel.generate_on_nightly_cron %]checked="checked"[% END %] title="Will regenerate the carousel when the 'plugins_nightly.pl' cron job runs."/>
+                                </td>
+                                <td>
+                                    <i class="fa fa-angle-up"></i>
+                                    <i class="fa fa-angle-down"></i>
+                                    <i class="fa fa-angle-double-up"></i>
+                                    <i class="fa fa-angle-double-down"></i>
+                                    <i class="fa fa-times-circle error"></i>
                                 </td>
                             </tr>
                         [% END %]
@@ -252,7 +250,7 @@
 
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
-<style>
+<style nonce="[% Koha.CSPNonce | html %]">
 #inlibro-carrousel table,
 .ms-parent, .ms-drop {
     font-size: 0.8em;
@@ -344,14 +342,14 @@
 }
 
 #inlibro-carrousel #background{
-    background-color : #[% bgColor %];
+    background-color : #[% bgColor | html %];
     border :0;
 }
 
 #inlibro-carrousel #background p {
     font-size: 30px;
     padding: 25px 10px;
-    color: #[% txtColor %];
+    color: #[% txtColor | html %];
 }
 
 #inlibro-carrousel #div_title {
@@ -362,7 +360,7 @@
 #inlibro-carrousel #div_title p {
     font-size: 30px;
     padding: 25px 10px;
-    color: #[% titleColor %];
+    color: #[% titleColor | html %];
 }
 
 #inlibro-carrousel .fa{
@@ -381,34 +379,20 @@
 }
 </style>
 
-<script>
+<script nonce="[% Koha.CSPNonce | html %]">
 // Set configs
 $(function() {
     $("select[multiple='multiple']").multipleSelect(
         {
             placeholder: _("Please select ..."),
-            selectAllText: _("Select all"),
+            selectAll: false,
             allSelected: _("All selected"),
             countSelected: _("# of % selected"),
             noMatchesFound: _("No matches found")
         }
     );
 
-    $(".ms-drop [name^='selectAll']").on("click", function () {
-        var module = $(this).closest(".ms-parent").prev().prop("name");
-        var checked = $(this).prop("checked");
-        $(this).closest(".ms-drop").find("input[type='checkbox']").not("[name^='selectAll']").each(function () {
-            var id = $(this).val();
-            var tr = $("tr#" + module + "-" + id);
-            if (checked && tr.length === 0) {
-                addLine(module, id, $(this).parent().text());
-            } else if (!checked && tr.length === 1) {
-                tr.remove();
-            }
-        });
-    });
-
-    $(".ms-drop input[type='checkbox']").not("[name^='selectAll']").on("click", function () {
+    $(".ms-drop input[type='checkbox']").on("click", function () {
         var module = $(this).closest(".ms-parent").prev().prop("name");
         if ($(this).prop('checked')) {
             addLine(module, $(this).val(), $(this).parent().text());
@@ -556,13 +540,6 @@ function addLine (module, id, name) {
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"autorotate-" + module + "-" + id + "\" value=\"" + id + "\" />"
       + "    </td>"
-      + "    <td>"
-      + "        <i class=\"fa fa-angle-up\"></i>"
-      + "        <i class=\"fa fa-angle-down\"></i>"
-      + "        <i class=\"fa fa-angle-double-up\"></i>"
-      + "        <i class=\"fa fa-angle-double-down\"></i>"
-      + "        <i class=\"fa fa-times-circle error\"></i>"
-      + "    </td>"
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"external-" + module + "-" + id + "\" value=\"" + id + "\" title=\"Will use the value in 856$u if available\"/>"
       + "    </td>"
@@ -571,6 +548,13 @@ function addLine (module, id, name) {
       + "    </td>"
       + "    <td class=\"center\">"
       + "        <input type=\"checkbox\" name=\"generate_on_nightly_cron-" + module + "-" + id + "\" value=\"" + 0 + "\" title=\"Will regenerate the carousel when the 'plugins_nightly.pl' cron job runs.\"/>"
+      + "    </td>"
+      + "    <td>"
+      + "        <i class=\"fa fa-angle-up\"></i>"
+      + "        <i class=\"fa fa-angle-down\"></i>"
+      + "        <i class=\"fa fa-angle-double-up\"></i>"
+      + "        <i class=\"fa fa-angle-double-down\"></i>"
+      + "        <i class=\"fa fa-times-circle error\"></i>"
       + "    </td>"
       + "</tr>";
 

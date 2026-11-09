@@ -37,7 +37,7 @@
 <!-- Footer-->
 [% INCLUDE 'intranet-bottom.inc' %]
 
-<style>
+<style nonce="[% Koha.CSPNonce | html %]">
 .alignment{
     float: right;
 }

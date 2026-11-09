@@ -54,13 +54,13 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.4.1";
+our $VERSION = "4.4.2";
 our $metadata = {
-    name            => 'Carrousel 4.4.1',
-    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie, Noah Tremblay, Eric Bégin, Chris Mathevet',
+    name            => 'Carrousel 4.4.2',
+    author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie, Noah Tremblay, Eric Bégin, Chris Mathevet, Bastien Chauvet',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
-    date_updated    => '2026-09-01',
+    date_updated    => '2026-11-06',
     minimum_version => '18.05',
     maximum_version => undef,
     version         => $VERSION,
@@ -70,7 +70,7 @@ our $metadata = {
 our $LIMIT_DISPLAYED = 40;
 
 our $useSql = 0;
-if (!(eval("use Koha::Virtualshelves") || !(eval("use Koha::Virtualshelfcontents")))) {
+if (!(eval {"use Koha::Virtualshelves"} || !(eval {"use Koha::Virtualshelfcontents"}))) {
     $useSql =1;
 }
 
@@ -82,6 +82,8 @@ sub new {
 
     return $self;
 }
+
+=encoding utf8
 
 =head3 api_namespace
 
@@ -279,7 +281,7 @@ sub loadContent {
                         }
                     }
                 } else {
-                    warn "An error occured while executing report $id.";
+                    warn "An error occurred while executing report $id.";
                 }
             } else {
                 warn "Report $id can't be used because it needs parameters.";
@@ -326,7 +328,8 @@ sub getEnabledCarrousels {
         my $branchcode = $carrousel->{branchcode} || undef;
         if ($carrousel->{module} eq "lists") {
             my $shelf = Koha::Virtualshelves->find($carrousel->{id});
-            my $borrowernumber = $shelf->owner if defined $shelf;
+            my $borrowernumber;
+            $borrowernumber = $shelf->owner if defined $shelf;
             if (C4::Context->preference("IndependentBranches")) {
                 my $patron = Koha::Patrons->find($borrowernumber);
                 $branchcode = $patron->branchcode if defined $patron;
@@ -400,7 +403,7 @@ sub generateCarrousels {
                 map {$self->_localize_carrousel_for_language($_, $language)}
                     @{$branchcodes{$branchcode}}
             ];
-            binmode(STDOUT, ":utf8");
+            binmode(STDOUT, ":encoding(UTF-8)");
 
             $tt->process(
                 'Koha/Plugin/Carrousel/opac-carrousel.tt',
@@ -1076,7 +1079,7 @@ sub getThumbnailUrl {
     return if ! $record;
     my $dbh = C4::Context->dbh;
 
-    # We look for image localy, if available we return relative path and exit function.
+    # We look for image locally, if available we return relative path and exit function.
     my $cover_images_table='cover_images';
     if ( getKohaVersion() < 20.0600049 ) {
         $cover_images_table='biblioimages';
@@ -1212,7 +1215,8 @@ sub configure {
         my $sth = $dbh->prepare("SELECT * from saved_sql");
         $sth->execute();
         while (my $report = $sth->fetchrow_hashref()) {
-              my $sql = $report->{savedsql} if $report;
+              my $sql;
+              $sql = $report->{savedsql} if $report;
                unless ($sql) {
                    warn "Report $report->{id} was not found.";
                } else {
@@ -1258,14 +1262,16 @@ sub upgrade {
 
     # _version_compare Returns 1 if the first argument is the higher version
     if ($self->_version_compare("3.0", $database_version) == 1) {
-        my @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))} if (defined $self->retrieve_data('shelvesOrder'));
-        my @enabledShelves = @{decode_json($self->retrieve_data('enabledShelves'))} if (defined $self->retrieve_data('enabledShelves'));
+        my @shelvesOrder;
+        @shelvesOrder = @{decode_json($self->retrieve_data('shelvesOrder'))} if (defined $self->retrieve_data('shelvesOrder'));
+        my @enabledShelves;
+        @enabledShelves = @{decode_json($self->retrieve_data('enabledShelves'))} if (defined $self->retrieve_data('enabledShelves'));
         my $type = $self->retrieve_data('type');
         my $dbh = C4::Context->dbh;
 
         my @carrousels;
         foreach my $id (@shelvesOrder) {
-            if (grep(/^$id$/, @enabledShelves)) {
+            if (grep {/^$id$/} @enabledShelves) {
                 my $carrousel = {
                     id     => $id,
                     module => "lists",
