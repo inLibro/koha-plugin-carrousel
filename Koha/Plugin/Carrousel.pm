@@ -54,9 +54,9 @@ BEGIN {
     $module->import;
 }
 
-our $VERSION = "4.4.2";
+our $VERSION = "4.4.3";
 our $metadata = {
-    name            => 'Carrousel 4.4.2',
+    name            => 'Carrousel 4.4.3',
     author          => 'Mehdi Hamidi, Maryse Simard, Brandon Jimenez, Alexis Ripetti, Salman Ali, Hinemoea Viault, Hammat Wele, Salah Eddine Ghedda, Matthias Le Gac, Alexandre Noël, Shi Yao Wang, William Lavoie, Noah Tremblay, Eric Bégin, Chris Mathevet, Bastien Chauvet',
     description     => 'Generates a carrousel from available data sources (lists, reports or collections).',
     date_authored   => '2016-05-27',
@@ -393,6 +393,8 @@ sub generateCarrousels {
 
     my $opaclanguages = C4::Context->preference('opaclanguages');   #expected ex opaclanguages = "fr-CA,en"
     my @languages = split /,/, $opaclanguages;
+    # OpacMainUserBlock doit avoir une localisation en anglais pour apparaitre dans la liste des personnalisations HTML.
+    push @languages, 'en' unless grep { $_ eq 'en' } @languages;
 
     # Pour chaque langue et chaque branche, génère une version localisée des carrousels
     foreach my $language (@languages) {
